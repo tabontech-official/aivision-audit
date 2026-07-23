@@ -1,0 +1,915 @@
+// ==============================================================
+// AuditFlow — Prisma schema (source of truth from Phase 2 onward)
+// Database: Neon PostgreSQL
+// In Phase 2 this file moves to prisma/schema.prisma unchanged.
+// ==============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// ----------------------------------------------------------------
+// ENUMS
+// ----------------------------------------------------------------
+
+enum UserRole {
+  MASTER_ADMIN
+  ADMIN
+  USER
+}
+
+enum UserPlan {
+  FREE
+  PREMIUM
+}
+
+enum PlanAccess {
+  FREE
+  PREMIUM
+  HIDDEN
+  BOTH
+}
+
+enum ReportStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  PARTIAL
+}
+
+enum AuditStage {
+  CONNECTING
+  FETCHING_HTML
+  RENDERING
+  CHECKING_SEO
+  CHECKING_SPEED
+  INSPECTING_METADATA
+  REVIEWING_ACCESSIBILITY
+  ANALYZING_MOBILE
+  CHECKING_CONVERSION
+  PREPARING_RECOMMENDATIONS
+  GENERATING_REPORT
+}
+
+enum CheckStatus {
+  PASS
+  FAIL
+  WARNING
+  INFO
+  NOT_APPLICABLE
+  ERROR
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFORMATIONAL
+}
+
+enum InspectionType {
+  ELEMENT_EXISTS
+  ELEMENT_NOT_EXISTS
+  ATTRIBUTE_EXISTS
+  ATTRIBUTE_EQUALS
+  ATTRIBUTE_CONTAINS
+  TEXT_EXISTS
+  TEXT_CONTAINS
+  ELEMENT_COUNT
+  TEXT_LENGTH
+  HTTP_STATUS
+  REDIRECT_CHECK
+  SSL_CHECK
+  RESPONSE_HEADER
+  BROKEN_LINKS
+  IMAGE_ALT_TEXT
+  HTML_VALIDATION
+  META_TAG
+  HEADING_HIERARCHY
+  CANONICAL_TAG
+  ROBOTS_META
+  SITEMAP_CHECK
+  ROBOTS_TXT_CHECK
+  STRUCTURED_DATA
+  SCHEMA_TYPE
+  MOBILE_VIEWPORT
+  FORM_FIELD
+  CTA_CHECK
+  PSI_METRIC
+  LIGHTHOUSE_SCORE
+  API_CHECK
+  RULES_EVALUATOR // sandboxed JsonLogic — safe replacement for "custom JavaScript"
+  REGEX_EVALUATOR
+  BOOLEAN_CHECK
+  NUMERIC_COMPARISON
+  STRING_COMPARISON
+}
+
+enum CriteriaOperator {
+  EXISTS
+  NOT_EXISTS
+  EQUALS
+  NOT_EQUALS
+  CONTAINS
+  NOT_CONTAINS
+  STARTS_WITH
+  ENDS_WITH
+  GREATER_THAN
+  LESS_THAN
+  GREATER_THAN_OR_EQUAL
+  LESS_THAN_OR_EQUAL
+  BETWEEN
+  MATCHES_REGEX
+  IS_TRUE
+  IS_FALSE
+}
+
+enum TemplateStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  UNPAID
+  PAUSED
+}
+
+enum PaymentStatus {
+  SUCCEEDED
+  PENDING
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PsiStrategy {
+  MOBILE
+  DESKTOP
+}
+
+enum NotificationType {
+  REPORT_READY
+  REPORT_FAILED
+  PLAN_UPGRADED
+  PLAN_DOWNGRADED
+  PAYMENT_FAILED
+  SYSTEM
+}
+
+// ----------------------------------------------------------------
+// AUTH & IDENTITY
+// ----------------------------------------------------------------
+
+model User {
+  id                  String    @id @default(uuid()) @db.Uuid
+  email               String    @unique
+  passwordHash        String?   @map("password_hash") // null for future OAuth-only users
+  name                String?
+  image               String?
+  role                UserRole  @default(USER)
+  plan                UserPlan  @default(FREE)
+  emailVerifiedAt     DateTime? @map("email_verified_at") @db.Timestamptz
+  mustChangePassword  Boolean   @default(false) @map("must_change_password")
+  lastLoginAt         DateTime? @map("last_login_at") @db.Timestamptz
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamptz
+
+  accounts            Account[]
+  sessions            Session[]
+  verificationTokens  VerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+  claimedAnonSessions AnonymousSession[]   @relation("ClaimedAnonSessions")
+  ownedOrganizations  Organization[]       @relation("OrgOwner")
+  organizationMembers OrganizationMember[]
+  websites            Website[]
+  reports             Report[]
+  subscriptions       Subscription[]
+  payments            Payment[]
+  invoices            Invoice[]
+  notifications       Notification[]
+  createdTemplates    ReportTemplate[]     @relation("TemplateCreator")
+  publishedVersions   TemplateVersion[]    @relation("VersionPublisher")
+  activityLogs        AdminActivityLog[]   @relation("LogActor")
+  updatedSettings     SystemSetting[]      @relation("SettingUpdater")
+  updatedBranding     BrandingSetting[]    @relation("BrandingUpdater")
+  updatedEmailTpls    EmailTemplate[]      @relation("EmailTplUpdater")
+  apiUsage            ApiUsage[]
+
+  @@index([role])
+  @@index([plan])
+  @@map("users")
+}
+
+// Auth.js OAuth accounts (future-ready; credentials flow doesn't use it)
+model Account {
+  userId            String  @map("user_id") @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refreshToken      String? @map("refresh_token")
+  accessToken       String? @map("access_token")
+  expiresAt         Int?    @map("expires_at")
+  tokenType         String? @map("token_type")
+  scope             String?
+  idToken           String? @map("id_token")
+  sessionState      String? @map("session_state")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// Session revocation registry. JWT strategy is primary; every issued JWT carries
+// a sessionId that must exist & be unrevoked here for sensitive operations.
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz
+  ipAddress  String?   @map("ip_address")
+  userAgent  String?   @map("user_agent")
+  rememberMe Boolean   @default(false) @map("remember_me")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash") // sha256 of the emailed token
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  usedAt    DateTime? @map("used_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  usedAt    DateTime? @map("used_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+// Anonymous audit sessions — cookie token is hashed, never stored raw
+model AnonymousSession {
+  id              String    @id @default(uuid()) @db.Uuid
+  tokenHash       String    @unique @map("token_hash")
+  ipAddress       String?   @map("ip_address")
+  userAgent       String?   @map("user_agent")
+  claimedByUserId String?   @map("claimed_by_user_id") @db.Uuid
+  claimedAt       DateTime? @map("claimed_at") @db.Timestamptz
+  expiresAt       DateTime  @map("expires_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  claimedBy User?    @relation("ClaimedAnonSessions", fields: [claimedByUserId], references: [id], onDelete: SetNull)
+  reports   Report[]
+
+  @@index([expiresAt])
+  @@map("anonymous_sessions")
+}
+
+// Future-ready multi-seat support (not surfaced in v1 UI)
+model Organization {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String    @unique
+  ownerId   String    @map("owner_id") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  owner   User                 @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  members OrganizationMember[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  organizationId String   @map("organization_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  role           String   @default("member") // owner | admin | member
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, userId])
+  @@map("organization_members")
+}
+
+// ----------------------------------------------------------------
+// DYNAMIC REPORT BUILDER
+// Template → Version (immutable once published) → Sections → Fields
+//   → Criteria → Suggestions
+// ----------------------------------------------------------------
+
+model ReportTemplate {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  isDefault   Boolean   @default(false) @map("is_default")
+  createdById String?   @map("created_by_id") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  createdBy User?             @relation("TemplateCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  versions  TemplateVersion[]
+
+  @@map("report_templates")
+}
+
+// Admin edits the latest DRAFT version; Publish freezes it and clones a new
+// DRAFT. Reports pin the version they ran against, so history never mutates.
+model TemplateVersion {
+  id            String         @id @default(uuid()) @db.Uuid
+  templateId    String         @map("template_id") @db.Uuid
+  versionNumber Int            @map("version_number")
+  status        TemplateStatus @default(DRAFT)
+  publishedAt   DateTime?      @map("published_at") @db.Timestamptz
+  publishedById String?        @map("published_by_id") @db.Uuid
+  changelog     String?
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+
+  template    ReportTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  publishedBy User?           @relation("VersionPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  sections    ReportSection[]
+  reports     Report[]
+
+  @@unique([templateId, versionNumber])
+  @@index([status])
+  @@map("template_versions")
+}
+
+model ReportSection {
+  id                  String     @id @default(uuid()) @db.Uuid
+  templateVersionId   String     @map("template_version_id") @db.Uuid
+  name                String
+  slug                String
+  shortDescription    String?    @map("short_description")
+  detailedDescription String?    @map("detailed_description")
+  icon                String? // lucide icon name, validated against whitelist
+  displayOrder        Int        @default(0) @map("display_order")
+  isEnabled           Boolean    @default(true) @map("is_enabled")
+  defaultExpanded     Boolean    @default(true) @map("default_expanded")
+  weight              Float      @default(1) // contribution to overall score
+  contributesToScore  Boolean    @default(true) @map("contributes_to_score")
+  planAccess          PlanAccess @default(BOTH) @map("plan_access")
+  visibleInReport     Boolean    @default(true) @map("visible_in_report")
+  accentColor         String?    @map("accent_color") // hex, validated
+  isSystem            Boolean    @default(false) @map("is_system") // e.g. Page Speed — undeletable
+  adminNotes          String?    @map("admin_notes")
+  createdAt           DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt           DateTime?  @map("deleted_at") @db.Timestamptz
+
+  templateVersion TemplateVersion       @relation(fields: [templateVersionId], references: [id], onDelete: Cascade)
+  fields          AuditField[]
+  sectionResults  ReportSectionResult[]
+
+  @@unique([templateVersionId, slug])
+  @@index([templateVersionId, displayOrder])
+  @@map("report_sections")
+}
+
+model AuditField {
+  id             String     @id @default(uuid()) @db.Uuid
+  sectionId      String     @map("section_id") @db.Uuid
+  name           String
+  fieldKey       String     @map("field_key") // stable machine key, e.g. "seo.title_tag"
+  description    String?
+  displayOrder   Int        @default(0) @map("display_order")
+  isEnabled      Boolean    @default(true) @map("is_enabled")
+  planAccess     PlanAccess @default(BOTH) @map("plan_access")
+  severity       Severity   @default(MEDIUM)
+  category       String?
+  score          Float      @default(1) // max points for this check
+  weight         Float      @default(1)
+  passLabel      String     @default("Yes") @map("pass_label")
+  failLabel      String     @default("No") @map("fail_label")
+  warningLabel   String     @default("Partial") @map("warning_label")
+  helpArticleUrl String?    @map("help_article_url")
+  adminNotes     String?    @map("admin_notes")
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt      DateTime?  @map("deleted_at") @db.Timestamptz
+
+  section     ReportSection     @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  criteria    AuditCriteria?
+  suggestions AuditSuggestion[]
+  results     AuditResult[]
+
+  @@unique([sectionId, fieldKey])
+  @@index([sectionId, displayOrder])
+  @@map("audit_fields")
+}
+
+// One criteria row per field. `config` is a Zod-validated, inspection-type-
+// specific JSON payload (selector, attribute, header name, PSI metric key,
+// JsonLogic rules for RULES_EVALUATOR, …). No executable code is ever stored.
+model AuditCriteria {
+  id            String           @id @default(uuid()) @db.Uuid
+  fieldId       String           @unique @map("field_id") @db.Uuid
+  inspectionType InspectionType  @map("inspection_type")
+  dataSource    String           @default("HTML") @map("data_source") // HTML | RENDERED_DOM | HEADERS | PSI | ROBOTS | SITEMAP | NETWORK
+  selector      String? // CSS selector or extraction rule
+  attributeName String?          @map("attribute_name")
+  operator      CriteriaOperator
+  expectedValue String?          @map("expected_value")
+  minValue      Float?           @map("min_value")
+  maxValue      Float?           @map("max_value")
+  regexPattern  String?          @map("regex_pattern") // validated + complexity-capped (ReDoS guard)
+  caseSensitive Boolean          @default(false) @map("case_sensitive")
+
+  // Optional secondary band: if pass fails but this passes → WARNING not FAIL
+  warnOperator      CriteriaOperator? @map("warn_operator")
+  warnExpectedValue String?           @map("warn_expected_value")
+  warnMinValue      Float?            @map("warn_min_value")
+  warnMaxValue      Float?            @map("warn_max_value")
+
+  config    Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  field AuditField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@map("audit_criteria")
+}
+
+// Messages + suggestions per outcome status. One row per (field, status).
+// Templates support {{domain}} {{actualValue}} {{expectedValue}} {{count}}
+// {{minimum}} {{maximum}} {{pageTitle}} {{sectionName}} — interpolated
+// server-side with a strict whitelist, output escaped.
+model AuditSuggestion {
+  id         String      @id @default(uuid()) @db.Uuid
+  fieldId    String      @map("field_id") @db.Uuid
+  forStatus  CheckStatus @map("for_status")
+  message    String // e.g. "Your page is missing a title tag."
+  suggestion String? // actionable recommendation
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+
+  field AuditField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@unique([fieldId, forStatus])
+  @@map("audit_suggestions")
+}
+
+// ----------------------------------------------------------------
+// WEBSITES, REPORTS, RESULTS
+// ----------------------------------------------------------------
+
+model Website {
+  id             String    @id @default(uuid()) @db.Uuid
+  url            String // normalized origin + path
+  domain         String
+  faviconUrl     String?   @map("favicon_url")
+  userId         String?   @map("user_id") @db.Uuid // null for anonymous, claimed on signup
+  firstAuditedAt DateTime? @map("first_audited_at") @db.Timestamptz
+  lastAuditedAt  DateTime? @map("last_audited_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reports Report[]
+
+  @@unique([userId, url])
+  @@index([userId])
+  @@index([domain])
+  @@map("websites")
+}
+
+model Report {
+  id                 String        @id @default(uuid()) @db.Uuid
+  publicId           String        @unique @map("public_id") // unguessable URL id (nanoid 21)
+  websiteId          String        @map("website_id") @db.Uuid
+  userId             String?       @map("user_id") @db.Uuid
+  anonymousSessionId String?       @map("anonymous_session_id") @db.Uuid
+  templateVersionId  String        @map("template_version_id") @db.Uuid
+  status             ReportStatus  @default(QUEUED)
+  currentStage       AuditStage?   @map("current_stage")
+  progressPercent    Int           @default(0) @map("progress_percent")
+  planAtGeneration   UserPlan      @default(FREE) @map("plan_at_generation")
+  overallScore       Float?        @map("overall_score")
+  grade              String? // "Excellent" | "Good" | "Needs Improvement" | "Poor" (from settings)
+  mobileScore        Float?        @map("mobile_score")
+  desktopScore       Float?        @map("desktop_score")
+  passedCount        Int           @default(0) @map("passed_count")
+  failedCount        Int           @default(0) @map("failed_count")
+  warningCount       Int           @default(0) @map("warning_count")
+  criticalIssueCount Int           @default(0) @map("critical_issue_count")
+  screenshotUrl      String?       @map("screenshot_url")
+  errorMessage       String?       @map("error_message") // safe, user-facing failure summary
+  startedAt          DateTime?     @map("started_at") @db.Timestamptz
+  completedAt        DateTime?     @map("completed_at") @db.Timestamptz
+  expiresAt          DateTime?     @map("expires_at") @db.Timestamptz // anonymous reports expire
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt          DateTime?     @map("deleted_at") @db.Timestamptz
+
+  website          Website               @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  user             User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anonymousSession AnonymousSession?     @relation(fields: [anonymousSessionId], references: [id], onDelete: SetNull)
+  templateVersion  TemplateVersion       @relation(fields: [templateVersionId], references: [id], onDelete: Restrict)
+  sectionResults   ReportSectionResult[]
+  auditResults     AuditResult[]
+  rawData          WebsiteRawData?
+  pageSpeedResults PageSpeedResult[]
+  snapshot         ReportSnapshot?
+
+  @@index([userId, createdAt])
+  @@index([websiteId])
+  @@index([anonymousSessionId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("reports")
+}
+
+model ReportSectionResult {
+  id           String      @id @default(uuid()) @db.Uuid
+  reportId     String      @map("report_id") @db.Uuid
+  sectionId    String      @map("section_id") @db.Uuid
+  score        Float?
+  maxScore     Float?      @map("max_score")
+  status       CheckStatus @default(INFO) // rollup
+  summary      String?
+  passedCount  Int         @default(0) @map("passed_count")
+  failedCount  Int         @default(0) @map("failed_count")
+  warningCount Int         @default(0) @map("warning_count")
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  report  Report        @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  section ReportSection @relation(fields: [sectionId], references: [id], onDelete: Restrict)
+  results AuditResult[]
+
+  @@unique([reportId, sectionId])
+  @@index([reportId])
+  @@map("report_section_results")
+}
+
+model AuditResult {
+  id                String      @id @default(uuid()) @db.Uuid
+  reportId          String      @map("report_id") @db.Uuid
+  sectionResultId   String      @map("section_result_id") @db.Uuid
+  fieldId           String      @map("field_id") @db.Uuid
+  status            CheckStatus
+  severity          Severity
+  actualValue       String?     @map("actual_value") // detected value, stringified
+  expectedSummary   String?     @map("expected_summary") // human-readable expected condition
+  evidence          Json? // snippets, counts, urls
+  renderedMessage   String?     @map("rendered_message") // interpolated message
+  renderedSuggestion String?    @map("rendered_suggestion") // interpolated suggestion
+  score             Float       @default(0)
+  maxScore          Float       @default(0) @map("max_score")
+  isQuickWin        Boolean     @default(false) @map("is_quick_win")
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  report        Report              @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  sectionResult ReportSectionResult @relation(fields: [sectionResultId], references: [id], onDelete: Cascade)
+  field         AuditField          @relation(fields: [fieldId], references: [id], onDelete: Restrict)
+
+  @@unique([reportId, fieldId])
+  @@index([reportId])
+  @@index([sectionResultId])
+  @@map("audit_results")
+}
+
+// Full extracted crawl snapshot — checks can be re-evaluated without re-crawling
+model WebsiteRawData {
+  id                  String   @id @default(uuid()) @db.Uuid
+  reportId            String   @unique @map("report_id") @db.Uuid
+  httpStatus          Int?     @map("http_status")
+  finalUrl            String?  @map("final_url")
+  redirectChain       Json?    @map("redirect_chain") // string[]
+  responseHeaders     Json?    @map("response_headers") // Record<string,string>
+  extracted           Json     @default("{}") // titles, metas, headings, links, images, OG, JSON-LD, forms, CTAs, trust signals, counts, ratios …
+  robotsTxt           String?  @map("robots_txt")
+  sitemapInfo         Json?    @map("sitemap_info")
+  brokenLinks         Json?    @map("broken_links") // Array<{url, status}>
+  htmlSizeBytes       Int?     @map("html_size_bytes")
+  fetchDurationMs     Int?     @map("fetch_duration_ms")
+  renderedWithBrowser Boolean  @default(false) @map("rendered_with_browser")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("website_raw_data")
+}
+
+model PageSpeedResult {
+  id                 String      @id @default(uuid()) @db.Uuid
+  reportId           String      @map("report_id") @db.Uuid
+  strategy           PsiStrategy
+  performanceScore   Float?      @map("performance_score")
+  accessibilityScore Float?      @map("accessibility_score")
+  bestPracticesScore Float?      @map("best_practices_score")
+  seoScore           Float?      @map("seo_score")
+  fcpMs              Float?      @map("fcp_ms")
+  lcpMs              Float?      @map("lcp_ms")
+  tbtMs              Float?      @map("tbt_ms")
+  cls                Float?
+  speedIndexMs       Float?      @map("speed_index_ms")
+  ttiMs              Float?      @map("tti_ms")
+  inpMs              Float?      @map("inp_ms")
+  serverResponseMs   Float?      @map("server_response_ms")
+  opportunities      Json?
+  diagnostics        Json?
+  passedAudits       Json?       @map("passed_audits")
+  rawResponse        Json?       @map("raw_response") // debug only, never sent to client
+  fetchedAt          DateTime    @default(now()) @map("fetched_at") @db.Timestamptz
+  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, strategy])
+  @@index([reportId])
+  @@map("page_speed_results")
+}
+
+// Immutable JSON snapshot of the final rendered report payload (history/PDF)
+model ReportSnapshot {
+  id        String   @id @default(uuid()) @db.Uuid
+  reportId  String   @unique @map("report_id") @db.Uuid
+  payload   Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("report_snapshots")
+}
+
+// ----------------------------------------------------------------
+// BILLING
+// ----------------------------------------------------------------
+
+model Plan {
+  id                   String   @id @default(uuid()) @db.Uuid
+  key                  UserPlan @unique
+  name                 String
+  description          String?
+  priceMonthlyCents    Int      @default(0) @map("price_monthly_cents")
+  priceYearlyCents     Int      @default(0) @map("price_yearly_cents")
+  currency             String   @default("usd")
+  stripeProductId      String?  @map("stripe_product_id")
+  stripePriceMonthlyId String?  @map("stripe_price_monthly_id")
+  stripePriceYearlyId  String?  @map("stripe_price_yearly_id")
+  auditLimitPerMonth   Int      @default(3) @map("audit_limit_per_month")
+  isActive             Boolean  @default(true) @map("is_active")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  features      PlanFeature[]
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model PlanFeature {
+  id           String   @id @default(uuid()) @db.Uuid
+  planId       String   @map("plan_id") @db.Uuid
+  featureKey   String   @map("feature_key") // pdf_download | history | rerun | full_evidence …
+  label        String // marketing copy on pricing page
+  isIncluded   Boolean  @default(true) @map("is_included")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, featureKey])
+  @@map("plan_features")
+}
+
+model Subscription {
+  id                   String             @id @default(uuid()) @db.Uuid
+  userId               String             @map("user_id") @db.Uuid
+  planId               String             @map("plan_id") @db.Uuid
+  stripeCustomerId     String?            @map("stripe_customer_id")
+  stripeSubscriptionId String?            @unique @map("stripe_subscription_id")
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart   DateTime?          @map("current_period_start") @db.Timestamptz
+  currentPeriodEnd     DateTime?          @map("current_period_end") @db.Timestamptz
+  cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
+  canceledAt           DateTime?          @map("canceled_at") @db.Timestamptz
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime           @updatedAt @map("updated_at") @db.Timestamptz
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan     Plan      @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payments Payment[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id                    String        @id @default(uuid()) @db.Uuid
+  userId                String        @map("user_id") @db.Uuid
+  subscriptionId        String?       @map("subscription_id") @db.Uuid
+  stripePaymentIntentId String?       @unique @map("stripe_payment_intent_id")
+  stripeChargeId        String?       @map("stripe_charge_id")
+  amountCents           Int           @map("amount_cents")
+  currency              String        @default("usd")
+  status                PaymentStatus
+  failureReason         String?       @map("failure_reason")
+  paidAt                DateTime?     @map("paid_at") @db.Timestamptz
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  invoices     Invoice[]
+
+  @@index([userId])
+  @@map("payments")
+}
+
+model Invoice {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  paymentId        String?   @map("payment_id") @db.Uuid
+  stripeInvoiceId  String?   @unique @map("stripe_invoice_id")
+  invoiceNumber    String?   @map("invoice_number")
+  amountCents      Int       @map("amount_cents")
+  currency         String    @default("usd")
+  pdfUrl           String?   @map("pdf_url") // Stripe-hosted invoice PDF
+  hostedInvoiceUrl String?   @map("hosted_invoice_url")
+  issuedAt         DateTime? @map("issued_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  payment Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("invoices")
+}
+
+// Stripe webhook idempotency ledger
+model StripeWebhookEvent {
+  id            String    @id @default(uuid()) @db.Uuid
+  stripeEventId String    @unique @map("stripe_event_id")
+  type          String
+  processedAt   DateTime? @map("processed_at") @db.Timestamptz
+  payload       Json?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("stripe_webhook_events")
+}
+
+// ----------------------------------------------------------------
+// SYSTEM
+// ----------------------------------------------------------------
+
+// Key-value settings. Typed access layer validates each key with Zod.
+// `isSecret` values are AES-256-GCM encrypted (SETTINGS_ENCRYPTION_KEY),
+// masked in all API responses.
+// Seeded keys: product_name, support_email, free_audit_limit,
+// premium_audit_limit, anonymous_report_expiration_days, score_ranges,
+// pagespeed_api_key (secret), maintenance_mode, terms_url, privacy_url,
+// cookie_policy_url, anonymous_audits_per_hour_ip
+model SystemSetting {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  value       Json?
+  isSecret    Boolean  @default(false) @map("is_secret")
+  description String?
+  updatedById String?  @map("updated_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  updatedBy User? @relation("SettingUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("system_settings")
+}
+
+model BrandingSetting {
+  id           String   @id @default(uuid()) @db.Uuid
+  productName  String   @default("AuditFlow") @map("product_name")
+  logoUrl      String?  @map("logo_url")
+  logoDarkUrl  String?  @map("logo_dark_url")
+  faviconUrl   String?  @map("favicon_url")
+  primaryColor String   @default("#4F46E5") @map("primary_color") // indigo-600
+  accentColor  String   @default("#7C3AED") @map("accent_color") // premium purple
+  updatedById  String?  @map("updated_by_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  updatedBy User? @relation("BrandingUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("branding_settings")
+}
+
+// Editable transactional email templates. Variables use the same {{placeholder}}
+// whitelist convention as suggestions ({{name}}, {{verifyUrl}}, {{resetUrl}}, …).
+model EmailTemplate {
+  id                 String   @id @default(uuid()) @db.Uuid
+  key                String   @unique // verify_email | reset_password | report_ready | welcome | payment_failed
+  name               String
+  subject            String
+  htmlBody           String   @map("html_body")
+  textBody           String?  @map("text_body")
+  availableVariables Json     @default("[]") @map("available_variables") // string[]
+  isEnabled          Boolean  @default(true) @map("is_enabled")
+  updatedById        String?  @map("updated_by_id") @db.Uuid
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  updatedBy User? @relation("EmailTplUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("email_templates")
+}
+
+// Every admin mutation: who, what, before/after
+model AdminActivityLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String // e.g. "section.update", "user.plan_change"
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  before     Json?
+  after      Json?
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  actor User? @relation("LogActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("admin_activity_logs")
+}
+
+// External API consumption tracking (PSI, Browserless, Resend, Stripe)
+model ApiUsage {
+  id           String   @id @default(uuid()) @db.Uuid
+  provider     String // pagespeed | browserless | resend | stripe
+  endpoint     String?
+  userId       String?  @map("user_id") @db.Uuid
+  reportId     String?  @map("report_id") @db.Uuid
+  statusCode   Int?     @map("status_code")
+  durationMs   Int?     @map("duration_ms")
+  success      Boolean  @default(true)
+  errorMessage String?  @map("error_message")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([provider, createdAt])
+  @@index([userId])
+  @@map("api_usage")
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  title     String
+  body      String?
+  linkUrl   String?          @map("link_url")
+  readAt    DateTime?        @map("read_at") @db.Timestamptz
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
