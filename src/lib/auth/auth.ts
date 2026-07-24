@@ -17,6 +17,27 @@ const LOCKOUT_MINUTES = 15;
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    // Node-runtime jwt callback: extends the edge-safe one with a DB re-read
+    // on the `update` trigger, so plan/verification changes (e.g. after a
+    // Stripe upgrade) refresh the token authoritatively — never from client input.
+    async jwt(params) {
+      const token = await authConfig.callbacks.jwt(params);
+      if (params.trigger === "update" && token.id) {
+        const fresh = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: { plan: true, role: true, emailVerifiedAt: true },
+        });
+        if (fresh) {
+          token.plan = fresh.plan;
+          token.role = fresh.role;
+          token.isEmailVerified = fresh.emailVerifiedAt !== null;
+        }
+      }
+      return token;
+    },
+  },
   providers: [
     Credentials({
       credentials: {

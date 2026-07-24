@@ -7,6 +7,7 @@ import { ANON_COOKIE_NAME } from "@/lib/auth/claim";
 import { validateAndNormalizeUrl } from "@/lib/security/url";
 import { assertPublicHost } from "@/lib/security/ssrf";
 import { getSetting } from "@/services/settings/get";
+import { getAllowance } from "@/services/audits/allowance";
 import { enqueueAuditJob } from "@/services/jobs/enqueue";
 import type { UserPlan } from "@prisma/client";
 
@@ -69,25 +70,16 @@ export async function createAudit(
     userId = requester.userId;
     plan = requester.plan;
 
-    // Monthly allowance
-    const limit =
-      plan === "PREMIUM"
-        ? await getSetting("premium_audit_limit")
-        : await getSetting("free_audit_limit");
-    const monthStart = new Date();
-    monthStart.setDate(1);
-    monthStart.setHours(0, 0, 0, 0);
-    const used = await db.report.count({
-      where: { userId, createdAt: { gte: monthStart }, deletedAt: null },
-    });
-    if (used >= limit) {
+    // Monthly allowance (shared with the dashboard so displayed = enforced)
+    const allowance = await getAllowance(userId, plan);
+    if (allowance.remaining <= 0) {
       return {
         ok: false,
         status: 429,
         error:
           plan === "PREMIUM"
-            ? `You've reached your monthly limit of ${limit} audits.`
-            : `You've used all ${limit} free audits this month. Upgrade to Premium for more.`,
+            ? `You've reached your monthly limit of ${allowance.limit} audits.`
+            : `You've used all ${allowance.limit} free audits this month. Upgrade to Premium for more.`,
       };
     }
 

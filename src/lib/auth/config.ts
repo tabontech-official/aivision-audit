@@ -46,7 +46,7 @@ export const authConfig = {
 
       return true;
     },
-    jwt({ token, user, trigger, session }) {
+    jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
@@ -54,12 +54,10 @@ export const authConfig = {
         token.sessionId = user.sessionId;
         token.isEmailVerified = user.isEmailVerified;
       }
-      // Allow session refresh after plan/role changes (update() call)
-      if (trigger === "update" && session) {
-        if (session.plan) token.plan = session.plan;
-        if (session.isEmailVerified !== undefined)
-          token.isEmailVerified = session.isEmailVerified;
-      }
+      // NOTE: the `update` trigger is handled in auth.ts, which re-reads the
+      // plan/verification from the DB (authoritative). We intentionally do NOT
+      // trust client-supplied session values here — a spoofed update() must
+      // not be able to grant Premium.
       return token;
     },
     session({ session, token }) {

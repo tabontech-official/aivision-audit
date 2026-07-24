@@ -32,6 +32,7 @@
     "react-hook-form": "^7.54.2",
     "resend": "^4.1.2",
     "server-only": "^0.0.1",
+    "stripe": "^18.5.0",
     "undici": "^8.8.0",
     "zod": "^3.24.1"
   },

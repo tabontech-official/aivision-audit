@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Lock, CheckCircle2, ArrowRight } from "lucide-react";
+import { Lock } from "lucide-react";
 import { db } from "@/lib/db/client";
 import { getReportForViewer } from "@/services/reports/access";
 
@@ -31,51 +31,28 @@ export default async function ReportGatePage({
     redirect(`/analyze/${publicId}`);
   }
 
-  const website = await db.website.findUnique({
-    where: { id: report.websiteId },
-    select: { domain: true },
-  });
-  const domain = website?.domain ?? "your website";
-
-  // Authenticated owners go to the dashboard report view (Phase 7)
+  // Authenticated owners (and admins) get the full report view in the dashboard.
   if (viewer === "owner-user" || viewer === "admin") {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center px-4">
-        <div className="card w-full max-w-md p-8 text-center">
-          <CheckCircle2 className="mx-auto h-10 w-10 text-success-600" aria-hidden />
-          <h1 className="mt-4 text-xl font-bold text-ink">Audit complete</h1>
-          <p className="mt-2 text-sm text-ink-secondary">
-            Your report for <strong>{domain}</strong> is saved to your account.
-          </p>
-          {report.overallScore !== null && (
-            <div className="mx-auto mt-6 flex h-24 w-24 items-center justify-center rounded-full border-8 border-brand-600 text-3xl font-bold text-ink">
-              {Math.round(report.overallScore)}
-            </div>
-          )}
-          <p className="mt-6 text-xs text-ink-muted">
-            The full report view arrives in Phase 7 of the build.
-          </p>
-          <Link
-            href="/dashboard"
-            className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
-          >
-            Go to dashboard
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
-        </div>
-      </main>
-    );
+    redirect(`/dashboard/reports/${publicId}`);
   }
 
-  // Anonymous owner: locked preview + conversion CTA
-  const teaserSections = [
-    "Page Speed",
-    "SEO",
-    "Technical SEO",
-    "Accessibility",
-    "Mobile Usability",
-    "Security",
-  ];
+  const [website, snapshot] = await Promise.all([
+    db.website.findUnique({
+      where: { id: report.websiteId },
+      select: { domain: true },
+    }),
+    db.reportSnapshot.findUnique({ where: { reportId: report.id } }),
+  ]);
+  const domain = website?.domain ?? "your website";
+
+  // Anonymous owner: locked preview + conversion CTA.
+  // Section names come from the actual snapshot (titles only — never detail).
+  const snapshotSections =
+    (snapshot?.payload as { sections?: Array<{ name: string }> } | null)?.sections ?? [];
+  const teaserSections =
+    snapshotSections.length > 0
+      ? snapshotSections.map((s) => s.name).slice(0, 8)
+      : ["Page Speed", "SEO", "Technical SEO", "Accessibility", "Mobile Usability", "Security"];
 
   return (
     <main className="flex min-h-screen flex-col items-center px-4 py-12">
