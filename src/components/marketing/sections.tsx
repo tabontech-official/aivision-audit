@@ -26,26 +26,79 @@ import { AuditUrlForm } from "./audit-url-form";
 export function Hero() {
   return (
     <section className="relative overflow-hidden">
+
+      {/* Background */}
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(79,70,229,0.08),transparent)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(37,99,235,0.08),transparent)]"
         aria-hidden
       />
-      <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-20 pt-16 text-center sm:px-6 sm:pt-24">
-        <span className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
-          <Sparkles className="h-3.5 w-3.5" aria-hidden />
-          Professional website audits in minutes
-        </span>
-        <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-ink sm:text-5xl">
-          See What Is Holding Your Website Back
-        </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-secondary">
-          Run a professional website audit in minutes. Get clear scores, actionable
-          recommendations, and a prioritized improvement plan.
-        </p>
-        <div className="mt-9 flex w-full justify-center">
-          <AuditUrlForm size="lg" />
+
+
+      <div className="relative mx-auto flex max-w-6xl flex-col items-center px-4 pb-20 pt-16 text-center sm:px-6 sm:pt-24">
+
+
+        {/* Badge */}
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm">
+          <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+          AI-powered website intelligence
         </div>
+
+
+
+        {/* Heading */}
+        <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-6xl">
+
+          Understand What’s
+          <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
+            {" "}Holding Your Website Back
+          </span>
+
+        </h1>
+
+
+
+        {/* Description */}
+        <p className="mt-6 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+
+          Get a complete website audit covering SEO, performance,
+          accessibility, and conversion issues with clear fixes you can act on.
+
+        </p>
+
+
+
+        {/* Audit Input */}
+        <div className="mt-8 w-full max-w-xl">
+          <AuditUrlForm size="md" />
+        </div>
+
+
+
+        {/* Trust line */}
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-slate-500">
+
+          <span className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            No signup required
+          </span>
+
+          <span className="text-slate-300">•</span>
+
+          <span>
+            Instant website analysis
+          </span>
+
+          <span className="text-slate-300">•</span>
+
+          <span>
+            Actionable recommendations
+          </span>
+
+        </div>
+
+
       </div>
+
     </section>
   );
 }
@@ -55,22 +108,61 @@ export function Hero() {
 /* ------------------------------------------------------------------ */
 
 const CRED_STATS = [
-  { value: "60+", label: "Automated checks per audit" },
-  { value: "10", label: "Audit categories covered" },
-  { value: "2 min", label: "Average time to results" },
-  { value: "Free", label: "To run your first audit" },
+  { value: "60+", label: "Automated Checks Per Audit" },
+  { value: "10", label: "Audit Categories Covered" },
+  { value: "2 min", label: "Average Time To Results" },
 ];
 
 export function CredibilityStrip() {
   return (
-    <section className="border-y border-slate-200 bg-white">
-      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 md:grid-cols-4">
-        {CRED_STATS.map((s) => (
-          <div key={s.label} className="text-center">
-            <div className="text-2xl font-bold text-ink">{s.value}</div>
-            <div className="mt-1 text-sm text-ink-muted">{s.label}</div>
-          </div>
-        ))}
+    <section className="border-y border-slate-100 bg-white">
+      <div className="mx-auto max-w-6xl px-4 py-20 text-center sm:px-6">
+
+        {/* Heading */}
+        <h2 className="mx-auto max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+          The Most{" "}
+          <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
+            Powerful
+          </span>{" "}
+          Website Audit Platform
+        </h2>
+
+
+        {/* Sub heading */}
+        <p className="mt-4 text-xl font-medium text-slate-900 sm:text-2xl">
+          Trusted by businesses and agencies to improve website performance
+        </p>
+
+
+        {/* Optional logo row */}
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-x-12 gap-y-6 opacity-40">
+          <span className="text-lg font-semibold">Agency</span>
+          <span className="text-lg font-semibold">SaaS</span>
+          <span className="text-lg font-semibold">Commerce</span>
+          <span className="text-lg font-semibold">Startups</span>
+          <span className="text-lg font-semibold">Teams</span>
+        </div>
+
+
+        {/* Stats */}
+        <div className="mt-14 flex flex-col items-center justify-center gap-10 sm:flex-row sm:gap-24">
+
+          {CRED_STATS.map((s) => (
+            <div key={s.label} className="text-center">
+
+              <div className="text-4xl font-bold tracking-tight text-blue-700 sm:text-5xl">
+                {s.value}
+              </div>
+
+              <div className="mt-2 text-sm font-medium text-slate-400">
+                {s.label}
+              </div>
+
+            </div>
+          ))}
+
+        </div>
+
       </div>
     </section>
   );
@@ -115,26 +207,91 @@ const FEATURES = [
 
 export function Features() {
   return (
-    <section id="features" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-      <div className="mx-auto max-w-2xl text-center">
-        <h2 className="text-3xl font-bold tracking-tight text-ink">
-          Everything that matters, in one report
-        </h2>
-        <p className="mt-4 text-ink-secondary">
-          AuditFlow inspects your live website the way search engines, browsers, and real
-          visitors experience it — then explains exactly what to fix.
-        </p>
-      </div>
-      <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {FEATURES.map((f) => (
-          <div key={f.title} className="card p-6 transition-shadow hover:shadow-card-hover">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-              <f.icon className="h-5 w-5" aria-hidden />
-            </div>
-            <h3 className="mt-4 font-semibold text-ink">{f.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-ink-secondary">{f.body}</p>
+    <section
+      id="features"
+      className="border-y border-slate-100 bg-white"
+    >
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+
+
+        {/* Heading */}
+        <div className="mx-auto max-w-3xl text-center">
+
+          <div className="mb-5 text-sm font-semibold uppercase tracking-wider text-blue-600">
+            FEATURES
           </div>
-        ))}
+
+
+          <h2 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+            Everything you need to
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
+              {" "}improve your website
+            </span>
+          </h2>
+
+
+          <p className="mt-5 text-lg leading-relaxed text-slate-600">
+            AuditFlow analyzes your website from every important angle and
+            gives you clear recommendations instead of confusing reports.
+          </p>
+
+        </div>
+
+
+
+        {/* Feature Grid */}
+        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
+
+          {FEATURES.map((f) => (
+
+            <div
+              key={f.title}
+              className="
+                group rounded-3xl border border-slate-200
+                bg-white p-7 transition-all
+                hover:-translate-y-1
+                hover:border-slate-300
+                hover:shadow-xl
+              "
+            >
+
+              {/* Icon */}
+              <div
+                className="
+                  flex h-12 w-12 items-center justify-center
+                  rounded-2xl bg-blue-50 text-blue-600
+                  transition group-hover:bg-blue-600
+                  group-hover:text-white
+                "
+              >
+                <f.icon
+                  className="h-6 w-6"
+                  aria-hidden
+                />
+              </div>
+
+
+
+              {/* Content */}
+              <h3 className="mt-6 text-lg font-semibold text-slate-950">
+                {f.title}
+              </h3>
+
+
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                {f.body}
+              </p>
+
+
+            </div>
+
+          ))}
+
+
+        </div>
+
+
       </div>
     </section>
   );
@@ -164,33 +321,149 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="border-y border-slate-200 bg-white">
+    <section
+      id="how-it-works"
+      className="border-y border-slate-100 bg-white"
+    >
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-ink">How it works</h2>
-          <p className="mt-4 text-ink-secondary">From URL to action plan in three steps.</p>
-        </div>
-        <div className="mt-12 grid gap-8 md:grid-cols-3">
-          {STEPS.map((s, i) => (
-            <div key={s.title} className="relative text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 text-white shadow-card">
-                <s.icon className="h-6 w-6" aria-hidden />
-              </div>
-              <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-brand-600">
-                Step {i + 1}
-              </div>
-              <h3 className="mt-2 font-semibold text-ink">{s.title}</h3>
-              <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-ink-secondary">
-                {s.body}
-              </p>
+
+        <div className="grid items-center gap-14 md:grid-cols-2">
+
+
+          {/* Left */}
+          <div>
+
+            <div className="mb-5 text-sm font-semibold uppercase tracking-wider text-blue-600">
+              HOW IT WORKS
             </div>
-          ))}
+
+            <h2 className="max-w-xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+              From website URL
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
+                {" "}to growth insights
+              </span>
+            </h2>
+
+            <p className="mt-5 max-w-lg text-lg leading-relaxed text-slate-600">
+              Run a complete website audit and discover exactly what needs
+              improvement with clear, actionable recommendations.
+            </p>
+
+
+            <div className="mt-8 space-y-5">
+
+              {STEPS.map((s, i) => (
+                <div
+                  key={s.title}
+                  className="flex items-start gap-4"
+                >
+
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
+                    <s.icon className="h-5 w-5" aria-hidden />
+                  </div>
+
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-blue-600">
+                        Step {i + 1}
+                      </span>
+
+                      <h3 className="font-semibold text-slate-900">
+                        {s.title}
+                      </h3>
+                    </div>
+
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                      {s.body}
+                    </p>
+                  </div>
+
+                </div>
+              ))}
+
+            </div>
+
+          </div>
+
+
+
+          {/* Right Demo Card */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
+
+            <div className="rounded-xl bg-slate-100 px-5 py-4 text-sm text-slate-500">
+              https://yourwebsite.com
+            </div>
+
+
+            <div className="mt-5 rounded-2xl bg-blue-50 p-5">
+
+              <div className="text-sm font-semibold text-blue-700">
+                AUDIT REPORT
+              </div>
+
+              <div className="mt-3 text-xl font-semibold text-slate-900">
+                Website Score: 86/100
+              </div>
+
+
+              <div className="mt-5 space-y-3 text-sm">
+
+                <div className="flex justify-between">
+                  <span className="text-slate-600">
+                    SEO Health
+                  </span>
+                  <strong>
+                    92%
+                  </strong>
+                </div>
+
+
+                <div className="flex justify-between">
+                  <span className="text-slate-600">
+                    Performance
+                  </span>
+                  <strong>
+                    84%
+                  </strong>
+                </div>
+
+
+                <div className="flex justify-between">
+                  <span className="text-slate-600">
+                    Accessibility
+                  </span>
+                  <strong>
+                    90%
+                  </strong>
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div className="mt-5 rounded-2xl border border-dashed border-blue-300 p-5">
+
+              <div className="text-sm font-semibold text-blue-700">
+                AUDIT INSIGHT
+              </div>
+
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                Your website is performing well, but improving page speed and
+                content structure can increase visibility.
+              </p>
+
+            </div>
+
+          </div>
+
         </div>
+
       </div>
     </section>
   );
 }
-
 /* ------------------------------------------------------------------ */
 /* Report preview                                                      */
 /* ------------------------------------------------------------------ */
@@ -198,67 +471,128 @@ export function HowItWorks() {
 export function ReportPreview() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-      <div className="grid items-center gap-12 lg:grid-cols-2">
+      <div className="grid items-center gap-14 lg:grid-cols-2">
+
+
+        {/* Left Content */}
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-ink">
-            A report you can actually act on
+
+          <div className="mb-5 text-sm font-semibold uppercase tracking-wider text-blue-600">
+            SMART REPORTING
+          </div>
+
+
+          <h2 className="max-w-xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+            Reports built for
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
+              {" "}real improvements
+            </span>
           </h2>
-          <p className="mt-4 leading-relaxed text-ink-secondary">
-            No vague grades. Every check shows what we found, what we expected, why it
-            matters, and the specific change that fixes it — ordered by impact.
+
+
+          <p className="mt-5 text-lg leading-relaxed text-slate-600">
+            No confusing scores. Every issue comes with evidence, impact,
+            and clear steps to improve your website.
           </p>
-          <ul className="mt-6 space-y-3">
+
+
+          <ul className="mt-8 space-y-4">
+
             {[
-              "Overall score with per-section breakdowns",
-              "Detected values and evidence for every check",
-              "Plain-English fixes, not jargon",
-              "Quick wins highlighted separately from long-term work",
+              "Overall health score with detailed breakdowns",
+              "Evidence behind every detected issue",
+              "Simple recommendations anyone can follow",
+              "Prioritized fixes based on impact",
             ].map((item) => (
-              <li key={item} className="flex items-start gap-2.5 text-sm text-ink-secondary">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success-600" aria-hidden />
+              <li
+                key={item}
+                className="flex items-start gap-3 text-sm text-slate-700"
+              >
+                <CheckCircle2
+                  className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500"
+                />
                 {item}
               </li>
             ))}
+
           </ul>
+
         </div>
 
-        {/* Illustrative mock report card */}
-        <div className="card overflow-hidden">
-          <div className="border-b border-slate-100 bg-surface-subtle px-5 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-semibold text-ink">example.com</div>
-                <div className="text-xs text-ink-muted">Audited just now</div>
+
+
+        {/* Report Preview Card */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl">
+
+
+          {/* Header */}
+          <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-5">
+
+            <div>
+              <div className="text-sm font-semibold text-slate-900">
+                example.com
               </div>
-              <div className="flex h-14 w-14 items-center justify-center rounded-full border-4 border-warning-500 text-lg font-bold text-ink">
-                72
+
+              <div className="mt-1 text-xs text-slate-500">
+                Audit completed recently
               </div>
             </div>
+
+
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-blue-500 text-xl font-bold text-slate-900">
+              86
+            </div>
+
           </div>
-          <div className="divide-y divide-slate-100">
+
+
+
+          {/* Report Items */}
+          <div className="mt-5 space-y-3">
+
+
             <PreviewRow
-              icon={<CheckCircle2 className="h-4 w-4 text-success-600" />}
-              title="Title tag present"
-              detail="58 characters — good length"
+              icon={
+                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              }
+              title="SEO structure"
+              detail="All important metadata detected"
             />
+
+
             <PreviewRow
-              icon={<AlertTriangle className="h-4 w-4 text-warning-600" />}
-              title="Largest Contentful Paint"
-              detail="3.4s on mobile — aim for under 2.5s"
+              icon={
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+              }
+              title="Page performance"
+              detail="Mobile speed needs improvement"
             />
+
+
             <PreviewRow
-              icon={<XCircle className="h-4 w-4 text-danger-600" />}
-              title="Meta description missing"
-              detail="Add a 120–160 character summary"
+              icon={
+                <XCircle className="h-5 w-5 text-red-500" />
+              }
+              title="Missing optimization"
+              detail="Improve content structure and keywords"
             />
+
+
             <PreviewRow
-              icon={<Lock className="h-4 w-4 text-premium-600" />}
-              title="Conversion analysis"
-              detail="Unlock with Premium"
+              icon={
+                <Lock className="h-5 w-5 text-blue-600" />
+              }
+              title="AI visibility insights"
+              detail="Available with Premium"
               locked
             />
+
           </div>
+
+
         </div>
+
+
       </div>
     </section>
   );
@@ -317,87 +651,195 @@ function PlanCell({ value }: { value: boolean | string }) {
 
 export function Pricing() {
   return (
-    <section id="pricing" className="border-y border-slate-200 bg-white">
+    <section
+      id="pricing"
+      className="border-y border-slate-100 bg-white"
+    >
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-ink">
-            Start free. Upgrade when you need depth.
+
+
+        {/* Header */}
+        <div className="mx-auto max-w-3xl text-center">
+
+          <div className="mb-5 text-sm font-semibold uppercase tracking-wider text-blue-600">
+            PRICING
+          </div>
+
+          <h2 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+            Simple pricing that
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
+              {" "}scales with you
+            </span>
           </h2>
-          <p className="mt-4 text-ink-secondary">
-            Every audit starts with a genuinely useful free report. Premium unlocks the
-            complete picture.
+
+          <p className="mt-5 text-lg text-slate-600">
+            Start with a free audit and upgrade when you need deeper insights,
+            reports, and advanced recommendations.
           </p>
+
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-2">
+
+
+        {/* Cards */}
+        <div className="mx-auto mt-12 grid max-w-5xl gap-6 md:grid-cols-2">
+
+
           {/* Free */}
-          <div className="card flex flex-col p-7">
-            <h3 className="font-semibold text-ink">Free</h3>
-            <div className="mt-3 flex items-baseline gap-1">
-              <span className="text-4xl font-bold text-ink">$0</span>
-              <span className="text-sm text-ink-muted">/ forever</span>
+          <div className="rounded-3xl border border-slate-200 bg-white p-8">
+
+            <h3 className="text-lg font-semibold text-slate-900">
+              Free
+            </h3>
+
+
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className="text-5xl font-semibold text-slate-950">
+                $0
+              </span>
+
+              <span className="text-sm text-slate-500">
+                / forever
+              </span>
             </div>
-            <p className="mt-3 text-sm text-ink-secondary">
-              Essential checks to understand where your website stands.
+
+
+            <p className="mt-4 text-sm leading-relaxed text-slate-600">
+              Essential website checks to understand your current performance.
             </p>
+
+
             <Link
               href="/signup"
-              className="mt-6 rounded-lg border border-slate-300 px-4 py-2.5 text-center text-sm font-medium text-ink transition-colors hover:bg-slate-50"
+              className="mt-8 block rounded-xl border border-slate-300 px-5 py-3 text-center text-sm font-medium text-slate-900 transition hover:bg-slate-50"
             >
               Create free account
             </Link>
+
+
+            <ul className="mt-8 space-y-3 text-sm text-slate-600">
+
+              <li>✓ Basic SEO checks</li>
+              <li>✓ Performance overview</li>
+              <li>✓ Limited recommendations</li>
+
+            </ul>
+
           </div>
+
+
+
 
           {/* Premium */}
-          <div className="relative flex flex-col rounded-card border-2 border-premium-600 bg-white p-7 shadow-card">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-premium-600 px-3 py-0.5 text-xs font-semibold text-white">
-              Most popular
-            </span>
-            <h3 className="font-semibold text-ink">Premium</h3>
-            <div className="mt-3 flex items-baseline gap-1">
-              <span className="text-4xl font-bold text-ink">$29</span>
-              <span className="text-sm text-ink-muted">/ month</span>
+          <div className="relative rounded-3xl border-2 border-blue-600 bg-white p-8 shadow-xl">
+
+
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-1 text-xs font-semibold text-white">
+              MOST POPULAR
             </div>
-            <p className="mt-3 text-sm text-ink-secondary">
-              The complete audit toolkit: every section, full evidence, PDF exports, and
-              history.
+
+
+            <h3 className="text-lg font-semibold text-slate-900">
+              Premium
+            </h3>
+
+
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className="text-5xl font-semibold text-slate-950">
+                $29
+              </span>
+
+              <span className="text-sm text-slate-500">
+                / month
+              </span>
+            </div>
+
+
+            <p className="mt-4 text-sm leading-relaxed text-slate-600">
+              Complete audit insights with detailed reports, evidence,
+              exports, and history.
             </p>
+
+
             <Link
               href="/signup"
-              className="mt-6 rounded-lg bg-premium-700 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-premium-600"
+              className="mt-8 block rounded-xl bg-black px-5 py-3 text-center text-sm font-medium text-white transition hover:bg-slate-800"
             >
-              Start with Premium
+              Start Premium
             </Link>
+
+
+            <ul className="mt-8 space-y-3 text-sm text-slate-600">
+
+              <li>✓ Full audit sections</li>
+              <li>✓ Detailed recommendations</li>
+              <li>✓ PDF exports</li>
+              <li>✓ Audit history</li>
+
+            </ul>
+
+
           </div>
+
+
         </div>
 
-        {/* Comparison table */}
-        <div className="mx-auto mt-12 max-w-4xl overflow-x-auto">
-          <table className="w-full min-w-[520px] border-collapse text-left">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="py-3 pr-4 text-sm font-semibold text-ink">What you get</th>
-                <th className="w-28 py-3 text-center text-sm font-semibold text-ink">Free</th>
-                <th className="w-28 py-3 text-center text-sm font-semibold text-premium-700">
+
+
+        {/* Comparison */}
+        <div className="mx-auto mt-14 max-w-5xl overflow-hidden rounded-2xl border border-slate-200">
+
+          <table className="w-full text-left">
+
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-900">
+                  Features
+                </th>
+
+                <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900">
+                  Free
+                </th>
+
+                <th className="px-6 py-4 text-center text-sm font-semibold text-blue-600">
                   Premium
                 </th>
               </tr>
             </thead>
+
+
             <tbody>
+
               {PLAN_ROWS.map((row) => (
-                <tr key={row.label} className="border-b border-slate-100">
-                  <td className="py-3 pr-4 text-sm text-ink-secondary">{row.label}</td>
-                  <td className="py-3 text-center">
+                <tr
+                  key={row.label}
+                  className="border-t border-slate-100"
+                >
+
+                  <td className="px-6 py-4 text-sm text-slate-600">
+                    {row.label}
+                  </td>
+
+
+                  <td className="px-6 py-4 text-center">
                     <PlanCell value={row.free} />
                   </td>
-                  <td className="py-3 text-center">
+
+
+                  <td className="px-6 py-4 text-center">
                     <PlanCell value={row.premium} />
                   </td>
+
                 </tr>
               ))}
+
             </tbody>
+
           </table>
+
         </div>
+
+
       </div>
     </section>
   );
@@ -436,98 +878,271 @@ const FAQS = [
 
 export function Faq() {
   return (
-    <section id="faq" className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
-      <h2 className="text-center text-3xl font-bold tracking-tight text-ink">
-        Frequently asked questions
-      </h2>
-      <div className="mt-10 divide-y divide-slate-200">
-        {FAQS.map((f) => (
-          <details key={f.q} className="group py-4">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left font-medium text-ink [&::-webkit-details-marker]:hidden">
-              {f.q}
-              <span className="text-xl leading-none text-ink-muted transition-transform group-open:rotate-45">
-                +
-              </span>
-            </summary>
-            <p className="mt-3 text-sm leading-relaxed text-ink-secondary">{f.a}</p>
-          </details>
-        ))}
+    <section
+      id="faq"
+      className="border-y border-slate-100 bg-white"
+    >
+      <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6">
+
+
+        {/* Heading */}
+        <div className="text-center">
+
+          <div className="mb-5 text-sm font-semibold uppercase tracking-wider text-blue-600">
+            FAQ
+          </div>
+
+
+          <h2 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+            Frequently asked
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
+              {" "}questions
+            </span>
+          </h2>
+
+
+          <p className="mt-4 text-lg text-slate-600">
+            Everything you need to know about website audits and reports.
+          </p>
+
+        </div>
+
+
+
+        {/* FAQ Items */}
+        <div className="mt-12 overflow-hidden rounded-3xl border border-slate-200 bg-white">
+
+          {FAQS.map((f) => (
+            <details
+              key={f.q}
+              className="group border-b border-slate-100 last:border-none"
+            >
+
+              <summary
+                className="
+                  flex cursor-pointer list-none items-center justify-between
+                  gap-5 px-6 py-5 text-left text-base font-medium
+                  text-slate-900 transition
+                  hover:bg-slate-50
+                  [&::-webkit-details-marker]:hidden
+                "
+              >
+
+                {f.q}
+
+
+                <span
+                  className="
+                    flex h-7 w-7 shrink-0 items-center justify-center
+                    rounded-full border border-slate-200
+                    text-lg text-slate-500
+                    transition-transform
+                    group-open:rotate-45
+                  "
+                >
+                  +
+                </span>
+
+              </summary>
+
+
+              <div className="px-6 pb-5">
+
+                <p className="max-w-3xl text-sm leading-relaxed text-slate-600">
+                  {f.a}
+                </p>
+
+              </div>
+
+
+            </details>
+          ))}
+
+        </div>
+
+
       </div>
     </section>
   );
 }
-
 /* ------------------------------------------------------------------ */
 /* Final CTA                                                           */
 /* ------------------------------------------------------------------ */
 
 export function FinalCta() {
   return (
-    <section className="border-t border-slate-200 bg-gradient-to-b from-white to-brand-50/50">
-      <div className="mx-auto flex max-w-6xl flex-col items-center px-4 py-20 text-center sm:px-6">
-        <h2 className="max-w-2xl text-3xl font-bold tracking-tight text-ink">
-          Find out what&apos;s holding your website back — right now
-        </h2>
-        <p className="mt-4 max-w-xl text-ink-secondary">
-          Your first audit takes two minutes and costs nothing.
-        </p>
-        <div className="mt-8 flex w-full justify-center">
-          <AuditUrlForm size="lg" />
+    <section className="border-t border-slate-100 bg-white">
+      <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+
+        <div className="relative overflow-hidden rounded-3xl bg-slate-950 px-6 py-16 text-center sm:px-12">
+
+          {/* Background glow */}
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_50%_at_50%_0%,rgba(59,130,246,0.35),transparent)]"
+            aria-hidden
+          />
+
+
+          <div className="relative">
+
+            <h2 className="mx-auto max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+              Find what&apos;s holding your website back
+              <span className="bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent">
+                {" "}today
+              </span>
+            </h2>
+
+
+            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+              Run your first audit in minutes. No setup, no credit card,
+              just clear insights and actionable improvements.
+            </p>
+
+
+            <div className="mt-8 flex justify-center">
+              <AuditUrlForm size="lg" />
+            </div>
+
+
+          </div>
+
         </div>
+
       </div>
     </section>
   );
 }
 
+
 /* ------------------------------------------------------------------ */
-/* Footer                                                              */
+/* Footer */
 /* ------------------------------------------------------------------ */
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="flex flex-col items-start justify-between gap-8 md:flex-row">
-          <div className="max-w-xs">
+    <footer className="border-t border-slate-100 bg-white">
+
+      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+
+
+        <div className="grid gap-10 md:grid-cols-4">
+
+
+          {/* Brand */}
+          <div className="md:col-span-2">
+
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
+
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-sm font-bold text-white">
                 A
               </div>
-              <span className="font-semibold tracking-tight text-ink">AuditFlow</span>
+
+              <span className="font-semibold tracking-tight text-slate-950">
+                AuditFlow
+              </span>
+
             </div>
-            <p className="mt-3 text-sm text-ink-muted">
-              Professional website audits with clear scores and actionable recommendations.
+
+
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-600">
+              Professional website audits with clear scores,
+              actionable recommendations, and growth insights.
             </p>
+
           </div>
-          <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
-            <div>
-              <div className="text-sm font-semibold text-ink">Product</div>
-              <ul className="mt-3 space-y-2 text-sm text-ink-secondary">
-                <li><a href="#features" className="hover:text-ink">Features</a></li>
-                <li><a href="#how-it-works" className="hover:text-ink">How It Works</a></li>
-                <li><a href="#pricing" className="hover:text-ink">Pricing</a></li>
-              </ul>
+
+
+
+
+          {/* Product */}
+          <div>
+
+            <div className="text-sm font-semibold text-slate-950">
+              Product
             </div>
-            <div>
-              <div className="text-sm font-semibold text-ink">Account</div>
-              <ul className="mt-3 space-y-2 text-sm text-ink-secondary">
-                <li><Link href="/login" className="hover:text-ink">Log in</Link></li>
-                <li><Link href="/signup" className="hover:text-ink">Sign up</Link></li>
-              </ul>
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-ink">Legal</div>
-              <ul className="mt-3 space-y-2 text-sm text-ink-secondary">
-                <li><Link href="/terms" className="hover:text-ink">Terms of Service</Link></li>
-                <li><Link href="/privacy" className="hover:text-ink">Privacy Policy</Link></li>
-              </ul>
-            </div>
+
+            <ul className="mt-4 space-y-3 text-sm text-slate-600">
+
+              <li>
+                <a href="#features" className="hover:text-black">
+                  Features
+                </a>
+              </li>
+
+              <li>
+                <a href="#how-it-works" className="hover:text-black">
+                  How It Works
+                </a>
+              </li>
+
+              <li>
+                <a href="#pricing" className="hover:text-black">
+                  Pricing
+                </a>
+              </li>
+
+            </ul>
+
           </div>
+
+
+
+
+          {/* Account */}
+          <div>
+
+            <div className="text-sm font-semibold text-slate-950">
+              Account
+            </div>
+
+            <ul className="mt-4 space-y-3 text-sm text-slate-600">
+
+              <li>
+                <Link href="/login" className="hover:text-black">
+                  Log in
+                </Link>
+              </li>
+
+              <li>
+                <Link href="/signup" className="hover:text-black">
+                  Sign up
+                </Link>
+              </li>
+
+            </ul>
+
+          </div>
+
+
         </div>
-        <div className="mt-10 border-t border-slate-100 pt-6 text-sm text-ink-muted">
-          © {new Date().getFullYear()} AuditFlow. All rights reserved.
+
+
+
+        {/* Bottom */}
+        <div className="mt-12 flex flex-col gap-3 border-t border-slate-100 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+
+          <span>
+            © {new Date().getFullYear()} AuditFlow. All rights reserved.
+          </span>
+
+
+          <div className="flex gap-5">
+
+            <Link href="/terms" className="hover:text-black">
+              Terms
+            </Link>
+
+            <Link href="/privacy" className="hover:text-black">
+              Privacy
+            </Link>
+
+          </div>
+
         </div>
+
+
       </div>
+
     </footer>
   );
 }
