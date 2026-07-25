@@ -213,13 +213,18 @@ export function BuilderClient({ data }: { data: BuilderData }) {
       setLocalSections((prev) => optimisticUpdate(prev));
     }
     startTransition(async () => {
-      const result = await fn();
-      if (result.ok) {
-        if (result.message) setFlash({ kind: "success", text: result.message });
-        router.refresh();
-      } else {
-        setFlash({ kind: "error", text: result.error ?? "Something went wrong." });
-        router.refresh();
+      try {
+        const result = await fn();
+        if (result.ok) {
+          if (result.message) setFlash({ kind: "success", text: result.message });
+        } else {
+          setFlash({ kind: "error", text: result.error ?? "Something went wrong." });
+        }
+      } catch (err) {
+        setFlash({
+          kind: "error",
+          text: err instanceof Error ? err.message : "Network error performing action.",
+        });
       }
     });
   };

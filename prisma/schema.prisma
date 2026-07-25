@@ -913,3 +913,32 @@ model Notification {
   @@index([userId, readAt])
   @@map("notifications")
 }
+
+enum LogLevel {
+  INFO
+  WARN
+  ERROR
+  DEBUG
+}
+
+// Complete App Execution Logs — capturing pipeline stages, stuck audits, errors & stack traces
+model SystemExecutionLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  level        LogLevel @default(INFO)
+  category     String   // e.g. "AUDIT_PIPELINE", "FETCH_HTML", "PLAYWRIGHT_RENDER", "PAGESPEED_API", "SYSTEM_ERROR"
+  message      String
+  reportId     String?  @map("report_id") @db.Uuid
+  websiteUrl   String?  @map("website_url")
+  stage        String?  // AuditStage string representation
+  durationMs   Int?     @map("duration_ms")
+  meta         Json?    // Context payload, HTTP headers, request params
+  stackTrace   String?  @map("stack_trace")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([level])
+  @@index([category])
+  @@index([reportId])
+  @@index([createdAt])
+  @@map("system_execution_logs")
+}
+

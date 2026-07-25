@@ -14,51 +14,81 @@ import { storeScreenshot } from "@/services/inspection/screenshot-store";
 import { fetchPsiBoth, type PsiMetrics } from "@/services/pagespeed/client";
 import { evaluateReport } from "@/services/reports/evaluate-report";
 import { buildAndStoreSnapshot } from "@/services/reports/snapshot";
+import { logExecution } from "@/services/system-log/log";
 import type { AuditStage, Prisma } from "@prisma/client";
-
-/**
- * The audit pipeline. Called by the QStash worker route (prod) or inline
- * after intake (dev). Idempotent per report: re-invocation of a COMPLETED/
- * FAILED report is a no-op; a PROCESSING report continues from raw data
- * already persisted (QStash retry safety).
- *
- * Phase 4 scope: collect and persist everything (raw data, PSI, screenshot)
- * and finish with a provisional PSI-based score. Phase 6 adds the criteria
- * evaluation engine that turns raw data into per-check results and the real
- * weighted score.
- */
 
 async function setStage(
   reportId: string,
   stage: AuditStage,
   progress: number,
+  websiteUrl?: string,
 ): Promise<void> {
   await db.report.update({
     where: { id: reportId },
     data: { currentStage: stage, progressPercent: progress },
   });
+
+  await logExecution({
+    level: "INFO",
+    category: "AUDIT_PIPELINE",
+    message: `Stage transitioned to ${stage} (${progress}%)`,
+    reportId,
+    websiteUrl,
+    stage,
+    meta: { progress },
+  });
 }
 
-async function fail(reportId: string, userMessage: string, detail?: string): Promise<void> {
-  console.error(`[audit:${reportId}] FAILED: ${userMessage}${detail ? ` (${detail})` : ""}`);
+async function fail(
+  reportId: string,
+  userMessage: string,
+  detail?: string,
+  websiteUrl?: string,
+): Promise<void> {
+  const fullDetail = `${userMessage}${detail ? ` (${detail})` : ""}`;
+  console.error(`[audit:${reportId}] FAILED: ${fullDetail}`);
+  
   await db.report.update({
     where: { id: reportId },
     data: { status: "FAILED", errorMessage: userMessage, completedAt: new Date() },
   });
+
+  await logExecution({
+    level: "ERROR",
+    category: "AUDIT_PIPELINE",
+    message: `Audit FAILED: ${userMessage}`,
+    reportId,
+    websiteUrl,
+    meta: { detail, userMessage },
+  });
 }
 
 export async function runAudit(reportId: string): Promise<void> {
+  const startTime = Date.now();
   const report = await db.report.findUnique({
     where: { id: reportId },
     include: { website: true },
   });
 
   if (!report) {
-    console.error(`[audit:${reportId}] report not found`);
+    await logExecution({
+      level: "ERROR",
+      category: "AUDIT_PIPELINE",
+      message: `Audit failed to start: report not found in DB`,
+      reportId,
+    });
     return;
   }
+
   // Idempotency: terminal states are never re-run
   if (report.status === "COMPLETED" || report.status === "FAILED" || report.status === "PARTIAL") {
+    await logExecution({
+      level: "WARN",
+      category: "AUDIT_PIPELINE",
+      message: `Audit execution skipped: report already in terminal status (${report.status})`,
+      reportId,
+      websiteUrl: report.website.url,
+    });
     return;
   }
 
@@ -67,48 +97,90 @@ export async function runAudit(reportId: string): Promise<void> {
     data: { status: "PROCESSING", startedAt: report.startedAt ?? new Date() },
   });
 
+  await logExecution({
+    level: "INFO",
+    category: "AUDIT_PIPELINE",
+    message: `Starting audit pipeline for website ${report.website.url}`,
+    reportId,
+    websiteUrl: report.website.url,
+  });
+
   try {
     /* ---- Stage 1: validate + connect + fetch ---- */
-    await setStage(reportId, "CONNECTING", 5);
+    await setStage(reportId, "CONNECTING", 5, report.website.url);
 
     const validated = validateAndNormalizeUrl(report.website.url);
     if (!validated.ok) {
-      return fail(reportId, "This website address is not valid.", validated.error);
+      return fail(reportId, "This website address is not valid.", validated.error, report.website.url);
     }
     const ssrf = await assertPublicHost(validated.value.hostname);
     if (!ssrf.ok) {
-      return fail(reportId, "This address cannot be audited.");
+      return fail(reportId, "This address cannot be audited.", ssrf.error, report.website.url);
     }
 
-    await setStage(reportId, "FETCHING_HTML", 12);
+    await setStage(reportId, "FETCHING_HTML", 12, validated.value.url);
+    const fetchStart = Date.now();
     const fetched = await fetchPage(validated.value.url);
+    const fetchDuration = Date.now() - fetchStart;
+
     if (!fetched.ok) {
-      return fail(reportId, fetched.userMessage, fetched.error);
+      return fail(reportId, fetched.userMessage, fetched.error, validated.value.url);
     }
     const page = fetched.page;
 
+    await logExecution({
+      level: "INFO",
+      category: "FETCH_HTML",
+      message: `Successfully fetched HTML (HTTP ${page.httpStatus}, ${page.htmlSizeBytes} bytes, ${fetchDuration}ms)`,
+      reportId,
+      websiteUrl: page.finalUrl,
+      durationMs: fetchDuration,
+      meta: { httpStatus: page.httpStatus, htmlSize: page.htmlSizeBytes, finalUrl: page.finalUrl },
+    });
+
     /* ---- Stage 2: optional JS rendering + screenshot ---- */
-    await setStage(reportId, "RENDERING", 22);
+    await setStage(reportId, "RENDERING", 22, page.finalUrl);
+    const renderStart = Date.now();
     const rendered = await renderPage(page.finalUrl);
+    const renderDuration = Date.now() - renderStart;
 
     let screenshotUrl: string | null = null;
     if (rendered?.screenshotJpegBase64) {
       screenshotUrl = await storeScreenshot(reportId, rendered.screenshotJpegBase64);
     }
 
-    /* ---- Stage 3: extraction (rendered DOM when richer, else static) ---- */
-    await setStage(reportId, "INSPECTING_METADATA", 32);
+    await logExecution({
+      level: rendered ? "INFO" : "WARN",
+      category: "PLAYWRIGHT_RENDER",
+      message: rendered
+        ? `Rendered page with headless browser (${renderDuration}ms)`
+        : `Headless rendering skipped or timed out; proceeding with static HTML`,
+      reportId,
+      websiteUrl: page.finalUrl,
+      durationMs: renderDuration,
+      meta: { rendered: rendered !== null, screenshotCaptured: !!screenshotUrl },
+    });
 
-    // Prefer rendered HTML when it is substantially larger (SPA hydration);
-    // network truth (status/headers) always comes from the raw fetch.
+    /* ---- Stage 3: extraction (rendered DOM when richer, else static) ---- */
+    await setStage(reportId, "INSPECTING_METADATA", 32, page.finalUrl);
+
     const useRendered =
       rendered !== null && rendered.html.length > page.html.length * 1.2;
     const extracted = extractFromHtml(
       useRendered ? { ...page, html: rendered.html } : page,
     );
 
+    await logExecution({
+      level: "INFO",
+      category: "AUDIT_PIPELINE",
+      message: `Extracted page metadata (Title: "${extracted.page.title ?? "none"}", Links: ${extracted.links.internal.length} internal, Images: ${extracted.images.count})`,
+      reportId,
+      websiteUrl: page.finalUrl,
+      meta: { title: extracted.page.title, h1Count: extracted.headings.h1.length },
+    });
+
     /* ---- Stage 4: robots / sitemap / broken links ---- */
-    await setStage(reportId, "CHECKING_SEO", 42);
+    await setStage(reportId, "CHECKING_SEO", 42, page.finalUrl);
     const origin = new URL(page.finalUrl).origin;
     extracted.robots = await checkRobotsTxt(origin);
     extracted.sitemap = await checkSitemap(origin, extracted.robots.content);
@@ -118,9 +190,6 @@ export async function runAudit(reportId: string): Promise<void> {
     );
 
     /* ---- Persist raw data checkpoint ---- */
-    // Store the HTML the extraction ran against (rendered when used) so
-    // criteria can be re-evaluated — including selector checks — without
-    // re-crawling. Capped at 2MB to bound row size.
     const htmlForStorage = (useRendered ? rendered!.html : page.html).slice(0, 2 * 1024 * 1024);
     const rawDataPayload = {
       httpStatus: page.httpStatus,
@@ -142,7 +211,6 @@ export async function runAudit(reportId: string): Promise<void> {
       create: { reportId, ...rawDataPayload },
     });
 
-    // Update website metadata (favicon, audit timestamps)
     await db.website.update({
       where: { id: report.websiteId },
       data: {
@@ -153,8 +221,10 @@ export async function runAudit(reportId: string): Promise<void> {
     });
 
     /* ---- Stage 5: PageSpeed Insights ---- */
-    await setStage(reportId, "CHECKING_SPEED", 55);
+    await setStage(reportId, "CHECKING_SPEED", 55, page.finalUrl);
+    const psiStart = Date.now();
     const psi = await fetchPsiBoth(page.finalUrl, reportId);
+    const psiDuration = Date.now() - psiStart;
 
     const storePsi = async (metrics: PsiMetrics | null) => {
       if (!metrics) return;
@@ -185,19 +255,44 @@ export async function runAudit(reportId: string): Promise<void> {
     };
     await Promise.all([storePsi(psi.mobile), storePsi(psi.desktop)]);
 
-    /* ---- Stages 6-9: cosmetic progress through remaining stages ---- */
-    await setStage(reportId, "REVIEWING_ACCESSIBILITY", 68);
-    await setStage(reportId, "ANALYZING_MOBILE", 76);
-    await setStage(reportId, "CHECKING_CONVERSION", 82);
-    await setStage(reportId, "PREPARING_RECOMMENDATIONS", 90);
+    await logExecution({
+      level: (psi.mobile || psi.desktop) ? "INFO" : "WARN",
+      category: "PAGESPEED_API",
+      message: (psi.mobile || psi.desktop)
+        ? `PageSpeed Insights fetched successfully (Mobile score: ${psi.mobile?.performanceScore ?? "N/A"}, Desktop score: ${psi.desktop?.performanceScore ?? "N/A"})`
+        : `PageSpeed Insights API returned no metrics or failed`,
+      reportId,
+      websiteUrl: page.finalUrl,
+      durationMs: psiDuration,
+      meta: { mobileScore: psi.mobile?.performanceScore, desktopScore: psi.desktop?.performanceScore },
+    });
+
+    /* ---- Stages 6-9: progress stages ---- */
+    await setStage(reportId, "REVIEWING_ACCESSIBILITY", 68, page.finalUrl);
+    await setStage(reportId, "ANALYZING_MOBILE", 76, page.finalUrl);
+    await setStage(reportId, "CHECKING_CONVERSION", 82, page.finalUrl);
+    await setStage(reportId, "PREPARING_RECOMMENDATIONS", 90, page.finalUrl);
 
     /* ---- Stage 10: evaluate all criteria, score, snapshot, finalize ---- */
-    await setStage(reportId, "GENERATING_REPORT", 96);
+    await setStage(reportId, "GENERATING_REPORT", 96, page.finalUrl);
 
+    const evalStart = Date.now();
     const summary = await evaluateReport(reportId);
     await buildAndStoreSnapshot(reportId);
+    const evalDuration = Date.now() - evalStart;
+
+    await logExecution({
+      level: "INFO",
+      category: "CRITERIA_EVAL",
+      message: `Criteria evaluation completed in ${evalDuration}ms (Pass: ${summary.passedCount}, Fail: ${summary.failedCount}, Warn: ${summary.warningCount})`,
+      reportId,
+      websiteUrl: page.finalUrl,
+      durationMs: evalDuration,
+      meta: { overallScore: summary.overallScore, grade: summary.grade },
+    });
 
     const psiFailed = !psi.mobile && !psi.desktop;
+    const totalDuration = Date.now() - startTime;
 
     await db.report.update({
       where: { id: reportId },
@@ -220,16 +315,34 @@ export async function runAudit(reportId: string): Promise<void> {
       },
     });
 
-    console.log(
-      `[audit:${reportId}] done (${page.finalUrl}) score=${summary.overallScore} grade=${summary.grade} ` +
-        `pass=${summary.passedCount} fail=${summary.failedCount} warn=${summary.warningCount} psi=${!psiFailed}`,
-    );
+    await logExecution({
+      level: "INFO",
+      category: "AUDIT_PIPELINE",
+      message: `Audit pipeline COMPLETED successfully in ${totalDuration}ms (Overall score: ${summary.overallScore}/100, Grade: ${summary.grade})`,
+      reportId,
+      websiteUrl: page.finalUrl,
+      durationMs: totalDuration,
+      meta: { overallScore: summary.overallScore, grade: summary.grade, status: psiFailed ? "PARTIAL" : "COMPLETED" },
+    });
   } catch (err) {
+    const totalDuration = Date.now() - startTime;
+    await logExecution({
+      level: "ERROR",
+      category: "AUDIT_PIPELINE",
+      message: `Audit pipeline CRASHED with uncaught error after ${totalDuration}ms`,
+      reportId,
+      websiteUrl: report.website.url,
+      durationMs: totalDuration,
+      error: err,
+    });
+
     const message = err instanceof Error ? err.message : String(err);
     await fail(
       reportId,
       "Something went wrong while auditing this website. Please try again.",
       message.slice(0, 300),
+      report.website.url,
     );
   }
 }
+
