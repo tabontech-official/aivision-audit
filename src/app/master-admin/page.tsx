@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
 
 export const metadata: Metadata = { title: "Overview" };
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function MasterAdminOverview() {
   const admin = await requireMasterAdmin();

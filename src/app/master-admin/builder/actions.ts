@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { auth } from "@/lib/auth/auth";
@@ -7,6 +8,7 @@ import {
   sectionInputSchema,
   fieldInputSchema,
   testCriterionSchema,
+  type FieldInput,
 } from "@/lib/validation/builder";
 import { logAdminActivity } from "@/services/audit-log/log";
 import { ensureDraftVersion, cloneVersionAsDraft } from "@/services/builder/draft";
@@ -716,3 +718,141 @@ export async function testCriterionAction(
     },
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* JSON Import                                                         */
+/* ------------------------------------------------------------------ */
+
+export async function importSectionJsonAction(jsonContent: string): Promise<BuilderResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonContent);
+  } catch {
+    return { ok: false, error: "Invalid JSON format. Please ensure the file contains valid JSON." };
+  }
+
+  const draft = await ensureDraftVersion();
+  if (!draft) return { ok: false, error: "No default template exists. Run the seed first." };
+
+  // Validate basic section properties
+  const sectionParsed = sectionInputSchema.safeParse(parsed);
+  if (!sectionParsed.success) {
+    return {
+      ok: false,
+      error: `Section validation failed: ${sectionParsed.error.issues[0]?.message ?? "Invalid section structure"}`,
+    };
+  }
+
+  const sectionData = sectionParsed.data;
+
+  // Check if slug is taken in current draft version
+  const slugTaken = await db.reportSection.findFirst({
+    where: { templateVersionId: draft.id, slug: sectionData.slug, deletedAt: null },
+  });
+  if (slugTaken) {
+    return { ok: false, error: `A section with slug "${sectionData.slug}" already exists in the current draft.` };
+  }
+
+  const maxSectionOrder = await db.reportSection.aggregate({
+    where: { templateVersionId: draft.id, deletedAt: null },
+    _max: { displayOrder: true },
+  });
+
+  const rawFields = Array.isArray((parsed as Record<string, unknown>).fields)
+    ? ((parsed as Record<string, unknown>).fields as unknown[])
+    : [];
+
+  // Parse and validate all fields before writing to DB
+  const validatedFields: FieldInput[] = [];
+  for (let i = 0; i < rawFields.length; i++) {
+    const fRes = fieldInputSchema.safeParse(rawFields[i]);
+    if (!fRes.success) {
+      return {
+        ok: false,
+        error: `Field #${i + 1} validation failed: ${fRes.error.issues[0]?.message ?? "Invalid field structure"}`,
+      };
+    }
+    validatedFields.push(fRes.data);
+  }
+
+  // Create section and fields inside database transaction
+  const createdSection = await db.$transaction(async (tx) => {
+    const newSection = await tx.reportSection.create({
+      data: {
+        templateVersionId: draft.id,
+        ...sectionData,
+        displayOrder: (maxSectionOrder._max.displayOrder ?? 0) + 1,
+      },
+    });
+
+    for (let i = 0; i < validatedFields.length; i++) {
+      const fieldData = validatedFields[i]!;
+      const { criteria, messages, ...fieldScalar } = fieldData;
+
+      await tx.auditField.create({
+        data: {
+          sectionId: newSection.id,
+          ...fieldScalar,
+          displayOrder: i + 1,
+          criteria: {
+            create: {
+              inspectionType: criteria.inspectionType,
+              dataSource: criteria.dataSource,
+              selector: criteria.selector ?? null,
+              attributeName: criteria.attributeName ?? null,
+              operator: criteria.operator,
+              expectedValue: criteria.expectedValue ?? null,
+              minValue: criteria.minValue ?? null,
+              maxValue: criteria.maxValue ?? null,
+              regexPattern: criteria.regexPattern ?? null,
+              caseSensitive: criteria.caseSensitive,
+              warnOperator: criteria.warnOperator ?? null,
+              warnExpectedValue: criteria.warnExpectedValue ?? null,
+              warnMinValue: criteria.warnMinValue ?? null,
+              warnMaxValue: criteria.warnMaxValue ?? null,
+              config: (criteria.config ?? {}) as Prisma.InputJsonValue,
+            },
+          },
+          suggestions: {
+            createMany: {
+              data: [
+                {
+                  forStatus: "PASS",
+                  message: messages.PASS.message ?? "Passed check.",
+                  suggestion: messages.PASS.suggestion ?? null,
+                },
+                {
+                  forStatus: "FAIL",
+                  message: messages.FAIL.message ?? "Failed check.",
+                  suggestion: messages.FAIL.suggestion ?? null,
+                },
+                {
+                  forStatus: "WARNING",
+                  message: messages.WARNING.message ?? "Warning check.",
+                  suggestion: messages.WARNING.suggestion ?? null,
+                },
+              ],
+            },
+          },
+        },
+      });
+    }
+
+    return newSection;
+  });
+
+  await logAdminActivity({
+    actorId: admin.id,
+    action: "section.import_json",
+    entityType: "report_section",
+    entityId: createdSection.id,
+    after: { name: createdSection.name, slug: createdSection.slug, fieldCount: validatedFields.length },
+  });
+
+  revalidatePath(BUILDER_PATH);
+  return { ok: true, message: `Successfully imported section "${createdSection.name}" with ${validatedFields.length} check(s).` };
+}
+

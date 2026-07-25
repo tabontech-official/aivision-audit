@@ -6,7 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { BuilderClient, type BuilderData } from "./builder-client";
 
 export const metadata: Metadata = { title: "Report Builder" };
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function BuilderPage() {
   await requireMasterAdmin();

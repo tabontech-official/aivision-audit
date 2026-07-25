@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -13,6 +13,8 @@ import {
   GripVertical,
   Rocket,
   Lock,
+  FileUp,
+  FileCode,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,7 @@ import {
   duplicateFieldAction,
   reorderFieldsAction,
   publishDraftAction,
+  importSectionJsonAction,
 } from "./actions";
 
 /* ---------- serialized types shared with the server page ---------- */
@@ -115,10 +118,100 @@ export function BuilderClient({ data }: { data: BuilderData }) {
   const [publishOpen, setPublishOpen] = useState(false);
   const [changelog, setChangelog] = useState("");
 
-  const sections = data.draft?.sections ?? [];
+  // JSON Import States
+  const [importOpen, setImportOpen] = useState(false);
+  const [sampleOpen, setSampleOpen] = useState(false);
+  const [jsonText, setJsonText] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
 
-  const run = (fn: () => Promise<{ ok: boolean; message?: string; error?: string }>) => {
+  const sampleSectionJson = JSON.stringify(
+    {
+      name: "Custom Security & Privacy",
+      slug: "custom-security",
+      shortDescription: "Evaluates security headers and privacy policy compliance.",
+      detailedDescription: "Comprehensive security checks ensuring safe user browsing.",
+      icon: "shield",
+      weight: 1.5,
+      contributesToScore: true,
+      planAccess: "BOTH",
+      isEnabled: true,
+      defaultExpanded: true,
+      visibleInReport: true,
+      accentColor: "#059669",
+      adminNotes: "Imported custom section for security auditing",
+      fields: [
+        {
+          name: "HTTPS Enforced",
+          fieldKey: "custom_security.https_check",
+          description: "Ensures site redirects HTTP requests to HTTPS.",
+          planAccess: "BOTH",
+          severity: "HIGH",
+          category: "Security",
+          score: 1,
+          weight: 1,
+          passLabel: "Pass",
+          failLabel: "Fail",
+          warningLabel: "Partial",
+          helpArticleUrl: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security",
+          isEnabled: true,
+          adminNotes: "Checks SSL/TLS enforcement",
+          criteria: {
+            inspectionType: "SSL_CHECK",
+            dataSource: "HTML",
+            operator: "IS_TRUE",
+            caseSensitive: false,
+            configJson: "{}",
+          },
+          messages: {
+            PASS: {
+              message: "Website strictly uses HTTPS.",
+              suggestion: "Keep SSL certificates renewed automatically.",
+            },
+            FAIL: {
+              message: "Website is accessible over insecure HTTP.",
+              suggestion: "Configure 301 redirects from http:// to https:// and install an SSL certificate.",
+            },
+            WARNING: {
+              message: "HTTPS is present but has configuration warnings.",
+              suggestion: "Review TLS configuration and chain certificates.",
+            },
+          },
+        },
+      ],
+    },
+    null,
+    2,
+  );
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) setJsonText(content);
+    };
+    reader.readAsText(file);
+  };
+
+  const [localSections, setLocalSections] = useState<BuilderSection[]>(data.draft?.sections ?? []);
+
+  useEffect(() => {
+    if (data.draft?.sections) {
+      setLocalSections(data.draft.sections);
+    }
+  }, [data.draft?.sections]);
+
+  const sections = localSections;
+
+  const run = (
+    fn: () => Promise<{ ok: boolean; message?: string; error?: string }>,
+    optimisticUpdate?: (prev: BuilderSection[]) => BuilderSection[],
+  ) => {
     setFlash(null);
+    if (optimisticUpdate) {
+      setLocalSections((prev) => optimisticUpdate(prev));
+    }
     startTransition(async () => {
       const result = await fn();
       if (result.ok) {
@@ -126,6 +219,7 @@ export function BuilderClient({ data }: { data: BuilderData }) {
         router.refresh();
       } else {
         setFlash({ kind: "error", text: result.error ?? "Something went wrong." });
+        router.refresh();
       }
     });
   };
@@ -139,19 +233,28 @@ export function BuilderClient({ data }: { data: BuilderData }) {
     });
 
   const moveSection = (index: number, dir: -1 | 1) => {
-    const ids = sections.map((s) => s.id);
     const target = index + dir;
-    if (target < 0 || target >= ids.length) return;
-    [ids[index], ids[target]] = [ids[target]!, ids[index]!];
-    run(() => reorderSectionsAction(ids));
+    if (target < 0 || target >= sections.length) return;
+    const newSections = [...sections];
+    [newSections[index], newSections[target]] = [newSections[target]!, newSections[index]!];
+    const ids = newSections.map((s) => s.id);
+    run(
+      () => reorderSectionsAction(ids),
+      () => newSections,
+    );
   };
 
   const moveField = (section: BuilderSection, index: number, dir: -1 | 1) => {
-    const ids = section.fields.map((f) => f.id);
     const target = index + dir;
-    if (target < 0 || target >= ids.length) return;
-    [ids[index], ids[target]] = [ids[target]!, ids[index]!];
-    run(() => reorderFieldsAction(section.id, ids));
+    if (target < 0 || target >= section.fields.length) return;
+    const newFields = [...section.fields];
+    [newFields[index], newFields[target]] = [newFields[target]!, newFields[index]!];
+    const ids = newFields.map((f) => f.id);
+    run(
+      () => reorderFieldsAction(section.id, ids),
+      (prev) =>
+        prev.map((s) => (s.id === section.id ? { ...s, fields: newFields } : s)),
+    );
   };
 
   return (
@@ -172,12 +275,20 @@ export function BuilderClient({ data }: { data: BuilderData }) {
             )}
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => setSectionModal({ mode: "create" })}>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="secondary" onClick={() => setSampleOpen(true)}>
+            <FileCode className="h-4 w-4" aria-hidden />
+            Sample JSON
+          </Button>
+          <Button type="button" variant="secondary" onClick={() => setImportOpen(true)}>
+            <FileUp className="h-4 w-4" aria-hidden />
+            Import JSON
+          </Button>
+          <Button type="button" variant="secondary" onClick={() => setSectionModal({ mode: "create" })}>
             <Plus className="h-4 w-4" aria-hidden />
             Add Section
           </Button>
-          <Button onClick={() => setPublishOpen(true)} disabled={!data.draft}>
+          <Button type="button" onClick={() => setPublishOpen(true)} disabled={!data.draft}>
             <Rocket className="h-4 w-4" aria-hidden />
             Publish
           </Button>
@@ -262,7 +373,13 @@ export function BuilderClient({ data }: { data: BuilderData }) {
                   </IconButton>
                   <IconButton
                     label={section.isEnabled ? `Disable ${section.name}` : `Enable ${section.name}`}
-                    onClick={() => run(() => toggleSectionAction(section.id))}
+                    onClick={() =>
+                      run(
+                        () => toggleSectionAction(section.id),
+                        (prev) =>
+                          prev.map((s) => (s.id === section.id ? { ...s, isEnabled: !s.isEnabled } : s)),
+                      )
+                    }
                   >
                     <Power className="h-4 w-4" />
                   </IconButton>
@@ -282,7 +399,10 @@ export function BuilderClient({ data }: { data: BuilderData }) {
                       danger
                       onClick={() => {
                         if (confirm(`Delete section "${section.name}" and all its checks?`)) {
-                          run(() => deleteSectionAction(section.id));
+                          run(
+                            () => deleteSectionAction(section.id),
+                            (prev) => prev.filter((s) => s.id !== section.id),
+                          );
                         }
                       }}
                     >
@@ -366,7 +486,22 @@ export function BuilderClient({ data }: { data: BuilderData }) {
                           </IconButton>
                           <IconButton
                             label={field.isEnabled ? `Disable ${field.name}` : `Enable ${field.name}`}
-                            onClick={() => run(() => toggleFieldAction(field.id))}
+                            onClick={() =>
+                              run(
+                                () => toggleFieldAction(field.id),
+                                (prev) =>
+                                  prev.map((s) =>
+                                    s.id === section.id
+                                      ? {
+                                          ...s,
+                                          fields: s.fields.map((f) =>
+                                            f.id === field.id ? { ...f, isEnabled: !f.isEnabled } : f,
+                                          ),
+                                        }
+                                      : s,
+                                  ),
+                              )
+                            }
                           >
                             <Power className="h-3.5 w-3.5" />
                           </IconButton>
@@ -381,7 +516,15 @@ export function BuilderClient({ data }: { data: BuilderData }) {
                             danger
                             onClick={() => {
                               if (confirm(`Delete check "${field.name}"?`)) {
-                                run(() => deleteFieldAction(field.id));
+                                run(
+                                  () => deleteFieldAction(field.id),
+                                  (prev) =>
+                                    prev.map((s) =>
+                                      s.id === section.id
+                                        ? { ...s, fields: s.fields.filter((f) => f.id !== field.id) }
+                                        : s,
+                                    ),
+                                );
                               }
                             }}
                           >
@@ -489,6 +632,145 @@ export function BuilderClient({ data }: { data: BuilderData }) {
               <Rocket className="h-4 w-4" aria-hidden />
               Publish version
             </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Import Section JSON Modal */}
+      <Modal
+        open={importOpen}
+        onClose={() => {
+          setImportOpen(false);
+          setJsonText("");
+          setImportError(null);
+        }}
+        title="Import Section from JSON"
+        wide
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-ink-secondary">
+            Upload a <code className="rounded bg-slate-100 px-1 py-0.5 font-mono text-xs">.json</code> file or paste a section JSON structure containing the section configuration and its fields/checks.
+          </p>
+
+          {importError && <Alert variant="error">{importError}</Alert>}
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-ink-muted mb-1.5">
+              Upload JSON File
+            </label>
+            <input
+              type="file"
+              accept=".json,application/json"
+              onChange={handleFileUpload}
+              className="block w-full text-sm text-ink-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-ink hover:file:bg-slate-200 cursor-pointer"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-ink-muted mb-1.5">
+              Or Paste JSON Content
+            </label>
+            <textarea
+              rows={10}
+              value={jsonText}
+              onChange={(e) => {
+                setJsonText(e.target.value);
+                setImportError(null);
+              }}
+              placeholder="Paste valid section JSON here..."
+              className="w-full font-mono text-xs rounded-lg border border-slate-300 p-3 text-ink focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            />
+          </div>
+
+          <div className="flex justify-between items-center pt-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setJsonText(sampleSectionJson);
+                setImportError(null);
+              }}
+            >
+              Load Sample Format
+            </Button>
+
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setImportOpen(false);
+                  setJsonText("");
+                  setImportError(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                loading={pending}
+                disabled={!jsonText.trim()}
+                onClick={() => {
+                  setImportError(null);
+                  run(async () => {
+                    const r = await importSectionJsonAction(jsonText);
+                    if (r.ok) {
+                      setImportOpen(false);
+                      setJsonText("");
+                    } else {
+                      setImportError(r.error ?? "Failed to import section.");
+                    }
+                    return r;
+                  });
+                }}
+              >
+                <FileUp className="h-4 w-4" aria-hidden />
+                Import Section
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Sample JSON Format Modal */}
+      <Modal
+        open={sampleOpen}
+        onClose={() => setSampleOpen(false)}
+        title="Sample Section JSON Schema & Format"
+        wide
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-ink-secondary">
+            Below is the required JSON structure for importing a section along with its checks, criteria, and suggestions into the builder.
+          </p>
+
+          <div className="relative">
+            <pre className="max-h-96 overflow-y-auto rounded-lg bg-slate-900 p-4 font-mono text-xs text-emerald-400">
+              {sampleSectionJson}
+            </pre>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(sampleSectionJson);
+                setFlash({ kind: "success", text: "Sample JSON copied to clipboard." });
+                setSampleOpen(false);
+              }}
+              className="absolute top-2 right-2 rounded bg-slate-700 px-2.5 py-1 text-xs font-medium text-white hover:bg-slate-600 transition-colors"
+            >
+              Copy JSON
+            </button>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setSampleOpen(false);
+                setJsonText(sampleSectionJson);
+                setImportOpen(true);
+              }}
+            >
+              Use in Import
+            </Button>
+            <Button onClick={() => setSampleOpen(false)}>Close</Button>
           </div>
         </div>
       </Modal>
