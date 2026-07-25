@@ -6,7 +6,6 @@ import {
   type SerializedSystemLog,
   type SerializedAdminLog,
 } from "./logs-client";
-import type { Prisma } from "@prisma/client";
 
 export const metadata: Metadata = { title: "Logs & System Diagnostics" };
 export const revalidate = 0; // Live logs page — non-cached
@@ -27,7 +26,6 @@ export default async function LogsPage({
   await requireMasterAdmin();
 
   const {
-    tab = "system",
     page = "1",
     search = "",
     level = "",
@@ -37,9 +35,12 @@ export default async function LogsPage({
   const pageNum = Math.max(1, Number(page) || 1);
 
   // System Execution Logs filter construction
-  const systemWhere: Record<string, unknown> = {};
+  type SystemWhere = NonNullable<Parameters<typeof db.systemExecutionLog.findMany>[0]>["where"];
+  type AdminWhere = NonNullable<Parameters<typeof db.adminActivityLog.findMany>[0]>["where"];
+
+  const systemWhere: SystemWhere = {};
   if (level) {
-    systemWhere.level = level;
+    systemWhere.level = level as unknown as SystemWhere["level"];
   }
   if (category) {
     systemWhere.category = category;
@@ -53,7 +54,7 @@ export default async function LogsPage({
   }
 
   // Admin Activity Logs filter construction
-  const adminWhere: Record<string, unknown> = {};
+  const adminWhere: AdminWhere = {};
   if (search) {
     adminWhere.OR = [
       { action: { contains: search, mode: "insensitive" } },
@@ -71,20 +72,20 @@ export default async function LogsPage({
     distinctCategoriesRaw,
   ] = await Promise.all([
     db.systemExecutionLog.findMany({
-      where: systemWhere as any,
+      where: systemWhere,
       orderBy: { createdAt: "desc" },
       skip: (pageNum - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
-    db.systemExecutionLog.count({ where: systemWhere as any }),
+    db.systemExecutionLog.count({ where: systemWhere }),
     db.adminActivityLog.findMany({
-      where: adminWhere as any,
+      where: adminWhere,
       orderBy: { createdAt: "desc" },
       skip: (pageNum - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       include: { actor: { select: { email: true } } },
     }),
-    db.adminActivityLog.count({ where: adminWhere as any }),
+    db.adminActivityLog.count({ where: adminWhere }),
     db.systemExecutionLog.groupBy({
       by: ["category"],
     }),

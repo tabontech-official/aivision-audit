@@ -4,10 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
-  Filter,
   RefreshCw,
   AlertCircle,
-  CheckCircle2,
   Info,
   AlertTriangle,
   ChevronDown,
