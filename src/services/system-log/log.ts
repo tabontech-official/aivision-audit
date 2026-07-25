@@ -1,6 +1,8 @@
 import "server-only";
 import { db } from "@/lib/db/client";
-import type { LogLevel, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+
+export type LogLevel = "INFO" | "WARN" | "ERROR" | "DEBUG";
 
 export type LogCategory =
   | "AUDIT_PIPELINE"
@@ -44,19 +46,24 @@ export async function logExecution(input: SystemLogInput): Promise<void> {
 
     const level: LogLevel = input.level ?? (input.error ? "ERROR" : "INFO");
 
-    await db.systemExecutionLog.create({
-      data: {
-        level,
-        category: input.category,
-        message: errorMessage.slice(0, 1000),
-        reportId: input.reportId ?? null,
-        websiteUrl: input.websiteUrl ?? null,
-        stage: input.stage ?? null,
-        durationMs: input.durationMs ?? null,
-        meta: (input.meta ?? {}) as Prisma.InputJsonValue,
-        stackTrace: stackTrace ? stackTrace.slice(0, 4000) : null,
-      },
-    });
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const dbAny = db as any;
+    if ("systemExecutionLog" in db && dbAny.systemExecutionLog) {
+      await dbAny.systemExecutionLog.create({
+        data: {
+          level,
+          category: input.category,
+          message: errorMessage.slice(0, 1000),
+          reportId: input.reportId ?? null,
+          websiteUrl: input.websiteUrl ?? null,
+          stage: input.stage ?? null,
+          durationMs: input.durationMs ?? null,
+          meta: (input.meta ?? {}) as Prisma.InputJsonValue,
+          stackTrace: stackTrace ? stackTrace.slice(0, 4000) : null,
+        },
+      });
+    }
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     // Also output clean colored log to console stdout/stderr
     const prefix = `[${input.category}]${input.reportId ? ` [report:${input.reportId}]` : ""}`;
