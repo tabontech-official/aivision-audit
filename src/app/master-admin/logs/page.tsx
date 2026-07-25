@@ -37,9 +37,9 @@ export default async function LogsPage({
   const pageNum = Math.max(1, Number(page) || 1);
 
   // System Execution Logs filter construction
-  const systemWhere: Prisma.SystemExecutionLogWhereInput = {};
+  const systemWhere: Record<string, unknown> = {};
   if (level) {
-    systemWhere.level = level as Prisma.EnumLogLevelFilter;
+    systemWhere.level = level;
   }
   if (category) {
     systemWhere.category = category;
@@ -53,7 +53,7 @@ export default async function LogsPage({
   }
 
   // Admin Activity Logs filter construction
-  const adminWhere: Prisma.AdminActivityLogWhereInput = {};
+  const adminWhere: Record<string, unknown> = {};
   if (search) {
     adminWhere.OR = [
       { action: { contains: search, mode: "insensitive" } },
@@ -71,20 +71,20 @@ export default async function LogsPage({
     distinctCategoriesRaw,
   ] = await Promise.all([
     db.systemExecutionLog.findMany({
-      where: systemWhere,
+      where: systemWhere as any,
       orderBy: { createdAt: "desc" },
       skip: (pageNum - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
-    db.systemExecutionLog.count({ where: systemWhere }),
+    db.systemExecutionLog.count({ where: systemWhere as any }),
     db.adminActivityLog.findMany({
-      where: adminWhere,
+      where: adminWhere as any,
       orderBy: { createdAt: "desc" },
       skip: (pageNum - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       include: { actor: { select: { email: true } } },
     }),
-    db.adminActivityLog.count({ where: adminWhere }),
+    db.adminActivityLog.count({ where: adminWhere as any }),
     db.systemExecutionLog.groupBy({
       by: ["category"],
     }),
