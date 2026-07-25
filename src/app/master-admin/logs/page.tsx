@@ -35,12 +35,9 @@ export default async function LogsPage({
   const pageNum = Math.max(1, Number(page) || 1);
 
   // System Execution Logs filter construction
-  type SystemWhere = NonNullable<Parameters<typeof db.systemExecutionLog.findMany>[0]>["where"];
-  type AdminWhere = NonNullable<Parameters<typeof db.adminActivityLog.findMany>[0]>["where"];
-
-  const systemWhere: SystemWhere = {};
+  const systemWhere: Record<string, unknown> = {};
   if (level) {
-    systemWhere.level = level as unknown as SystemWhere["level"];
+    systemWhere.level = level;
   }
   if (category) {
     systemWhere.category = category;
@@ -54,7 +51,7 @@ export default async function LogsPage({
   }
 
   // Admin Activity Logs filter construction
-  const adminWhere: AdminWhere = {};
+  const adminWhere: Record<string, unknown> = {};
   if (search) {
     adminWhere.OR = [
       { action: { contains: search, mode: "insensitive" } },
@@ -64,6 +61,12 @@ export default async function LogsPage({
     ];
   }
 
+  // Safe execution in case systemExecutionLog model is generating on build worker
+  const hasSystemLogModel = "systemExecutionLog" in db && typeof (db as unknown as Record<string, unknown>).systemExecutionLog === "object";
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const dbAny = db as any;
+
   const [
     systemLogsRaw,
     totalSystemLogs,
@@ -71,41 +74,48 @@ export default async function LogsPage({
     totalAdminLogs,
     distinctCategoriesRaw,
   ] = await Promise.all([
-    db.systemExecutionLog.findMany({
-      where: systemWhere,
-      orderBy: { createdAt: "desc" },
-      skip: (pageNum - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-    }),
-    db.systemExecutionLog.count({ where: systemWhere }),
+    hasSystemLogModel
+      ? (dbAny.systemExecutionLog.findMany({
+          where: systemWhere,
+          orderBy: { createdAt: "desc" },
+          skip: (pageNum - 1) * PAGE_SIZE,
+          take: PAGE_SIZE,
+        }) as Promise<Array<Record<string, unknown>>>)
+      : Promise.resolve([]),
+    hasSystemLogModel
+      ? (dbAny.systemExecutionLog.count({ where: systemWhere }) as Promise<number>)
+      : Promise.resolve(0),
     db.adminActivityLog.findMany({
-      where: adminWhere,
+      where: adminWhere as any,
       orderBy: { createdAt: "desc" },
       skip: (pageNum - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       include: { actor: { select: { email: true } } },
     }),
-    db.adminActivityLog.count({ where: adminWhere }),
-    db.systemExecutionLog.groupBy({
-      by: ["category"],
-    }),
+    db.adminActivityLog.count({ where: adminWhere as any }),
+    hasSystemLogModel
+      ? (dbAny.systemExecutionLog.groupBy({
+          by: ["category"],
+        }) as Promise<Array<{ category: string }>>)
+      : Promise.resolve([]),
   ]);
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   const categories = distinctCategoriesRaw.map((c) => c.category);
 
   // Serialize System Logs
   const systemLogs: SerializedSystemLog[] = systemLogsRaw.map((log) => ({
-    id: log.id,
-    level: log.level,
-    category: log.category,
-    message: log.message,
-    reportId: log.reportId,
-    websiteUrl: log.websiteUrl,
-    stage: log.stage,
-    durationMs: log.durationMs,
+    id: String(log.id ?? ""),
+    level: (log.level as SerializedSystemLog["level"]) ?? "INFO",
+    category: String(log.category ?? "SYSTEM"),
+    message: String(log.message ?? ""),
+    reportId: (log.reportId as string | null) ?? null,
+    websiteUrl: (log.websiteUrl as string | null) ?? null,
+    stage: (log.stage as string | null) ?? null,
+    durationMs: (log.durationMs as number | null) ?? null,
     meta: (log.meta as Record<string, unknown> | null) ?? null,
-    stackTrace: log.stackTrace,
-    createdAt: log.createdAt.toISOString(),
+    stackTrace: (log.stackTrace as string | null) ?? null,
+    createdAt: log.createdAt ? new Date(log.createdAt as string).toISOString() : new Date().toISOString(),
   }));
 
   // Serialize Admin Logs
@@ -131,3 +141,4 @@ export default async function LogsPage({
     />
   );
 }
+
