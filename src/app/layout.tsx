@@ -10,11 +10,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "AuditFlow — Professional Website Audits",
+    default: "AuditFlow — Free Shopify Store Audit",
     template: "%s · AuditFlow",
   },
   description:
-    "Run a professional website audit in minutes. Get clear scores, actionable recommendations, and a prioritized improvement plan.",
+    "Audit your Shopify store in minutes: app bloat, theme performance, product schema, SEO and AI readiness — with fixes that name the exact Shopify setting or theme file to change.",
 };
 
 export default function RootLayout({
@@ -24,7 +24,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="min-h-screen font-sans">{children}</body>
+      {/* suppressHydrationWarning: browser extensions (ColorZilla, Grammarly,
+          password managers) write attributes onto <body> before React
+          hydrates, which React reports as a mismatch. This is one level deep —
+          it covers only <body>'s own attributes, never its descendants — so
+          genuine hydration bugs inside the tree are still reported. */}
+      <body className="min-h-screen font-sans" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

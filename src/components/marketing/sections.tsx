@@ -40,7 +40,7 @@ export function Hero() {
         {/* Badge */}
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm">
           <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-          AI-powered website intelligence
+          Built for Shopify stores
         </div>
 
 
@@ -48,9 +48,9 @@ export function Hero() {
         {/* Heading */}
         <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-6xl">
 
-          Understand What’s
+          Free Shopify
           <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
-            {" "}Holding Your Website Back
+            {" "}Store Audit
           </span>
 
         </h1>
@@ -60,8 +60,10 @@ export function Hero() {
         {/* Description */}
         <p className="mt-6 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
 
-          Get a complete website audit covering SEO, performance,
-          accessibility, and conversion issues with clear fixes you can act on.
+          Find what&apos;s slowing your store down, hurting your search rankings, and
+          costing you conversions — app bloat, theme performance, product schema,
+          collection canonicals — with fixes that name the exact Shopify setting
+          or theme file to change.
 
         </p>
 
@@ -79,7 +81,7 @@ export function Hero() {
 
           <span className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            No signup required
+            Free account, no credit card
           </span>
 
           <span className="text-slate-300">•</span>
@@ -120,17 +122,18 @@ export function CredibilityStrip() {
 
         {/* Heading */}
         <h2 className="mx-auto max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-          The Most{" "}
+          The Audit Tool That{" "}
           <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
-            Powerful
+            Understands
           </span>{" "}
-          Website Audit Platform
+          Shopify
         </h2>
 
 
         {/* Sub heading */}
         <p className="mt-4 text-xl font-medium text-slate-900 sm:text-2xl">
-          Trusted by businesses and agencies to improve website performance
+          Generic tools say &ldquo;add a meta description.&rdquo; We say where — down to the
+          theme file.
         </p>
 
 

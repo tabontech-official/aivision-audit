@@ -1,23 +1,30 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db/client";
+import { db, ensureDbConnection, isTransientDbError } from "@/lib/db/client";
 import { auth } from "@/lib/auth/auth";
 import {
   sectionInputSchema,
   fieldInputSchema,
   testCriterionSchema,
-  type FieldInput,
 } from "@/lib/validation/builder";
 import { logAdminActivity } from "@/services/audit-log/log";
 import { ensureDraftVersion, cloneVersionAsDraft } from "@/services/builder/draft";
+import {
+  parseTemplatePayload,
+  importSections,
+  exportDraftTemplate,
+  type ImportOptions,
+  type ImportSectionOutcome,
+} from "@/services/builder/import-export";
 import { validateAndNormalizeUrl } from "@/lib/security/url";
 import { assertPublicHost } from "@/lib/security/ssrf";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { fetchPage } from "@/services/inspection/fetcher";
 import { extractFromHtml } from "@/services/inspection/extract-html";
-import { extractValue } from "@/services/criteria/extract-value";
+import { extractValue, evaluateRules } from "@/services/criteria/extract-value";
 import { evaluateCriteria } from "@/services/criteria/evaluate";
+import { detectPlatform } from "@/services/inspection/detect-platform";
 import type { CheckStatus, Prisma } from "@prisma/client";
 
 export type BuilderResult<T = undefined> =
@@ -238,6 +245,8 @@ export async function duplicateSectionAction(sectionId: string): Promise<Builder
         visibleInReport: section.visibleInReport,
         accentColor: section.accentColor,
         isSystem: false,
+        pillar: section.pillar,
+        appliesWhen: section.appliesWhen,
         adminNotes: section.adminNotes,
       },
     });
@@ -259,6 +268,8 @@ export async function duplicateSectionAction(sectionId: string): Promise<Builder
           failLabel: field.failLabel,
           warningLabel: field.warningLabel,
           helpArticleUrl: field.helpArticleUrl,
+          appliesWhen: field.appliesWhen,
+          pageType: field.pageType,
           adminNotes: field.adminNotes,
         },
       });
@@ -527,6 +538,8 @@ export async function duplicateFieldAction(fieldId: string): Promise<BuilderResu
         failLabel: field.failLabel,
         warningLabel: field.warningLabel,
         helpArticleUrl: field.helpArticleUrl,
+        appliesWhen: field.appliesWhen,
+        pageType: field.pageType,
         adminNotes: field.adminNotes,
       },
     });
@@ -597,38 +610,57 @@ export async function publishDraftAction(changelog: string): Promise<BuilderResu
   const admin = await requireAdmin();
   if (!admin) return { ok: false, error: "Not authorized." };
 
-  const draft = await ensureDraftVersion();
-  if (!draft) return { ok: false, error: "No draft version to publish." };
+  try {
+    // Publishing is a multi-step write. Wake the database and drop any dead
+    // pooled connections first, so a suspended compute fails here instead of
+    // halfway through freezing the version.
+    await ensureDbConnection();
 
-  const enabledSections = await db.reportSection.count({
-    where: { templateVersionId: draft.id, isEnabled: true, deletedAt: null },
-  });
-  if (enabledSections === 0) {
-    return { ok: false, error: "Enable at least one section before publishing." };
+    const draft = await ensureDraftVersion();
+    if (!draft) return { ok: false, error: "No draft version to publish." };
+
+    const enabledSections = await db.reportSection.count({
+      where: { templateVersionId: draft.id, isEnabled: true, deletedAt: null },
+    });
+    if (enabledSections === 0) {
+      return { ok: false, error: "Enable at least one section before publishing." };
+    }
+
+    await db.templateVersion.update({
+      where: { id: draft.id },
+      data: {
+        status: "PUBLISHED",
+        publishedAt: new Date(),
+        publishedById: admin.id,
+        changelog: changelog.trim().slice(0, 500) || null,
+      },
+    });
+
+    // Immediately clone a fresh draft so editing can continue. The clone runs
+    // in its own transaction — if it fails the publish above still stands, and
+    // `ensureDraftVersion()` recreates the draft on the next load.
+    await cloneVersionAsDraft(draft.id, draft.templateId, draft.versionNumber + 1);
+
+    await logAdminActivity({
+      actorId: admin.id,
+      action: "template.publish",
+      entityType: "template_version",
+      entityId: draft.id,
+      after: { versionNumber: draft.versionNumber, changelog },
+    });
+    revalidatePath(BUILDER_PATH);
+    return { ok: true, message: `Version ${draft.versionNumber} published. New audits will use it.` };
+  } catch (err) {
+    if (isTransientDbError(err)) {
+      return {
+        ok: false,
+        error:
+          "Lost the database connection while publishing. Reload the page to see whether the version went live, then try again.",
+      };
+    }
+    const message = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: `Publish failed: ${message.slice(0, 300)}` };
   }
-
-  await db.templateVersion.update({
-    where: { id: draft.id },
-    data: {
-      status: "PUBLISHED",
-      publishedAt: new Date(),
-      publishedById: admin.id,
-      changelog: changelog.trim().slice(0, 500) || null,
-    },
-  });
-
-  // Immediately clone a fresh draft so editing can continue
-  await cloneVersionAsDraft(draft.id, draft.templateId, draft.versionNumber + 1);
-
-  await logAdminActivity({
-    actorId: admin.id,
-    action: "template.publish",
-    entityType: "template_version",
-    entityId: draft.id,
-    after: { versionNumber: draft.versionNumber, changelog },
-  });
-  revalidatePath(BUILDER_PATH);
-  return { ok: true, message: `Version ${draft.versionNumber} published. New audits will use it.` };
 }
 
 /* ------------------------------------------------------------------ */
@@ -641,6 +673,9 @@ export type TestCriterionData = {
   expectedSummary: string;
   fetchedUrl: string;
   httpStatus: number;
+  /** null when no gate was supplied; otherwise whether it passed on this URL */
+  appliesWhenPassed: boolean | null;
+  detectedPlatform: string | null;
 };
 
 export async function testCriterionAction(
@@ -668,12 +703,32 @@ export async function testCriterionAction(
   if (!fetched.ok) return { ok: false, error: fetched.userMessage };
 
   const extracted = extractFromHtml(fetched.page);
+  // Platform detection runs so site.* paths and appliesWhen gates behave as
+  // they will in a real audit (robots/sitemap children are skipped for speed —
+  // headers + HTML carry the strong signals).
+  extracted.site = detectPlatform({
+    html: fetched.page.html,
+    responseHeaders: fetched.page.responseHeaders,
+    robotsContent: null,
+    sitemapChildren: [],
+  });
   // Aux data + PSI are not fetched for tests (kept fast); PSI checks report NOT_APPLICABLE.
   const ctx = {
     extracted,
     html: fetched.page.html,
     psi: { mobile: null, desktop: null },
   };
+
+  // Evaluate the gate the same way evaluate-report does: falsy → the check
+  // would be NOT_APPLICABLE on this site; errors fail open.
+  let appliesWhenPassed: boolean | null = null;
+  if (parsed.data.appliesWhen) {
+    try {
+      appliesWhenPassed = Boolean(evaluateRules(JSON.parse(parsed.data.appliesWhen), extracted));
+    } catch {
+      appliesWhenPassed = true; // fail open, same as the pipeline
+    }
+  }
 
   const c = parsed.data.criteria;
   const criteriaRow = {
@@ -714,6 +769,8 @@ export async function testCriterionAction(
       expectedSummary: outcome.expectedSummary,
       fetchedUrl: fetched.page.finalUrl,
       httpStatus: fetched.page.httpStatus,
+      appliesWhenPassed,
+      detectedPlatform: extracted.site?.platform ?? null,
     },
   };
 }
@@ -722,136 +779,101 @@ export async function testCriterionAction(
 /* JSON Import                                                         */
 /* ------------------------------------------------------------------ */
 
-export async function importSectionJsonAction(jsonContent: string): Promise<BuilderResult> {
+/**
+ * Import one section, an array of sections, or a full exported template.
+ *
+ * A section that already exists (matched on slug, then on name) is *merged*:
+ * the section itself is left exactly as it is and the incoming checks are
+ * appended as a named sub-section. Only checks whose `fieldKey` already exists
+ * are rewritten, because those are the same check with new settings.
+ */
+export async function importSectionJsonAction(
+  jsonContent: string,
+  options?: ImportOptions,
+): Promise<BuilderResult<ImportSectionOutcome[]>> {
   const admin = await requireAdmin();
   if (!admin) return { ok: false, error: "Not authorized." };
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(jsonContent);
-  } catch {
-    return { ok: false, error: "Invalid JSON format. Please ensure the file contains valid JSON." };
-  }
+  const parsed = parseTemplatePayload(jsonContent);
+  if (!parsed.ok) return { ok: false, error: parsed.error };
 
   const draft = await ensureDraftVersion();
   if (!draft) return { ok: false, error: "No default template exists. Run the seed first." };
+  if (draft.status !== "DRAFT") return { ok: false, error: "Only the draft version can be edited." };
 
-  // Validate basic section properties
-  const sectionParsed = sectionInputSchema.safeParse(parsed);
-  if (!sectionParsed.success) {
-    return {
-      ok: false,
-      error: `Section validation failed: ${sectionParsed.error.issues[0]?.message ?? "Invalid section structure"}`,
-    };
-  }
-
-  const sectionData = sectionParsed.data;
-
-  // Check if slug is taken in current draft version
-  const slugTaken = await db.reportSection.findFirst({
-    where: { templateVersionId: draft.id, slug: sectionData.slug, deletedAt: null },
+  const result = await importSections(draft.id, parsed.sections, {
+    updateSectionSettings: options?.updateSectionSettings ?? false,
+    onExistingCheck: options?.onExistingCheck ?? "update",
   });
-  if (slugTaken) {
-    return { ok: false, error: `A section with slug "${sectionData.slug}" already exists in the current draft.` };
-  }
-
-  const maxSectionOrder = await db.reportSection.aggregate({
-    where: { templateVersionId: draft.id, deletedAt: null },
-    _max: { displayOrder: true },
-  });
-
-  const rawFields = Array.isArray((parsed as Record<string, unknown>).fields)
-    ? ((parsed as Record<string, unknown>).fields as unknown[])
-    : [];
-
-  // Parse and validate all fields before writing to DB
-  const validatedFields: FieldInput[] = [];
-  for (let i = 0; i < rawFields.length; i++) {
-    const fRes = fieldInputSchema.safeParse(rawFields[i]);
-    if (!fRes.success) {
-      return {
-        ok: false,
-        error: `Field #${i + 1} validation failed: ${fRes.error.issues[0]?.message ?? "Invalid field structure"}`,
-      };
-    }
-    validatedFields.push(fRes.data);
-  }
-
-  // Create section and fields inside database transaction
-  const createdSection = await db.$transaction(async (tx) => {
-    const newSection = await tx.reportSection.create({
-      data: {
-        templateVersionId: draft.id,
-        ...sectionData,
-        displayOrder: (maxSectionOrder._max.displayOrder ?? 0) + 1,
-      },
-    });
-
-    for (let i = 0; i < validatedFields.length; i++) {
-      const fieldData = validatedFields[i]!;
-      const { criteria, messages, ...fieldScalar } = fieldData;
-
-      await tx.auditField.create({
-        data: {
-          sectionId: newSection.id,
-          ...fieldScalar,
-          displayOrder: i + 1,
-          criteria: {
-            create: {
-              inspectionType: criteria.inspectionType,
-              dataSource: criteria.dataSource,
-              selector: criteria.selector ?? null,
-              attributeName: criteria.attributeName ?? null,
-              operator: criteria.operator,
-              expectedValue: criteria.expectedValue ?? null,
-              minValue: criteria.minValue ?? null,
-              maxValue: criteria.maxValue ?? null,
-              regexPattern: criteria.regexPattern ?? null,
-              caseSensitive: criteria.caseSensitive,
-              warnOperator: criteria.warnOperator ?? null,
-              warnExpectedValue: criteria.warnExpectedValue ?? null,
-              warnMinValue: criteria.warnMinValue ?? null,
-              warnMaxValue: criteria.warnMaxValue ?? null,
-              config: (criteria.config ?? {}) as Prisma.InputJsonValue,
-            },
-          },
-          suggestions: {
-            createMany: {
-              data: [
-                {
-                  forStatus: "PASS",
-                  message: messages.PASS.message ?? "Passed check.",
-                  suggestion: messages.PASS.suggestion ?? null,
-                },
-                {
-                  forStatus: "FAIL",
-                  message: messages.FAIL.message ?? "Failed check.",
-                  suggestion: messages.FAIL.suggestion ?? null,
-                },
-                {
-                  forStatus: "WARNING",
-                  message: messages.WARNING.message ?? "Warning check.",
-                  suggestion: messages.WARNING.suggestion ?? null,
-                },
-              ],
-            },
-          },
-        },
-      });
-    }
-
-    return newSection;
-  });
+  if (!result.ok) return { ok: false, error: result.error };
 
   await logAdminActivity({
     actorId: admin.id,
     action: "section.import_json",
-    entityType: "report_section",
-    entityId: createdSection.id,
-    after: { name: createdSection.name, slug: createdSection.slug, fieldCount: validatedFields.length },
+    entityType: "template_version",
+    entityId: draft.id,
+    after: {
+      sections: result.outcomes.map((o) => ({
+        name: o.name,
+        slug: o.slug,
+        action: o.action,
+        subSection: o.subSection,
+        createdChecks: o.createdChecks,
+        updatedChecks: o.updatedChecks,
+        skippedChecks: o.skippedChecks,
+      })),
+    },
   });
 
   revalidatePath(BUILDER_PATH);
-  return { ok: true, message: `Successfully imported section "${createdSection.name}" with ${validatedFields.length} check(s).` };
+  return { ok: true, message: result.summary, data: result.outcomes };
+}
+
+/* ------------------------------------------------------------------ */
+/* JSON Export                                                         */
+/* ------------------------------------------------------------------ */
+
+export type TemplateExport = {
+  json: string;
+  fileName: string;
+  sectionCount: number;
+  fieldCount: number;
+  omittedFieldCount: number;
+};
+
+/** Serialize the entire draft as one file the importer accepts unchanged. */
+export async function exportTemplateJsonAction(): Promise<BuilderResult<TemplateExport>> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Not authorized." };
+
+  const draft = await ensureDraftVersion();
+  if (!draft) return { ok: false, error: "No default template exists. Run the seed first." };
+
+  const result = await exportDraftTemplate(draft.id);
+  if (!result.ok) return { ok: false, error: result.error };
+
+  await logAdminActivity({
+    actorId: admin.id,
+    action: "template.export_json",
+    entityType: "template_version",
+    entityId: draft.id,
+    after: { sectionCount: result.sectionCount, fieldCount: result.fieldCount },
+  });
+
+  const omitted = result.omittedFieldCount
+    ? ` ${result.omittedFieldCount} check(s) without criteria were left out — they cannot be re-imported.`
+    : "";
+
+  return {
+    ok: true,
+    message: `Exported ${result.sectionCount} section(s) and ${result.fieldCount} check(s).${omitted}`,
+    data: {
+      json: result.json,
+      fileName: result.fileName,
+      sectionCount: result.sectionCount,
+      fieldCount: result.fieldCount,
+      omittedFieldCount: result.omittedFieldCount,
+    },
+  };
 }
 

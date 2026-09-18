@@ -311,18 +311,25 @@ export function extractValue(
     case "BOOLEAN_CHECK": {
       const path = cfgString(config, "path");
       if (!path) return { kind: "unavailable", reason: "Configure a data path" };
-      return { kind: "boolean", value: truthy(resolvePath(ex, path)) };
+      const v = resolvePath(ex, path);
+      // Absent (undefined) ≠ false: a product-page signal missing on a
+      // homepage means "could not be measured" → NOT_APPLICABLE downstream,
+      // never a false FAIL. A stored null/false is a real negative.
+      if (v === undefined) return { kind: "unavailable", reason: "Data not present in this audit" };
+      return { kind: "boolean", value: truthy(v) };
     }
     case "NUMERIC_COMPARISON": {
       const path = cfgString(config, "path");
       if (!path) return { kind: "unavailable", reason: "Configure a data path" };
       const v = resolvePath(ex, path);
+      if (v === undefined) return { kind: "unavailable", reason: "Data not present in this audit" };
       return { kind: "number", value: typeof v === "number" ? v : v == null ? null : Number(v) };
     }
     case "STRING_COMPARISON": {
       const path = cfgString(config, "path");
       if (!path) return { kind: "unavailable", reason: "Configure a data path" };
       const v = resolvePath(ex, path);
+      if (v === undefined) return { kind: "unavailable", reason: "Data not present in this audit" };
       return { kind: "string", value: v == null ? null : String(v) };
     }
 

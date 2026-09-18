@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db/client";
+import { getSecretSetting } from "@/services/settings/secret";
 
 /**
  * Google PageSpeed Insights v5 client.
@@ -80,15 +81,15 @@ async function logUsage(
     .catch(() => undefined); // usage logging must never break an audit
 }
 
-/** Env var takes precedence; falls back to the admin-saved setting. */
+/**
+ * Database first, env var second. The admin-saved key must win: an operator
+ * who saves a key in Settings and sees "Saved" is entitled to have it used —
+ * an env var silently overriding it is invisible and nearly undebuggable.
+ * Read fresh on every call (no cache), so a save takes effect on the very
+ * next audit without a redeploy.
+ */
 async function getPsiApiKey(): Promise<string | null> {
-  if (process.env.PAGESPEED_API_KEY) return process.env.PAGESPEED_API_KEY;
-  try {
-    const row = await db.systemSetting.findUnique({ where: { key: "pagespeed_api_key" } });
-    return typeof row?.value === "string" && row.value.length > 0 ? row.value : null;
-  } catch {
-    return null;
-  }
+  return getSecretSetting("pagespeed_api_key", process.env.PAGESPEED_API_KEY);
 }
 
 export async function fetchPsi(
@@ -179,6 +180,60 @@ export async function fetchPsi(
     passedAudits: passedAudits.slice(0, 40),
     rawResponse: data,
   };
+}
+
+export type PsiKeyTestResult = {
+  verdict: "valid" | "invalid_key" | "api_disabled" | "quota_exceeded" | "network_error";
+  detail: string;
+};
+
+/**
+ * Validate a PSI API key without saving it. One authenticated call against a
+ * known-good lightweight URL, mobile only, short timeout — enough to
+ * distinguish the failure modes an operator actually hits.
+ */
+export async function testPsiApiKey(apiKey: string): Promise<PsiKeyTestResult> {
+  const params = new URLSearchParams({
+    url: "https://example.com",
+    strategy: "mobile",
+    category: "performance",
+    key: apiKey,
+  });
+
+  let res: Response;
+  try {
+    res = await fetch(`${PSI_ENDPOINT}?${params.toString()}`, {
+      signal: AbortSignal.timeout(30_000),
+      cache: "no-store",
+    });
+  } catch (err) {
+    return {
+      verdict: "network_error",
+      detail: err instanceof Error ? err.message.slice(0, 200) : "Request failed.",
+    };
+  }
+
+  if (res.ok) return { verdict: "valid", detail: "The key authenticated successfully." };
+
+  const body = (await res.json().catch(() => null)) as
+    | { error?: { message?: string; status?: string; errors?: Array<{ reason?: string }> } }
+    | null;
+  const message = body?.error?.message ?? `HTTP ${res.status}`;
+  const reason = body?.error?.errors?.[0]?.reason ?? "";
+  const status = body?.error?.status ?? "";
+
+  if (res.status === 429 || status === "RESOURCE_EXHAUSTED" || reason === "rateLimitExceeded") {
+    return { verdict: "quota_exceeded", detail: message.slice(0, 300) };
+  }
+  // Google reports a key from a project without the API enabled as 403
+  // PERMISSION_DENIED with an "API has not been used/enabled" message.
+  if (res.status === 403 && /not (been )?(used|enabled)|disabled/i.test(message)) {
+    return { verdict: "api_disabled", detail: message.slice(0, 300) };
+  }
+  if (res.status === 400 || res.status === 403) {
+    return { verdict: "invalid_key", detail: message.slice(0, 300) };
+  }
+  return { verdict: "network_error", detail: message.slice(0, 300) };
 }
 
 /** Fetch both strategies in parallel; either may independently fail (null). */

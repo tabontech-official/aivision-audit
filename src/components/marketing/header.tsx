@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
+import { AuthGateModal } from "@/components/marketing/auth-gate-modal";
 
 const NAV_LINKS = [
   { href: "#product", label: "Product", dropdown: true },
@@ -12,7 +14,9 @@ const NAV_LINKS = [
 ];
 
 export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [gateOpen, setGateOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 bg-white py-4">
@@ -54,14 +58,6 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
         {/* Actions */}
         <div className="hidden items-center gap-5 md:flex">
 
-          <Link
-            href="/login"
-            className="text-sm font-medium text-slate-600 hover:text-black"
-          >
-            Log in
-          </Link>
-
-
           {isLoggedIn ? (
             <Link
               href="/dashboard"
@@ -70,12 +66,13 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
               Dashboard
             </Link>
           ) : (
-            <Link
-              href="/signup"
+            <button
+              type="button"
+              onClick={() => setGateOpen(true)}
               className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
             >
-              Book a demo
-            </Link>
+              Log in / Sign up
+            </button>
           )}
 
         </div>
@@ -117,24 +114,41 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           <div className="mt-4 border-t pt-4 flex flex-col gap-3">
 
-            <Link
-              href="/login"
-              className="text-sm font-medium text-slate-700"
-            >
-              Log in
-            </Link>
-
-            <Link
-              href="/signup"
-              className="rounded-lg bg-black px-4 py-2 text-center text-sm font-medium text-white"
-            >
-              Book a demo
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="rounded-lg bg-black px-4 py-2 text-center text-sm font-medium text-white"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  setGateOpen(true);
+                }}
+                className="rounded-lg bg-black px-4 py-2 text-center text-sm font-medium text-white"
+              >
+                Log in / Sign up
+              </button>
+            )}
 
           </div>
 
         </div>
       )}
+
+      {/* The same single sign-in/sign-up module the audit gate uses. */}
+      <AuthGateModal
+        open={gateOpen}
+        onClose={() => setGateOpen(false)}
+        onAuthenticated={(redirectTo) => {
+          setGateOpen(false);
+          router.push(redirectTo);
+          router.refresh();
+        }}
+      />
 
     </header>
   );

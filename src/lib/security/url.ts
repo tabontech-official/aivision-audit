@@ -117,3 +117,21 @@ export function validateAndNormalizeUrl(input: string): UrlValidationResult {
     },
   };
 }
+
+/**
+ * Canonical page-URL normalization for FINDING IDENTITY (Fix Loop §2.2):
+ * lowercase host, https, no fragment, no trailing slash, path and meaningful
+ * query preserved. This is the ONE shared helper — if identity normalization
+ * ever diverged from intake normalization, findings would fragment across
+ * audits and the tracker would silently break.
+ *
+ * Built on validateAndNormalizeUrl so the two can never drift; input that
+ * fails validation falls back to a best-effort lowercase trim (identity must
+ * always be computable for a URL that already produced a report).
+ */
+export function normalizePageUrlForIdentity(input: string): string {
+  const validated = validateAndNormalizeUrl(input);
+  const url = validated.ok ? validated.value.url : input.trim().toLowerCase();
+  // Strip exactly one trailing slash on the path (never the "//" of the origin)
+  return url.replace(/(?<=[^/])\/$/, "").replace(/^(https?:\/\/[^/]+)\/$/, "$1");
+}

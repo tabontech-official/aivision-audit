@@ -30,6 +30,8 @@ export type ProjectedCheck =
       fieldId: string;
       name: string;
       fieldKey: string;
+      /** Sub-section group label (F.3) — null on pre-pillar snapshots. */
+      category: string | null;
       description: string | null;
       status: string;
       severity: string;
@@ -58,6 +60,10 @@ export type ProjectedSection =
       sectionId: string;
       name: string;
       slug: string;
+      /** Pillar + weight (F.2) — null on pre-pillar (v1) snapshots, which
+       *  render the flat list. */
+      pillar: string | null;
+      weight: number | null;
       shortDescription: string | null;
       icon: string | null;
       accentColor: string | null;
@@ -77,6 +83,8 @@ export type ProjectedSection =
       sectionId: string;
       name: string;
       slug: string;
+      pillar: string | null;
+      weight: number | null;
       shortDescription: string | null;
       icon: string | null;
       accentColor: string | null;
@@ -86,6 +94,9 @@ export type ProjectedSection =
 
 export type ProjectedReport = {
   sections: ProjectedSection[];
+  /** Platform detection context — safe for every viewer, drives the
+   *  non-Shopify banner and the detected-store header. */
+  site: ReportSnapshotPayload["site"] | null;
   /** true when anything was locked → drives the upgrade CTA */
   hasLockedContent: boolean;
   lockedSectionCount: number;
@@ -130,6 +141,7 @@ function projectCheck(check: SnapshotCheck, viewer: ViewerPlan): ProjectedCheck 
     fieldId: check.fieldId,
     name: check.name,
     fieldKey: check.fieldKey,
+    category: check.category ?? null,
     description: check.description,
     status: check.status,
     severity: check.severity,
@@ -158,6 +170,8 @@ function projectSection(
       sectionId: section.sectionId,
       name: section.name,
       slug: section.slug,
+      pillar: section.pillar ?? null,
+      weight: section.weight ?? null,
       shortDescription: section.shortDescription,
       icon: section.icon,
       accentColor: section.accentColor,
@@ -179,6 +193,8 @@ function projectSection(
     sectionId: section.sectionId,
     name: section.name,
     slug: section.slug,
+    pillar: section.pillar ?? null,
+    weight: section.weight ?? null,
     shortDescription: section.shortDescription,
     icon: section.icon,
     accentColor: section.accentColor,
@@ -224,6 +240,7 @@ export function projectSnapshot(
 
   return {
     sections,
+    site: payload.site ?? null,
     hasLockedContent: lockedSectionCount > 0 || lockedCheckCount > 0,
     lockedSectionCount,
     lockedCheckCount,

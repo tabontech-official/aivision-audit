@@ -5,6 +5,14 @@ import { z } from "zod";
 import { db } from "@/lib/db/client";
 import { auth } from "@/lib/auth/auth";
 import { logAdminActivity } from "@/services/audit-log/log";
+import { rateLimit } from "@/lib/security/rate-limit";
+import {
+  getSecretSetting,
+  getSecretStatus,
+  setSecretSetting,
+  clearSecretSetting,
+} from "@/services/settings/secret";
+import { testPsiApiKey } from "@/services/pagespeed/client";
 import type { Prisma } from "@prisma/client";
 
 export type SettingsResult = { ok: true; message?: string } | { ok: false; error: string };
@@ -84,7 +92,23 @@ export async function saveSettingsAction(input: unknown): Promise<SettingsResult
   return { ok: true, message: "Settings saved." };
 }
 
-/** PageSpeed key is a secret: stored write-only, masked on read. */
+/* ------------------------------------------------------------------ */
+/* PageSpeed API key — secret setting                                  */
+/*                                                                     */
+/* Encrypted at rest (AES-256-GCM), database wins over the env var,    */
+/* read fresh per audit so a save takes effect immediately. The raw    */
+/* value never goes back to the browser and never appears in a log —   */
+/* activity entries record only [set] / [not set].                     */
+/* ------------------------------------------------------------------ */
+
+export type PagespeedKeyStatus = {
+  isSet: boolean;
+  source: "database" | "environment" | "unset";
+  maskedPreview: string | null;
+  unreadable: boolean;
+  encryptionConfigured: boolean;
+};
+
 export async function savePagespeedKeyAction(key: string): Promise<SettingsResult> {
   const session = await auth();
   if (!session?.user || session.user.role !== "MASTER_ADMIN") {
@@ -95,19 +119,82 @@ export async function savePagespeedKeyAction(key: string): Promise<SettingsResul
     return { ok: false, error: "Enter a valid API key." };
   }
 
-  // Env var takes precedence in the PSI client; the DB copy is a fallback the
-  // client reads when PAGESPEED_API_KEY is unset. Stored as a secret setting.
-  await db.systemSetting.upsert({
-    where: { key: "pagespeed_api_key" },
-    update: { value: trimmed, isSecret: true, updatedById: session.user.id },
-    create: { key: "pagespeed_api_key", value: trimmed, isSecret: true, updatedById: session.user.id },
-  });
+  const wasSet = (await getSecretStatus("pagespeed_api_key", process.env.PAGESPEED_API_KEY)).isSet;
+
+  const stored = await setSecretSetting("pagespeed_api_key", trimmed, session.user.id);
+  if (!stored.ok) return { ok: false, error: stored.error };
 
   await logAdminActivity({
     actorId: session.user.id,
-    action: "settings.pagespeed_key",
+    action: "settings.pagespeed_key.update",
     entityType: "system_settings",
+    before: { pagespeed_api_key: wasSet ? "[set]" : "[not set]" },
+    after: { pagespeed_api_key: "[set]" },
   });
   revalidatePath("/master-admin/settings");
-  return { ok: true, message: "PageSpeed API key saved." };
+  return { ok: true, message: "PageSpeed API key saved — it applies to the very next audit." };
+}
+
+/** Remove the stored key so the environment fallback (if any) takes over. */
+export async function clearPagespeedKeyAction(): Promise<SettingsResult> {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "MASTER_ADMIN") {
+    return { ok: false, error: "Not authorized." };
+  }
+
+  await clearSecretSetting("pagespeed_api_key");
+
+  await logAdminActivity({
+    actorId: session.user.id,
+    action: "settings.pagespeed_key.clear",
+    entityType: "system_settings",
+    before: { pagespeed_api_key: "[set]" },
+    after: { pagespeed_api_key: "[not set]" },
+  });
+  revalidatePath("/master-admin/settings");
+  return {
+    ok: true,
+    message: process.env.PAGESPEED_API_KEY
+      ? "Stored key cleared — the environment variable key is now in use."
+      : "Stored key cleared — no key is configured; audits will finish PARTIAL.",
+  };
+}
+
+export type TestKeyResult =
+  | { ok: true; verdict: "valid" | "invalid_key" | "api_disabled" | "quota_exceeded" | "network_error"; detail: string }
+  | { ok: false; error: string };
+
+/**
+ * Validate a key against the real PSI endpoint without saving it.
+ * When called with an empty string, tests whatever key is currently active.
+ */
+export async function testPagespeedKeyAction(key: string): Promise<TestKeyResult> {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "MASTER_ADMIN") {
+    return { ok: false, error: "Not authorized." };
+  }
+
+  const rl = await rateLimit(`admin:psi-test:${session.user.id}`, 10, 60 * 60 * 1000);
+  if (!rl.allowed) {
+    return { ok: false, error: "Too many key tests. Try again in an hour." };
+  }
+
+  const candidate =
+    key.trim() ||
+    (await getSecretSetting("pagespeed_api_key", process.env.PAGESPEED_API_KEY)) ||
+    "";
+  if (!candidate) {
+    return { ok: false, error: "No key to test — enter one or save one first." };
+  }
+
+  const result = await testPsiApiKey(candidate);
+
+  await logAdminActivity({
+    actorId: session.user.id,
+    action: "settings.pagespeed_key.test",
+    entityType: "system_settings",
+    after: { verdict: result.verdict },
+  });
+
+  return { ok: true, verdict: result.verdict, detail: result.detail };
 }

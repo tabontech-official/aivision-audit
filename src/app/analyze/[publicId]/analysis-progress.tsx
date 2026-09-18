@@ -49,6 +49,13 @@ type StatusPayload = {
   error: string | null;
 };
 
+/**
+ * Purely a progress screen. The email ask that used to appear here was
+ * removed: it produced a Lead but not an account, and everything of value
+ * downstream — the Fix Loop, scheduled re-audits, comparisons — needs an
+ * account. The ask now happens at the teaser, the highest-intent moment,
+ * where the visitor has just seen their score and wants the rest.
+ */
 export function AnalysisProgress({
   publicId,
   domain,

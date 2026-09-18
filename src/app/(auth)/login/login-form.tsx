@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 
-export function LoginForm() {
+export function LoginForm({ returnTo = null }: { returnTo?: string | null }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -33,7 +33,7 @@ export function LoginForm() {
         setServerError(result.error);
         return;
       }
-      router.push(result.redirectTo ?? "/dashboard");
+      router.push(returnTo ?? result.redirectTo ?? "/dashboard");
       router.refresh();
     });
   };

@@ -5,10 +5,12 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Blocks,
+  Contact,
   Users,
   FileSearch,
   Settings,
   ScrollText,
+  Terminal,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -17,13 +19,27 @@ import { logoutAction } from "@/app/(auth)/actions";
 const NAV = [
   { href: "/master-admin", label: "Overview", icon: LayoutDashboard, exact: true },
   { href: "/master-admin/builder", label: "Report Builder", icon: Blocks },
+  { href: "/master-admin/leads", label: "Leads", icon: Contact },
   { href: "/master-admin/users", label: "Users", icon: Users },
   { href: "/master-admin/reports", label: "Reports", icon: FileSearch },
   { href: "/master-admin/logs", label: "Activity Logs", icon: ScrollText },
   { href: "/master-admin/settings", label: "Settings", icon: Settings },
 ];
 
-export function AdminSidebar({ adminEmail }: { adminEmail: string }) {
+/** Only rendered when the developer tools are switched on for this deployment. */
+const DEV_NAV = {
+  href: "/master-admin/dev",
+  label: "Pipeline Console",
+  icon: Terminal,
+};
+
+export function AdminSidebar({
+  adminEmail,
+  showDevTools = false,
+}: {
+  adminEmail: string;
+  showDevTools?: boolean;
+}) {
   const pathname = usePathname();
 
   return (
@@ -60,6 +76,27 @@ export function AdminSidebar({ adminEmail }: { adminEmail: string }) {
             </Link>
           );
         })}
+
+        {showDevTools && (
+          <>
+            <div className="px-3 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
+              Development
+            </div>
+            <Link
+              href={DEV_NAV.href}
+              aria-current={pathname.startsWith(DEV_NAV.href) ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                pathname.startsWith(DEV_NAV.href)
+                  ? "bg-brand-50 text-brand-700"
+                  : "text-ink-secondary hover:bg-slate-50 hover:text-ink",
+              )}
+            >
+              <DEV_NAV.icon className="h-4 w-4 shrink-0" aria-hidden />
+              {DEV_NAV.label}
+            </Link>
+          </>
+        )}
       </nav>
 
       <div className="border-t border-slate-100 p-3">

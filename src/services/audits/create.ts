@@ -155,6 +155,23 @@ export async function createAudit(
     });
   }
 
+  // One in-flight audit per OWNED website (§2.11): the per-user guard above is
+  // insufficient once findings exist — two concurrent audits of the same
+  // website would race reconciliation. Ownerless (anonymous) website rows are
+  // shared across visitors and stay governed by the per-session guard instead.
+  if (website.userId) {
+    const inFlightForSite = await db.report.count({
+      where: { websiteId: website.id, status: { in: ["QUEUED", "PROCESSING"] } },
+    });
+    if (inFlightForSite > 0) {
+      return {
+        ok: false,
+        status: 409,
+        error: "An audit for this website is already in progress. Wait for it to finish first.",
+      };
+    }
+  }
+
   // 6. Report row
   const report = await db.report.create({
     data: {

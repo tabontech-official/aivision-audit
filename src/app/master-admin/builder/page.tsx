@@ -75,6 +75,8 @@ export default async function BuilderPage() {
             visibleInReport: s.visibleInReport,
             accentColor: s.accentColor,
             isSystem: s.isSystem,
+            pillar: s.pillar,
+            appliesWhen: s.appliesWhen,
             adminNotes: s.adminNotes,
             fields: s.fields.map((f) => ({
               id: f.id,
@@ -91,6 +93,8 @@ export default async function BuilderPage() {
               failLabel: f.failLabel,
               warningLabel: f.warningLabel,
               helpArticleUrl: f.helpArticleUrl,
+              appliesWhen: f.appliesWhen,
+              pageType: f.pageType,
               adminNotes: f.adminNotes,
               criteria: f.criteria
                 ? {

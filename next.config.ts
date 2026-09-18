@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   // Prisma + argon2 native bindings must stay external to the server bundle
   serverExternalPackages: ["@node-rs/argon2", "@prisma/client"],
   poweredByHeader: false,
+  // The dev-only indicator defaults to bottom-left, where it covers the
+  // sidebar's account footer (and its log-out control) on every dashboard.
+  devIndicators: { position: "bottom-right" },
   async headers() {
     return [
       {

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/rbac";
 import { db } from "@/lib/db/client";
 import { getProjectedReport } from "@/services/reports/project-report";
+import type { ScoreBasis } from "@/services/reports/evaluate-report";
 import { ReportView } from "./report-view";
 import type { UserPlan } from "@prisma/client";
 
@@ -42,7 +43,25 @@ export default async function ReportDetailPage({
   }
 
   const viewerPlan = user.plan as UserPlan;
-  const projected = await getProjectedReport(report.id, viewerPlan);
+  const [projected, snapshotRow, findings] = await Promise.all([
+    getProjectedReport(report.id, viewerPlan),
+    db.reportSnapshot.findUnique({
+      where: { reportId: report.id },
+      select: { scoreBasis: true },
+    }),
+    // Live finding state (§2.14): the snapshot stays frozen; the badge is
+    // fetched live. Where no finding exists (anonymous, never claimed) there
+    // is simply no badge — never an error.
+    db.finding.findMany({
+      where: { websiteId: report.websiteId },
+      select: { fieldKey: true, state: true, resolvedAt: true },
+    }),
+  ]);
+
+  const findingStates: Record<string, { state: string; resolvedAt: string | null }> = {};
+  for (const f of findings) {
+    findingStates[f.fieldKey] = { state: f.state, resolvedAt: f.resolvedAt?.toISOString() ?? null };
+  }
 
   if (!projected) {
     // Failed audit or missing snapshot
@@ -77,6 +96,8 @@ export default async function ReportDetailPage({
       auditedAt={report.completedAt?.toISOString() ?? report.createdAt.toISOString()}
       viewerPlan={viewerPlan}
       projected={projected}
+      scoreBasis={(snapshotRow?.scoreBasis as ScoreBasis | null) ?? null}
+      findingStates={findingStates}
     />
   );
 }

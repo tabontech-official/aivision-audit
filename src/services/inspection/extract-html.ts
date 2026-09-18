@@ -98,6 +98,14 @@ export function extractFromHtml(page: FetchedPage): ExtractedData {
   let imgCount = 0;
   let missingAltCount = 0;
   let emptyAltCount = 0;
+  // Optimisation signals (E.4). A Shopify CDN image without ?width= is served
+  // full-resolution regardless of viewport — a top cause of poor mobile LCP.
+  let shopifyCdnCount = 0;
+  let withWidthParamCount = 0;
+  let lazyLoadedCount = 0;
+  let eagerAboveFoldCount = 0;
+  let withDimensionsCount = 0;
+  let srcsetEntryTotal = 0;
   $("img").each((_, el) => {
     imgCount++;
     const src = ($(el).attr("src") ?? $(el).attr("data-src") ?? "").slice(0, 300);
@@ -109,6 +117,15 @@ export function extractFromHtml(page: FetchedPage): ExtractedData {
       // empty alt is valid for decorative images; tracked separately, not a failure
       emptyAltCount++;
     }
+
+    if (/cdn\.shopify\.com|\/cdn\/shop\//i.test(src)) shopifyCdnCount++;
+    if (/[?&]width=/i.test(src)) withWidthParamCount++;
+    const loading = ($(el).attr("loading") ?? "").toLowerCase();
+    if (loading === "lazy") lazyLoadedCount++;
+    if (imgCount <= 3 && loading !== "lazy") eagerAboveFoldCount++;
+    if ($(el).attr("width") && $(el).attr("height")) withDimensionsCount++;
+    const srcset = $(el).attr("srcset") ?? "";
+    if (srcset.trim()) srcsetEntryTotal += srcset.split(",").filter((s) => s.trim()).length;
   });
 
   /* ---------------- links ---------------- */
@@ -189,6 +206,140 @@ export function extractFromHtml(page: FetchedPage): ExtractedData {
     const m = t?.match(/schema\.org\/(\w+)/);
     if (m?.[1]) schemaTypes.add(m[1]);
   });
+
+  /* ---------------- resource hints (E.3) ---------------- */
+  const preconnectHosts: string[] = [];
+  const dnsPrefetchHosts: string[] = [];
+  const hintHost = (href: string | undefined): string | null => {
+    if (!href) return null;
+    try {
+      return new URL(href.startsWith("//") ? `https:${href}` : href).hostname;
+    } catch {
+      return null;
+    }
+  };
+  $('link[rel="preconnect" i]').each((_, el) => {
+    const host = hintHost($(el).attr("href"));
+    if (host && !preconnectHosts.includes(host)) preconnectHosts.push(host);
+  });
+  $('link[rel="dns-prefetch" i]').each((_, el) => {
+    const host = hintHost($(el).attr("href"));
+    if (host && !dnsPrefetchHosts.includes(host)) dnsPrefetchHosts.push(host);
+  });
+  const preloadCount = $('link[rel="preload" i]').length;
+  const hasShopifyCdnHint = [...preconnectHosts, ...dnsPrefetchHosts].some((h) =>
+    /(^|\.)cdn\.shopify\.com$/i.test(h),
+  );
+
+  /* ---------------- Shopify URL structure (E.6) ---------------- */
+  let hasCollectionScopedProductLinks = false;
+  let variantParamLinkCount = 0;
+  let filterParamLinkCount = 0;
+  let paginationLinkCount = 0;
+  $("a[href]").each((_, el) => {
+    const href = $(el).attr("href") ?? "";
+    if (/\/collections\/[^/?#]+\/products\//i.test(href)) hasCollectionScopedProductLinks = true;
+    if (/[?&]variant=/i.test(href)) variantParamLinkCount++;
+    if (/[?&]filter\./i.test(href)) filterParamLinkCount++;
+    if (/[?&]page=\d/i.test(href)) paginationLinkCount++;
+  });
+
+  /* ---------------- product-page signals (E.5) ----------------
+   * Populated ONLY when the audited page carries Product JSON-LD. On a
+   * homepage the keys stay absent, and a check reading an absent path
+   * resolves NOT_APPLICABLE — `false` here would be a false failure. */
+  let productSignals: NonNullable<ExtractedData["shopify"]>["product"] | undefined;
+  const productNodes: Array<Record<string, unknown>> = [];
+  $('script[type="application/ld+json"]').each((_, el) => {
+    try {
+      const parsed: unknown = JSON.parse($(el).text());
+      const walk = (node: unknown): void => {
+        if (Array.isArray(node)) return node.forEach(walk);
+        if (node && typeof node === "object") {
+          const record = node as Record<string, unknown>;
+          const t = record["@type"];
+          const types = Array.isArray(t) ? t : [t];
+          // ProductGroup is the schema.org type for a product WITH VARIANTS —
+          // very common on Shopify (Allbirds and friends). Treating it as a
+          // product is required, not optional.
+          if (
+            types.some(
+              (x) =>
+                typeof x === "string" &&
+                ["product", "productgroup"].includes(x.toLowerCase()),
+            )
+          ) {
+            productNodes.push(record);
+          }
+          if (record["@graph"]) walk(record["@graph"]);
+        }
+      };
+      walk(parsed);
+    } catch {
+      /* invalid JSON-LD — ignored here, counted above */
+    }
+  });
+
+  // Shopify product URLs are deterministic. Knowing the page IS a product page
+  // is what makes "no product schema here" a real FAIL instead of silence.
+  let isProductPage = false;
+  try {
+    isProductPage = /\/products\/[^/]+/.test(new URL(page.finalUrl).pathname);
+  } catch {
+    /* unparsable URL — treat as not a product page */
+  }
+
+  if (isProductPage && productNodes.length === 0) {
+    // A product page with NO product schema: the single most valuable
+    // product-readiness finding. Sub-signals stay unknowable, but the page
+    // type and the absence are both facts.
+    productSignals = {
+      isProductPage: true,
+      hasProductSchema: false,
+      schemaHasOffers: false,
+      schemaHasPrice: false,
+      schemaHasAvailability: false,
+      schemaHasCurrency: false,
+      hasAggregateRating: false,
+      imageCount: $("img").length,
+      hasSizeGuide: /size (guide|chart)/i.test($("body").text().toLowerCase()),
+      hasShippingInfo: /shipping|delivery/i.test($("body").text().toLowerCase()),
+      hasReturnsInfo: /returns?|refund/i.test($("body").text().toLowerCase()),
+    };
+  } else if (productNodes.length > 0) {
+    const product = productNodes[0]!;
+    // ProductGroup carries its offers on variant nodes (`hasVariant`), so
+    // look there when the group itself has none.
+    const variants = product.hasVariant;
+    const firstVariant = (Array.isArray(variants) ? variants[0] : variants) as
+      | Record<string, unknown>
+      | undefined;
+    const offersRaw = product.offers ?? firstVariant?.offers;
+    const offers = (Array.isArray(offersRaw) ? offersRaw[0] : offersRaw) as
+      | Record<string, unknown>
+      | undefined;
+    const offerHas = (key: string): boolean =>
+      offers !== undefined && offers !== null && typeof offers === "object" &&
+      offers[key] !== undefined && offers[key] !== null && offers[key] !== "";
+    const imagesRaw = product.image ?? firstVariant?.image;
+    const bodyTextLower = $("body").text().toLowerCase();
+
+    productSignals = {
+      isProductPage,
+      hasProductSchema: true,
+      schemaHasOffers: offers !== undefined && offers !== null,
+      schemaHasPrice: offerHas("price") || offerHas("priceSpecification"),
+      schemaHasAvailability: offerHas("availability"),
+      schemaHasCurrency: offerHas("priceCurrency"),
+      hasAggregateRating:
+        (product.aggregateRating ?? firstVariant?.aggregateRating) !== undefined &&
+        (product.aggregateRating ?? firstVariant?.aggregateRating) !== null,
+      imageCount: Array.isArray(imagesRaw) ? imagesRaw.length : imagesRaw ? 1 : 0,
+      hasSizeGuide: /size (guide|chart)/i.test(bodyTextLower),
+      hasShippingInfo: /shipping|delivery/i.test(bodyTextLower),
+      hasReturnsInfo: /returns?|refund/i.test(bodyTextLower),
+    };
+  }
 
   /* ---------------- content metrics ---------------- */
   const clone = $.root().clone();
@@ -293,6 +444,13 @@ export function extractFromHtml(page: FetchedPage): ExtractedData {
       missingAltCount,
       emptyAltCount,
       issues: cap(imgIssues, 25),
+      shopifyCdnCount,
+      withWidthParamCount,
+      lazyLoadedCount,
+      eagerAboveFoldCount,
+      withDimensionsCount,
+      avgSrcsetEntries:
+        imgCount > 0 ? Math.round((srcsetEntryTotal / imgCount) * 10) / 10 : 0,
     },
     links: {
       internalCount: internal.length,
@@ -350,6 +508,19 @@ export function extractFromHtml(page: FetchedPage): ExtractedData {
       inlineStyleCount: $("style").length,
       fontLinkCount: $('link[href*="fonts." i], link[rel="preload"][as="font"]').length,
       iframeCount: $("iframe").length,
+      preconnectHosts: cap(preconnectHosts, 20),
+      dnsPrefetchHosts: cap(dnsPrefetchHosts, 20),
+      preloadCount,
+      hasShopifyCdnHint,
+    },
+    shopify: {
+      urls: {
+        hasCollectionScopedProductLinks,
+        variantParamLinkCount,
+        filterParamLinkCount,
+        paginationLinkCount,
+      },
+      ...(productSignals ? { product: productSignals } : {}),
     },
     network: {
       httpStatus: page.httpStatus,
@@ -373,7 +544,7 @@ export function extractFromHtml(page: FetchedPage): ExtractedData {
     },
     // Filled by aux checks in the job pipeline:
     robots: { exists: false, content: null, referencesSitemap: false, disallowsAll: false },
-    sitemap: { exists: false, url: null, urlCount: null },
+    sitemap: { exists: false, url: null, urlCount: null, childSitemaps: [], childSitemapUrls: [] },
     brokenLinks: { checkedCount: 0, brokenCount: 0, broken: [] },
   };
 }

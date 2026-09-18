@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/db/client";
+import { auth } from "@/lib/auth/auth";
 import { getReportForViewer } from "@/services/reports/access";
 import { AnalysisProgress } from "./analysis-progress";
 
@@ -13,6 +14,14 @@ export default async function AnalyzePage({
   params: Promise<{ publicId: string }>;
 }) {
   const { publicId } = await params;
+
+  // Audits require an account, so this screen is only ever reachable signed
+  // in. Redirect rather than 404 so a visitor who followed a link mid-audit
+  // is returned here after authenticating.
+  const session = await auth();
+  if (!session?.user) {
+    redirect(`/login?next=${encodeURIComponent(`/analyze/${publicId}`)}`);
+  }
 
   const access = await getReportForViewer(publicId);
   if (!access.ok) notFound();

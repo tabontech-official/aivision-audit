@@ -21,7 +21,14 @@ export default async function WebsitesPage() {
         take: 1,
         select: { publicId: true, overallScore: true, grade: true, createdAt: true },
       },
-      _count: { select: { reports: { where: { deletedAt: null } } } },
+      _count: {
+        select: {
+          reports: { where: { deletedAt: null } },
+          findings: {
+            where: { state: { in: ["OPEN", "ACKNOWLEDGED", "IN_PROGRESS", "STILL_FAILING", "REGRESSED"] } },
+          },
+        },
+      },
     },
   });
 
@@ -50,29 +57,27 @@ export default async function WebsitesPage() {
           {websites.map((w) => {
             const latest = w.reports[0];
             return (
-              <div key={w.id} className="card flex items-center gap-4 p-5">
+              <Link
+                key={w.id}
+                href={`/dashboard/websites/${w.id}`}
+                className="card flex items-center gap-4 p-5 transition-shadow hover:shadow-card-hover"
+              >
                 <ScorePill score={latest?.overallScore ?? null} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-semibold text-ink">{w.domain}</div>
                   <div className="truncate text-xs text-ink-muted">{w.url}</div>
                   <div className="mt-1 text-xs text-ink-muted">
                     {w._count.reports} audit{w._count.reports === 1 ? "" : "s"}
+                    {w._count.findings > 0 && ` · ${w._count.findings} open finding${w._count.findings === 1 ? "" : "s"}`}
+                    {w.auditSchedule !== "NONE" && ` · ${w.auditSchedule.toLowerCase()} audits`}
                     {latest &&
                       ` · last ${new Date(latest.createdAt).toLocaleDateString("en-US", {
                         month: "short", day: "numeric",
                       })}`}
                   </div>
                 </div>
-                {latest && (
-                  <Link
-                    href={`/dashboard/reports/${latest.publicId}`}
-                    aria-label={`Open latest report for ${w.domain}`}
-                    className="rounded-lg p-2 text-ink-muted hover:bg-slate-100 hover:text-ink"
-                  >
-                    <ArrowRight className="h-4 w-4" aria-hidden />
-                  </Link>
-                )}
-              </div>
+                <ArrowRight className="h-4 w-4 shrink-0 text-ink-muted" aria-hidden />
+              </Link>
             );
           })}
         </div>

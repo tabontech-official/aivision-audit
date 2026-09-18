@@ -200,9 +200,14 @@ export function evaluateCriteria(
   const expectedSummary = describeBand(passBand, criteria.regexPattern);
 
   if (value.kind === "unavailable") {
-    const isPsiGap = value.reason.includes("PageSpeed");
+    // NOT_APPLICABLE (excluded from scoring, not a misconfiguration) when the
+    // data genuinely wasn't there for this audit: PSI returned nothing, or the
+    // snapshot path is absent — e.g. product-page signals on a homepage. An
+    // absent path must never read as `false` and produce a false failure.
+    const isDataGap =
+      value.reason.includes("PageSpeed") || value.reason.includes("not present");
     return {
-      status: isPsiGap ? "NOT_APPLICABLE" : "ERROR",
+      status: isDataGap ? "NOT_APPLICABLE" : "ERROR",
       actualValue: null,
       expectedSummary,
     };

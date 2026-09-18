@@ -55,7 +55,9 @@ export function Modal({
           <X className="h-4 w-4" aria-hidden />
         </button>
       </div>
-      <div className="max-h-[75vh] overflow-y-auto px-6 py-5">{children}</div>
+      {/* text-left: modals opened from centered layouts (e.g. the marketing
+          hero) would otherwise inherit text-center onto every form label. */}
+      <div className="max-h-[75vh] overflow-y-auto px-6 py-5 text-left">{children}</div>
     </dialog>
   );
 }

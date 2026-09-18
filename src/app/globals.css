@@ -32,3 +32,45 @@
     @apply animate-shimmer rounded-md bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%];
   }
 }
+
+/* PDF export: the report is printed by the browser, so the print stylesheet
+   IS the PDF renderer. Keep colours (scores and statuses carry meaning),
+   drop app chrome, and avoid splitting a check across a page break. */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    /* Without this, browsers strip background colours and the status/score
+       colours — which are load-bearing here — vanish from the PDF. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* The dashboard shell never belongs in the document. */
+  aside,
+  nav,
+  header[data-app-chrome],
+  .print-hide {
+    display: none !important;
+  }
+
+  a[href]::after {
+    content: none !important;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+  }
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+}

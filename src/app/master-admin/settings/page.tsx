@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { db } from "@/lib/db/client";
 import { requireMasterAdmin } from "@/lib/auth/rbac";
+import { getSecretStatus } from "@/services/settings/secret";
 import { SettingsForm } from "./settings-form";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -41,8 +42,7 @@ export default async function SettingsPage() {
           2,
         ),
       }}
-      hasPagespeedKey={map.get("pagespeed_api_key")?.value != null || !!process.env.PAGESPEED_API_KEY}
-      pagespeedFromEnv={!!process.env.PAGESPEED_API_KEY}
+      pagespeedKey={await getSecretStatus("pagespeed_api_key", process.env.PAGESPEED_API_KEY)}
     />
   );
 }

@@ -7,6 +7,15 @@ import { z } from "zod";
  */
 
 export const planAccessSchema = z.enum(["FREE", "PREMIUM", "HIDDEN", "BOTH"]);
+
+/** Customer-facing pillar grouping (Part F). Unknown values are rejected at
+ *  import — all-or-nothing, consistent with the rest of the importer. */
+export const pillarSchema = z.enum([
+  "FOUNDATIONS", "SPEED_VITALS", "ONPAGE_CONTENT", "AI_ANSWER_ENGINES",
+  "TRUST_COMPLIANCE", "CONVERSION_UX",
+]);
+export const pageTypeSchema = z.enum(["HOME", "PRODUCT", "COLLECTION", "BLOG"]);
+
 export const severitySchema = z.enum(["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL"]);
 
 export const inspectionTypeSchema = z.enum([
@@ -47,6 +56,30 @@ export const SECTION_ICONS = [
   "zap", "globe",
 ] as const;
 
+/**
+ * `appliesWhen` gate: a string holding a JsonLogic expression validated with
+ * the SAME whitelist as RULES_EVALUATOR (`validateRuleNode` below — function
+ * declarations hoist) — one sandboxed expression language, not two.
+ * Empty/absent → the section or check always applies.
+ */
+export const appliesWhenSchema = z
+  .string()
+  .trim()
+  .max(2000)
+  .optional()
+  .or(z.literal("").transform(() => undefined))
+  .refine(
+    (value) => {
+      if (value === undefined) return true;
+      try {
+        return validateRuleNode(JSON.parse(value), 0);
+      } catch {
+        return false;
+      }
+    },
+    { message: 'appliesWhen must be valid JsonLogic using only the supported operations, e.g. {"var":"site.isShopify"}' },
+  );
+
 export const sectionInputSchema = z.object({
   name: z.string().trim().min(2, "Name is required").max(80),
   slug,
@@ -60,6 +93,8 @@ export const sectionInputSchema = z.object({
   defaultExpanded: z.coerce.boolean().default(true),
   visibleInReport: z.coerce.boolean().default(true),
   accentColor: hexColor,
+  pillar: pillarSchema.default("FOUNDATIONS"),
+  appliesWhen: appliesWhenSchema,
   adminNotes: z.string().trim().max(1000).optional().or(z.literal("").transform(() => undefined)),
 });
 
@@ -173,6 +208,9 @@ export const fieldInputSchema = z.object({
     .optional()
     .or(z.literal("").transform(() => undefined)),
   isEnabled: z.coerce.boolean().default(true),
+  appliesWhen: appliesWhenSchema,
+  /** Which sampled page this check inspects (multi-page sampling). */
+  pageType: pageTypeSchema.default("HOME"),
   adminNotes: z.string().trim().max(1000).optional().or(z.literal("").transform(() => undefined)),
   criteria: criteriaInputSchema,
   messages: z.object({
@@ -185,6 +223,9 @@ export const fieldInputSchema = z.object({
 export const testCriterionSchema = z.object({
   url: z.string().trim().min(3).max(2048),
   criteria: criteriaInputSchema,
+  /** Optional gate to evaluate alongside the criterion, so an admin can see
+   *  why a check would not run on this URL. */
+  appliesWhen: appliesWhenSchema,
 });
 
 export type SectionInput = z.infer<typeof sectionInputSchema>;

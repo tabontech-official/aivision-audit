@@ -1,5 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db/client";
+import type { ScoreBasis } from "./evaluate-report";
+import type { ExtractedData } from "@/services/inspection/types";
 import type { Prisma } from "@prisma/client";
 
 /**
@@ -13,6 +15,8 @@ export type SnapshotCheck = {
   fieldId: string;
   name: string;
   fieldKey: string;
+  /** Sub-section group label (F.3) — v2 snapshots; absent on v1. */
+  category?: string | null;
   description: string | null;
   status: string;
   severity: string;
@@ -33,6 +37,13 @@ export type SnapshotSection = {
   sectionId: string;
   name: string;
   slug: string;
+  /** Section carried an appliesWhen gate — i.e. it is platform-specific
+   *  (Shopify) analysis. The teaser prefers findings from these. */
+  platformSpecific?: boolean;
+  /** Pillar + weight (F.2) — v2 snapshots; absent on v1, where the report
+   *  renders the flat section list exactly as before. */
+  pillar?: string;
+  weight?: number;
   shortDescription: string | null;
   icon: string | null;
   accentColor: string | null;
@@ -49,12 +60,19 @@ export type SnapshotSection = {
 };
 
 export type ReportSnapshotPayload = {
-  version: 1;
+  /** 1 = flat sections; 2 = adds pillar/weight per section and category per
+   *  check. Renderers must keep the v1 path working for stored snapshots. */
+  version: 1 | 2;
   generatedAt: string;
   sections: SnapshotSection[];
+  /** Platform detection context (additive — absent on older snapshots). */
+  site?: ExtractedData["site"] | null;
 };
 
-export async function buildAndStoreSnapshot(reportId: string): Promise<void> {
+export async function buildAndStoreSnapshot(
+  reportId: string,
+  scoreBasis?: ScoreBasis,
+): Promise<void> {
   const sectionResults = await db.reportSectionResult.findMany({
     where: { reportId },
     include: {
@@ -70,6 +88,9 @@ export async function buildAndStoreSnapshot(reportId: string): Promise<void> {
       sectionId: sr.sectionId,
       name: sr.section.name,
       slug: sr.section.slug,
+      platformSpecific: sr.section.appliesWhen !== null,
+      pillar: sr.section.pillar,
+      weight: sr.section.weight,
       shortDescription: sr.section.shortDescription,
       icon: sr.section.icon,
       accentColor: sr.section.accentColor,
@@ -88,6 +109,7 @@ export async function buildAndStoreSnapshot(reportId: string): Promise<void> {
           fieldId: r.fieldId,
           name: r.field.name,
           fieldKey: r.field.fieldKey,
+          category: r.field.category,
           description: r.field.description,
           status: r.status,
           severity: r.severity,
@@ -113,15 +135,30 @@ export async function buildAndStoreSnapshot(reportId: string): Promise<void> {
     }))
     .sort((a, b) => a.displayOrder - b.displayOrder);
 
+  const rawData = await db.websiteRawData.findUnique({
+    where: { reportId },
+    select: { extracted: true },
+  });
+  const site =
+    (rawData?.extracted as unknown as ExtractedData | null)?.site ?? null;
+
   const payload: ReportSnapshotPayload = {
-    version: 1,
+    version: 2,
     generatedAt: new Date().toISOString(),
     sections,
+    site,
   };
 
   await db.reportSnapshot.upsert({
     where: { reportId },
-    update: { payload: payload as unknown as Prisma.InputJsonValue },
-    create: { reportId, payload: payload as unknown as Prisma.InputJsonValue },
+    update: {
+      payload: payload as unknown as Prisma.InputJsonValue,
+      scoreBasis: (scoreBasis ?? undefined) as Prisma.InputJsonValue | undefined,
+    },
+    create: {
+      reportId,
+      payload: payload as unknown as Prisma.InputJsonValue,
+      scoreBasis: (scoreBasis ?? undefined) as Prisma.InputJsonValue | undefined,
+    },
   });
 }

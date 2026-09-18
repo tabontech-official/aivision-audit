@@ -2,11 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Save } from "lucide-react";
+import { KeyRound, Save, FlaskConical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
-import { saveSettingsAction, savePagespeedKeyAction } from "./actions";
+import {
+  saveSettingsAction,
+  savePagespeedKeyAction,
+  clearPagespeedKeyAction,
+  testPagespeedKeyAction,
+  type PagespeedKeyStatus,
+} from "./actions";
 import { changePasswordAction } from "@/app/(auth)/actions";
 
 type SettingsInitial = {
@@ -25,18 +31,18 @@ type SettingsInitial = {
 
 export function SettingsForm({
   initial,
-  hasPagespeedKey,
-  pagespeedFromEnv,
+  pagespeedKey,
 }: {
   initial: SettingsInitial;
-  hasPagespeedKey: boolean;
-  pagespeedFromEnv: boolean;
+  pagespeedKey: PagespeedKeyStatus;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [flash, setFlash] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [form, setForm] = useState(initial);
   const [psiKey, setPsiKey] = useState("");
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; text: string } | null>(null);
   const [pw, setPw] = useState({ currentPassword: "", newPassword: "" });
 
   const set = <K extends keyof SettingsInitial>(key: K, value: SettingsInitial[K]) =>
@@ -125,6 +131,7 @@ export function SettingsForm({
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          setTestResult(null);
           run(async () => {
             const r = await savePagespeedKeyAction(psiKey);
             if (r.ok) setPsiKey("");
@@ -133,27 +140,123 @@ export function SettingsForm({
         }}
         className="card space-y-4 p-6"
       >
-        <h2 className="font-semibold text-ink">PageSpeed Insights API key</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-semibold text-ink">PageSpeed Insights API key</h2>
+          <span
+            className={
+              "rounded-full px-2.5 py-1 text-xs font-medium " +
+              (pagespeedKey.isSet
+                ? "bg-success-50 text-success-700"
+                : "bg-warning-50 text-warning-700")
+            }
+          >
+            {pagespeedKey.source === "database" && "Configured (database)"}
+            {pagespeedKey.source === "environment" && "Configured (environment variable)"}
+            {pagespeedKey.source === "unset" && "Not configured — audits will finish PARTIAL"}
+          </span>
+        </div>
+
         <p className="text-sm text-ink-secondary">
-          {pagespeedFromEnv
-            ? "A key is configured via the PAGESPEED_API_KEY environment variable (env takes precedence)."
-            : hasPagespeedKey
-              ? "A key is saved. Enter a new one to replace it — the current key is never displayed."
-              : "No key configured — speed metrics will be unavailable and reports finish as Partial."}
+          {pagespeedKey.isSet ? (
+            <>
+              Active key:{" "}
+              <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs">
+                {pagespeedKey.maskedPreview}
+              </code>{" "}
+              — a key saved here takes effect on the very next audit and always wins over the
+              environment variable. The full value is never shown again.
+            </>
+          ) : (
+            "Without a key, PageSpeed data is unavailable: speed checks return Not Applicable and reports finish as Partial. Saving a key here applies immediately — no redeploy."
+          )}
         </p>
-        <div className="flex gap-2">
+
+        {!pagespeedKey.encryptionConfigured && (
+          <Alert variant="error">
+            SETTINGS_ENCRYPTION_KEY is not set, so secret settings cannot be stored. Generate one
+            with <code className="font-mono text-xs">openssl rand -hex 32</code> and add it to the
+            environment.
+          </Alert>
+        )}
+        {pagespeedKey.unreadable && (
+          <Alert variant="error">
+            A stored key exists but cannot be decrypted — SETTINGS_ENCRYPTION_KEY is missing or has
+            changed. Save the key again, or restore the original encryption key.
+          </Alert>
+        )}
+        {testResult && (
+          <Alert variant={testResult.ok ? "success" : "error"}>{testResult.text}</Alert>
+        )}
+
+        <div className="flex flex-wrap gap-2">
           <input
             type="password"
             value={psiKey}
-            onChange={(e) => setPsiKey(e.target.value)}
-            placeholder="Paste API key"
+            onChange={(e) => {
+              setPsiKey(e.target.value);
+              setTestResult(null);
+            }}
+            placeholder={pagespeedKey.isSet ? "Paste a new key to replace the current one" : "Paste API key"}
             aria-label="PageSpeed API key"
             autoComplete="off"
-            className="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className="h-10 min-w-64 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           />
-          <Button type="submit" variant="secondary" loading={pending} disabled={!psiKey.trim()}>
+          <Button
+            type="button"
+            variant="secondary"
+            loading={testing}
+            disabled={!psiKey.trim() && !pagespeedKey.isSet}
+            onClick={async () => {
+              setTesting(true);
+              setTestResult(null);
+              try {
+                const r = await testPagespeedKeyAction(psiKey);
+                if (!r.ok) {
+                  setTestResult({ ok: false, text: r.error });
+                } else {
+                  const labels: Record<string, string> = {
+                    valid: "Key is valid — PSI authenticated the request.",
+                    invalid_key: "Invalid key.",
+                    api_disabled: "The key's Google Cloud project has not enabled the PageSpeed Insights API.",
+                    quota_exceeded: "Quota exceeded for this key.",
+                    network_error: "Could not reach the PSI endpoint.",
+                  };
+                  setTestResult({
+                    ok: r.verdict === "valid",
+                    text: `${labels[r.verdict] ?? r.verdict} ${r.verdict === "valid" ? "" : `(${r.detail})`}`,
+                  });
+                }
+              } finally {
+                setTesting(false);
+              }
+            }}
+          >
+            <FlaskConical className="h-4 w-4" aria-hidden />
+            {psiKey.trim() ? "Test key" : "Test current key"}
+          </Button>
+          <Button
+            type="submit"
+            loading={pending}
+            disabled={!psiKey.trim() || !pagespeedKey.encryptionConfigured}
+          >
             Save key
           </Button>
+          {pagespeedKey.source === "database" && (
+            <Button
+              type="button"
+              variant="secondary"
+              loading={pending}
+              onClick={() => {
+                if (confirm("Remove the stored key? The environment variable (if set) takes over.")) {
+                  setTestResult(null);
+                  run(() => clearPagespeedKeyAction());
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+              Clear key
+            </Button>
+          )}
         </div>
       </form>
 

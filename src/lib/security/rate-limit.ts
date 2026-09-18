@@ -94,12 +94,17 @@ export async function rateLimit(
   return memoryLimit(key, limit, windowMs);
 }
 
-/** Extract the client IP from a Request behind Vercel/proxies. */
-export function getClientIp(req: Request): string {
-  const fwd = req.headers.get("x-forwarded-for");
+/** Extract the client IP from a header bag behind Vercel/proxies. */
+export function getIpFromHeaders(h: Headers): string {
+  const fwd = h.get("x-forwarded-for");
   if (fwd) {
     const first = fwd.split(",")[0]?.trim();
     if (first) return first;
   }
-  return req.headers.get("x-real-ip") ?? "unknown";
+  return h.get("x-real-ip") ?? "unknown";
+}
+
+/** Extract the client IP from a Request behind Vercel/proxies. */
+export function getClientIp(req: Request): string {
+  return getIpFromHeaders(req.headers);
 }

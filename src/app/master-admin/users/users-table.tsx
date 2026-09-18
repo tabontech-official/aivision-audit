@@ -3,10 +3,12 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
-import { updateUserAction } from "./actions";
+import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
+import { deleteUserAction, updateUserAction } from "./actions";
 
 type UserRow = {
   id: string;
@@ -39,6 +41,7 @@ export function UsersTable({
   const [pending, startTransition] = useTransition();
   const [flash, setFlash] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [search, setSearch] = useState(query);
+  const [confirmDelete, setConfirmDelete] = useState<UserRow | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -48,6 +51,20 @@ export function UsersTable({
       const result = await updateUserAction({ userId, ...patch });
       if (result.ok) {
         setFlash({ kind: "success", text: result.message ?? "Updated." });
+        router.refresh();
+      } else {
+        setFlash({ kind: "error", text: result.error });
+      }
+    });
+  };
+
+  const remove = (user: UserRow) => {
+    setFlash(null);
+    startTransition(async () => {
+      const result = await deleteUserAction({ userId: user.id });
+      if (result.ok) {
+        setConfirmDelete(null);
+        setFlash({ kind: "success", text: result.message ?? "User deleted." });
         router.refresh();
       } else {
         setFlash({ kind: "error", text: result.error });
@@ -83,7 +100,8 @@ export function UsersTable({
         </form>
       </div>
 
-      {flash && (
+      {/* While the delete dialog is open its own copy of the error is shown */}
+      {flash && !confirmDelete && (
         <Alert variant={flash.kind === "success" ? "success" : "error"}>{flash.text}</Alert>
       )}
 
@@ -97,12 +115,15 @@ export function UsersTable({
               <th className="px-4 py-3 font-medium">Reports</th>
               <th className="px-4 py-3 font-medium">Last login</th>
               <th className="px-4 py-3 font-medium">Joined</th>
+              <th className="px-4 py-3 font-medium">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {users.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-ink-muted">
+                <td colSpan={7} className="px-4 py-8 text-center text-ink-muted">
                   No users found.
                 </td>
               </tr>
@@ -158,6 +179,25 @@ export function UsersTable({
                     month: "short", day: "numeric", year: "numeric",
                   })}
                 </td>
+                <td className="px-4 py-3 text-right">
+                  <button
+                    type="button"
+                    disabled={pending || u.id === currentAdminId}
+                    onClick={() => {
+                      setFlash(null);
+                      setConfirmDelete(u);
+                    }}
+                    aria-label={`Delete ${u.email}`}
+                    title={
+                      u.id === currentAdminId
+                        ? "You cannot delete your own account"
+                        : `Delete ${u.email}`
+                    }
+                    className="rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-muted"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -189,6 +229,53 @@ export function UsersTable({
           </div>
         </div>
       )}
+
+      <Modal
+        open={confirmDelete !== null}
+        onClose={() => {
+          if (!pending) setConfirmDelete(null);
+        }}
+        title="Delete user"
+      >
+        {confirmDelete && (
+          <div className="space-y-5">
+            <p className="text-sm text-ink-secondary">
+              Delete <span className="font-medium text-ink">{confirmDelete.email}</span>? Their
+              sessions end immediately and they can no longer sign in.
+              {confirmDelete.reportCount > 0 && (
+                <>
+                  {" "}
+                  Their {confirmDelete.reportCount}{" "}
+                  {confirmDelete.reportCount === 1 ? "report is" : "reports are"} retained for
+                  billing and audit history.
+                </>
+              )}
+            </p>
+            <p className="text-sm text-ink-secondary">
+              The email stays reserved, so this account cannot be re-registered.
+            </p>
+
+            {flash?.kind === "error" && <Alert variant="error">{flash.text}</Alert>}
+
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="secondary"
+                disabled={pending}
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                loading={pending}
+                onClick={() => remove(confirmDelete)}
+              >
+                Delete user
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

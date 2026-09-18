@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 
-export function SignupForm() {
+export function SignupForm({ returnTo = null }: { returnTo?: string | null }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export function SignupForm() {
         }
         return;
       }
-      router.push(result.redirectTo ?? "/dashboard");
+      router.push(returnTo ?? result.redirectTo ?? "/dashboard");
       router.refresh();
     });
   };
@@ -71,6 +71,22 @@ export function SignupForm() {
         error={errors.password?.message}
         {...register("password")}
       />
+      {/* Marketing consent: separate concern from the account itself, and
+          unticked by default — never pre-tick a consent box. */}
+      <label className="flex items-start gap-2 text-sm text-ink-secondary">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500/30"
+          {...register("marketingConsent")}
+        />
+        <span>
+          Send me occasional Shopify optimisation tips. Unsubscribe any time.
+          <span className="block text-xs text-ink-muted">
+            Your audit results are sent either way — this is only for marketing email.
+          </span>
+        </span>
+      </label>
+
       <Button type="submit" className="w-full" size="lg" loading={pending}>
         Create account
       </Button>

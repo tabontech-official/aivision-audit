@@ -1,0 +1,1355 @@
+{
+  "_format": "auditflow.template/v1",
+  "_note": "Import through Master Admin > Report Builder > Import JSON. Shopify sections are platform-gated; product checks are additionally gated to pages with Product JSON-LD.",
+  "sections": [
+    {
+      "name": "Shopify Performance & App Bloat",
+      "slug": "shopify-performance",
+      "shortDescription": "Theme delivery, app-script overhead, and image loading signals that affect storefront speed.",
+      "detailedDescription": "Checks Shopify-specific script overhead, resource hints, responsive image delivery, layout stability, and loading priority using the stored audit snapshot.",
+      "icon": "zap",
+      "weight": 2,
+      "contributesToScore": true,
+      "planAccess": "BOTH",
+      "isEnabled": true,
+      "defaultExpanded": true,
+      "visibleInReport": true,
+      "accentColor": "#7C3AED",
+      "appliesWhen": "{\"var\":\"site.isShopify\"}",
+      "adminNotes": "Thresholds are intentionally conservative. Tune app-count bands only after measuring a larger production cohort; app count is a diagnostic proxy, not proof that an app is slow.",
+      "fields": [
+        {
+          "name": "Third-Party App Script Hosts",
+          "fieldKey": "shopify_performance.app_count",
+          "description": "Counts third-party script hosts that appear to belong to Shopify apps.",
+          "category": "App bloat",
+          "planAccess": "BOTH",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1.5,
+          "passLabel": "Lean",
+          "failLabel": "Heavy",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "HTML",
+            "operator": "LESS_THAN_OR_EQUAL",
+            "maxValue": 5,
+            "warnOperator": "LESS_THAN_OR_EQUAL",
+            "warnMaxValue": 8,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"site.appCount\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "The storefront loads scripts from {{count}} detected app host(s).",
+              "suggestion": "Keep reviewing app usage during quarterly theme maintenance so unused integrations do not accumulate."
+            },
+            "FAIL": {
+              "message": "The storefront loads scripts from {{count}} detected app hosts, which is a strong app-bloat signal.",
+              "suggestion": "Open Shopify admin > Settings > Apps and sales channels. Remove unused apps, then inspect Online Store > Themes > Edit code for snippets left behind by uninstalled apps."
+            },
+            "WARNING": {
+              "message": "The storefront loads scripts from {{count}} detected app hosts.",
+              "suggestion": "Review each app against the revenue or operational value it provides. Remove redundant apps and retest the theme after cleanup."
+            }
+          }
+        },
+        {
+          "name": "Parser-Blocking App Scripts",
+          "fieldKey": "shopify_performance.blocking_app_scripts",
+          "description": "Counts third-party app scripts that load without async, defer, or module semantics.",
+          "category": "App bloat",
+          "planAccess": "BOTH",
+          "severity": "HIGH",
+          "score": 1,
+          "weight": 2,
+          "passLabel": "None",
+          "failLabel": "Blocking",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "HTML",
+            "operator": "EQUALS",
+            "expectedValue": "0",
+            "warnOperator": "LESS_THAN_OR_EQUAL",
+            "warnMaxValue": 2,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"site.blockingAppScripts\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "No parser-blocking third-party app scripts were detected.",
+              "suggestion": "Keep non-critical app scripts deferred and verify this after every app or theme change."
+            },
+            "FAIL": {
+              "message": "{{count}} parser-blocking app scripts were detected.",
+              "suggestion": "In Online Store > Themes > Edit code, inspect theme.liquid and app snippets. Remove orphaned tags and ask remaining app vendors for async, deferred, or theme-app-extension loading."
+            },
+            "WARNING": {
+              "message": "{{count}} parser-blocking app script(s) were detected.",
+              "suggestion": "Confirm each blocking script is needed before first paint. Defer non-critical integrations and retest the storefront."
+            }
+          }
+        },
+        {
+          "name": "Shopify CDN Connection Hint",
+          "fieldKey": "shopify_performance.cdn_resource_hint",
+          "description": "Checks for a preconnect or DNS-prefetch hint to cdn.shopify.com.",
+          "category": "Theme delivery",
+          "planAccess": "PREMIUM",
+          "severity": "LOW",
+          "score": 1,
+          "weight": 0.5,
+          "passLabel": "Present",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"resources.hasShopifyCdnHint\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "The page provides a connection hint for Shopify's CDN.",
+              "suggestion": "Keep the hint early in the document head and avoid duplicate hints."
+            },
+            "FAIL": {
+              "message": "No connection hint for cdn.shopify.com was found.",
+              "suggestion": "In Online Store > Themes > Edit code, add a preconnect link for https://cdn.shopify.com near the top of theme.liquid when critical assets use that host."
+            },
+            "WARNING": {
+              "message": "The Shopify CDN connection hint needs review.",
+              "suggestion": "Keep one early preconnect for cdn.shopify.com and remove redundant resource hints."
+            }
+          }
+        },
+        {
+          "name": "Responsive Shopify CDN Images",
+          "fieldKey": "shopify_performance.responsive_cdn_images",
+          "description": "Checks whether every detected Shopify CDN image URL includes a responsive width parameter.",
+          "category": "Images",
+          "planAccess": "BOTH",
+          "severity": "HIGH",
+          "score": 1,
+          "weight": 2,
+          "passLabel": "Responsive",
+          "failLabel": "Oversized risk",
+          "warningLabel": "Review",
+          "appliesWhen": "{\">\":[{\"var\":\"images.shopifyCdnCount\"},0]}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "RULES_EVALUATOR",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"rules\":{\"===\":[{\"var\":\"images.withWidthParamCount\"},{\"var\":\"images.shopifyCdnCount\"}]}}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "All detected Shopify CDN images use width-aware URLs.",
+              "suggestion": "Keep using image_url with explicit widths and image_tag with widths and sizes."
+            },
+            "FAIL": {
+              "message": "Some Shopify CDN images do not use a responsive width parameter.",
+              "suggestion": "In the relevant Liquid section or snippet, replace full-size image URLs with image_url: width: ... and render them with image_tag widths and sizes so mobile devices receive smaller files."
+            },
+            "WARNING": {
+              "message": "Responsive Shopify image delivery needs review.",
+              "suggestion": "Verify each above-the-fold image has width-specific src and srcset candidates."
+            }
+          }
+        },
+        {
+          "name": "Explicit Image Dimensions",
+          "fieldKey": "shopify_performance.image_dimensions",
+          "description": "Checks whether every image declares width and height to reserve layout space.",
+          "category": "Images",
+          "planAccess": "BOTH",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1.5,
+          "passLabel": "Stable",
+          "failLabel": "Shift risk",
+          "warningLabel": "Review",
+          "appliesWhen": "{\">\":[{\"var\":\"images.count\"},0]}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "RULES_EVALUATOR",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"rules\":{\"===\":[{\"var\":\"images.withDimensionsCount\"},{\"var\":\"images.count\"}]}}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "All detected images declare width and height.",
+              "suggestion": "Keep dimensions in image_tag output so the browser can reserve space before files load."
+            },
+            "FAIL": {
+              "message": "One or more images omit width or height, increasing layout-shift risk.",
+              "suggestion": "Use Shopify's image_tag filter or add width and height attributes in the responsible section/snippet. Start with hero, product, and collection-card images."
+            },
+            "WARNING": {
+              "message": "Image dimensions need review.",
+              "suggestion": "Inspect the rendered image markup and ensure width and height are emitted for each content image."
+            }
+          }
+        },
+        {
+          "name": "Responsive Srcset Coverage",
+          "fieldKey": "shopify_performance.srcset_coverage",
+          "description": "Measures the average number of srcset candidates per image.",
+          "category": "Images",
+          "planAccess": "PREMIUM",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1,
+          "passLabel": "Strong",
+          "failLabel": "Missing",
+          "warningLabel": "Partial",
+          "appliesWhen": "{\">\":[{\"var\":\"images.count\"},0]}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "HTML",
+            "operator": "GREATER_THAN_OR_EQUAL",
+            "minValue": 2,
+            "warnOperator": "GREATER_THAN_OR_EQUAL",
+            "warnMinValue": 1,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"images.avgSrcsetEntries\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Images average {{actualValue}} srcset candidates.",
+              "suggestion": "Keep a useful spread of widths aligned to the theme's actual breakpoints."
+            },
+            "FAIL": {
+              "message": "Images do not provide enough responsive srcset choices.",
+              "suggestion": "Use image_tag with a widths list and a correct sizes attribute in product cards, product media, banners, and editorial sections."
+            },
+            "WARNING": {
+              "message": "Images average only {{actualValue}} srcset candidate(s).",
+              "suggestion": "Add more width candidates so phones and smaller viewports are not forced to download desktop-sized images."
+            }
+          }
+        },
+        {
+          "name": "Above-the-Fold Image Priority",
+          "fieldKey": "shopify_performance.above_fold_eager",
+          "description": "Checks that at least one of the first three images is not lazy-loaded.",
+          "category": "Loading priority",
+          "planAccess": "BOTH",
+          "severity": "HIGH",
+          "score": 1,
+          "weight": 1.5,
+          "passLabel": "Prioritized",
+          "failLabel": "Delayed",
+          "warningLabel": "Review",
+          "appliesWhen": "{\">\":[{\"var\":\"images.count\"},0]}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "HTML",
+            "operator": "GREATER_THAN_OR_EQUAL",
+            "minValue": 1,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"images.eagerAboveFoldCount\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "At least one early image is loaded eagerly.",
+              "suggestion": "Keep the likely LCP image eager and consider fetchpriority=high only for that single critical image."
+            },
+            "FAIL": {
+              "message": "The first images are all lazy-loaded, which can delay the largest visible image.",
+              "suggestion": "In the hero or product-media section, set the likely LCP image to loading: 'eager'. Do not make every image eager."
+            },
+            "WARNING": {
+              "message": "Early image loading priority needs review.",
+              "suggestion": "Make only the likely LCP image eager and leave below-the-fold media lazy-loaded."
+            }
+          }
+        },
+        {
+          "name": "Below-the-Fold Lazy Loading",
+          "fieldKey": "shopify_performance.lazy_loading",
+          "description": "Checks for lazy loading on image-heavy pages.",
+          "category": "Loading priority",
+          "planAccess": "PREMIUM",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1,
+          "passLabel": "Enabled",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "appliesWhen": "{\">\":[{\"var\":\"images.count\"},3]}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "HTML",
+            "operator": "GREATER_THAN_OR_EQUAL",
+            "minValue": 1,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"images.lazyLoadedCount\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Lazy loading is used for non-critical imagery.",
+              "suggestion": "Keep above-the-fold media eager and below-the-fold media lazy."
+            },
+            "FAIL": {
+              "message": "This image-heavy page does not expose lazy-loaded images.",
+              "suggestion": "In product-card, collection, and editorial snippets, use image_tag with loading: 'lazy' for images below the initial viewport."
+            },
+            "WARNING": {
+              "message": "Lazy-loading coverage needs review.",
+              "suggestion": "Check that below-the-fold images are lazy without delaying the hero or main product image."
+            }
+          }
+        }
+      ],
+      "pillar": "SPEED_VITALS"
+    },
+    {
+      "name": "Shopify Store Policies",
+      "slug": "shopify-policies",
+      "shortDescription": "Checks Shopify's fixed policy pages for coverage, substance, and avoidable duplicate headings.",
+      "detailedDescription": "Verifies the refund, privacy, terms, and shipping policy routes and reviews the policy set for thin content and duplicated title/H1 text.",
+      "icon": "file-text",
+      "weight": 1.5,
+      "contributesToScore": true,
+      "planAccess": "BOTH",
+      "isEnabled": true,
+      "defaultExpanded": true,
+      "visibleInReport": true,
+      "accentColor": "#0F766E",
+      "appliesWhen": "{\"var\":\"site.isShopify\"}",
+      "adminNotes": "Legal notice is included in aggregate coverage but is not an individual scored check because jurisdictional requirements differ.",
+      "fields": [
+        {
+          "name": "Refund Policy Published",
+          "fieldKey": "shopify_policies.refund_exists",
+          "description": "Checks Shopify's /policies/refund-policy route.",
+          "category": "Coverage",
+          "planAccess": "BOTH",
+          "severity": "HIGH",
+          "score": 1,
+          "weight": 1.5,
+          "passLabel": "Published",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.policies.refund.exists\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "A refund policy is published at Shopify's standard policy route.",
+              "suggestion": "Review it whenever return windows, fees, or exclusions change."
+            },
+            "FAIL": {
+              "message": "No refund policy was found at Shopify's standard policy route.",
+              "suggestion": "Open Shopify admin > Settings > Policies, add the refund policy, save it, and link it from the footer and relevant product pages."
+            },
+            "WARNING": {
+              "message": "The refund policy needs review.",
+              "suggestion": "Confirm the policy is published, current, and linked from the storefront."
+            }
+          }
+        },
+        {
+          "name": "Privacy Policy Published",
+          "fieldKey": "shopify_policies.privacy_exists",
+          "description": "Checks Shopify's /policies/privacy-policy route.",
+          "category": "Coverage",
+          "planAccess": "BOTH",
+          "severity": "HIGH",
+          "score": 1,
+          "weight": 2,
+          "passLabel": "Published",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.policies.privacy.exists\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "A privacy policy is published at Shopify's standard policy route.",
+              "suggestion": "Keep the policy aligned with installed apps, analytics, advertising, and customer-data practices."
+            },
+            "FAIL": {
+              "message": "No privacy policy was found at Shopify's standard policy route.",
+              "suggestion": "Open Shopify admin > Settings > Policies, publish the privacy policy, and link it from the footer and consent surfaces."
+            },
+            "WARNING": {
+              "message": "The privacy policy needs review.",
+              "suggestion": "Confirm the policy is published and reflects the store's current data handling."
+            }
+          }
+        },
+        {
+          "name": "Terms of Service Published",
+          "fieldKey": "shopify_policies.terms_exists",
+          "description": "Checks Shopify's /policies/terms-of-service route.",
+          "category": "Coverage",
+          "planAccess": "PREMIUM",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1,
+          "passLabel": "Published",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.policies.terms.exists\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Terms of service are published at Shopify's standard policy route.",
+              "suggestion": "Review the terms after material changes to checkout, subscriptions, or fulfillment."
+            },
+            "FAIL": {
+              "message": "No terms of service were found at Shopify's standard policy route.",
+              "suggestion": "Open Shopify admin > Settings > Policies, add terms of service, and expose the link in the storefront footer."
+            },
+            "WARNING": {
+              "message": "The terms of service need review.",
+              "suggestion": "Confirm the route is public and the content matches current selling practices."
+            }
+          }
+        },
+        {
+          "name": "Shipping Policy Published",
+          "fieldKey": "shopify_policies.shipping_exists",
+          "description": "Checks Shopify's /policies/shipping-policy route.",
+          "category": "Coverage",
+          "planAccess": "BOTH",
+          "severity": "HIGH",
+          "score": 1,
+          "weight": 1.5,
+          "passLabel": "Published",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.policies.shipping.exists\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "A shipping policy is published at Shopify's standard policy route.",
+              "suggestion": "Keep delivery regions, processing times, rates, duties, and tracking expectations current."
+            },
+            "FAIL": {
+              "message": "No shipping policy was found at Shopify's standard policy route.",
+              "suggestion": "Open Shopify admin > Settings > Policies, publish shipping terms, and link them near product and cart decisions as well as in the footer."
+            },
+            "WARNING": {
+              "message": "The shipping policy needs review.",
+              "suggestion": "Confirm the route is public and its promises match current fulfillment operations."
+            }
+          }
+        },
+        {
+          "name": "Core Policy Coverage",
+          "fieldKey": "shopify_policies.coverage",
+          "description": "Counts published pages across Shopify's five fixed policy routes.",
+          "category": "Quality",
+          "planAccess": "BOTH",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1,
+          "passLabel": "Complete",
+          "failLabel": "Sparse",
+          "warningLabel": "Partial",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "HTML",
+            "operator": "GREATER_THAN_OR_EQUAL",
+            "minValue": 4,
+            "warnOperator": "GREATER_THAN_OR_EQUAL",
+            "warnMinValue": 2,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.policies.presentCount\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "{{count}} of Shopify's five policy routes are published.",
+              "suggestion": "Keep the policy set linked, current, and consistent with checkout operations."
+            },
+            "FAIL": {
+              "message": "Only {{count}} of Shopify's five policy routes are published.",
+              "suggestion": "Use Shopify admin > Settings > Policies to complete the relevant refund, privacy, terms, shipping, and legal-notice pages for the store's jurisdictions."
+            },
+            "WARNING": {
+              "message": "{{count}} of Shopify's five policy routes are published.",
+              "suggestion": "Complete the missing core policies and expose them from the footer."
+            }
+          }
+        },
+        {
+          "name": "Policy Content Depth",
+          "fieldKey": "shopify_policies.thin_count",
+          "description": "Counts published policy pages with fewer than roughly 100 words.",
+          "category": "Quality",
+          "planAccess": "PREMIUM",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1,
+          "passLabel": "Substantive",
+          "failLabel": "Thin",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "HTML",
+            "operator": "EQUALS",
+            "expectedValue": "0",
+            "warnOperator": "LESS_THAN_OR_EQUAL",
+            "warnMaxValue": 1,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.policies.thinCount\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "No published policy page was flagged as thin.",
+              "suggestion": "Keep each policy specific to the store rather than relying on unchanged boilerplate."
+            },
+            "FAIL": {
+              "message": "{{count}} published policy pages contain very little content.",
+              "suggestion": "In Shopify admin > Settings > Policies, expand each thin page with the actual timeframes, conditions, exclusions, contact route, and regional details customers need."
+            },
+            "WARNING": {
+              "message": "One published policy page appears thin.",
+              "suggestion": "Expand it with store-specific terms and plain-language operational details."
+            }
+          }
+        },
+        {
+          "name": "Distinct Policy Title and H1",
+          "fieldKey": "shopify_policies.duplicate_title_h1",
+          "description": "Counts policy pages where the browser title exactly repeats the H1.",
+          "category": "Quality",
+          "planAccess": "PREMIUM",
+          "severity": "LOW",
+          "score": 1,
+          "weight": 0.5,
+          "passLabel": "Distinct",
+          "failLabel": "Duplicated",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "HTML",
+            "operator": "EQUALS",
+            "expectedValue": "0",
+            "warnOperator": "LESS_THAN_OR_EQUAL",
+            "warnMaxValue": 1,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.policies.duplicateTitleH1Count\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Policy pages avoid exact title-and-H1 duplication.",
+              "suggestion": "Keep search titles descriptive while leaving the on-page heading concise."
+            },
+            "FAIL": {
+              "message": "{{count}} policy pages repeat the same text in the title and H1.",
+              "suggestion": "Edit the policy template's SEO title output in Online Store > Themes > Edit code so it adds useful store context instead of copying the H1 verbatim."
+            },
+            "WARNING": {
+              "message": "One policy page repeats the same title and H1.",
+              "suggestion": "Give its browser title useful context such as the store name while keeping the visible H1 natural."
+            }
+          }
+        }
+      ],
+      "pillar": "TRUST_COMPLIANCE"
+    },
+    {
+      "name": "Shopify Product Page Readiness",
+      "slug": "shopify-product-readiness",
+      "shortDescription": "Product schema completeness and customer decision support on Shopify product pages.",
+      "detailedDescription": "Runs only for Shopify and Hydrogen pages containing Product JSON-LD. Homepage audits correctly skip every check in this section.",
+      "icon": "shopping-cart",
+      "weight": 2,
+      "contributesToScore": true,
+      "planAccess": "BOTH",
+      "isEnabled": true,
+      "defaultExpanded": true,
+      "visibleInReport": true,
+      "accentColor": "#EA580C",
+      "appliesWhen": "{\"var\":\"site.isShopify\"}",
+      "adminNotes": "Every field is gated by shopify.product.hasProductSchema. Static-HTML themes that inject Product JSON-LD client-side remain N/A unless the render decision supplies the DOM.",
+      "fields": [
+        {
+          "name": "Product schema present",
+          "fieldKey": "shopify_product.has_schema",
+          "description": "Checks that the product page publishes Product (or ProductGroup) structured data — what Google Shopping and AI answer engines read.",
+          "category": "Structured data",
+          "planAccess": "BOTH",
+          "severity": "HIGH",
+          "score": 3,
+          "weight": 1,
+          "passLabel": "Present",
+          "failLabel": "Missing",
+          "warningLabel": "Partial",
+          "isEnabled": true,
+          "appliesWhen": "{\"var\":\"shopify.product.isProductPage\"}",
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.product.hasProductSchema\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "This product page publishes Product structured data.",
+              "suggestion": "Keep it in sync when you change themes — schema usually lives in the theme, not the product record."
+            },
+            "FAIL": {
+              "message": "This product page publishes no Product structured data, so Google Shopping and AI shopping assistants cannot read its price, availability or reviews.",
+              "suggestion": "Most themes emit this from a JSON-LD block in Sections > main-product.liquid (or snippets/product-json-ld.liquid). If your theme omits it, add the block or install a structured-data app rather than editing every template."
+            },
+            "WARNING": {
+              "message": "Product structured data was detected but could not be fully parsed.",
+              "suggestion": "Validate the page with Google Rich Results Test and fix any JSON-LD syntax errors."
+            }
+          },
+          "pageType": "PRODUCT"
+        },
+        {
+          "name": "Product Offers Schema",
+          "fieldKey": "shopify_product.schema_offers",
+          "description": "Checks that Product JSON-LD includes an offers object.",
+          "category": "Structured data",
+          "planAccess": "BOTH",
+          "severity": "HIGH",
+          "score": 1,
+          "weight": 2,
+          "passLabel": "Present",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "appliesWhen": "{\"var\":\"shopify.product.hasProductSchema\"}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.product.schemaHasOffers\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Product JSON-LD includes offer data.",
+              "suggestion": "Keep offer markup synchronized with the selected variant and visible product information."
+            },
+            "FAIL": {
+              "message": "Product JSON-LD is present but has no offers object.",
+              "suggestion": "Update the product structured-data snippet in Online Store > Themes > Edit code so Product includes Offer or AggregateOffer data generated from Shopify product and variant values."
+            },
+            "WARNING": {
+              "message": "Product offer markup needs review.",
+              "suggestion": "Validate the page with Google's Rich Results Test and ensure the offer matches the storefront."
+            }
+          },
+          "pageType": "PRODUCT"
+        },
+        {
+          "name": "Product Price Schema",
+          "fieldKey": "shopify_product.schema_price",
+          "description": "Checks that Product offers expose price or priceSpecification.",
+          "category": "Structured data",
+          "planAccess": "BOTH",
+          "severity": "HIGH",
+          "score": 1,
+          "weight": 2,
+          "passLabel": "Present",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "appliesWhen": "{\"var\":\"shopify.product.hasProductSchema\"}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.product.schemaHasPrice\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Product offer markup includes a price.",
+              "suggestion": "Keep schema price synchronized with the visible selected-variant price."
+            },
+            "FAIL": {
+              "message": "Product offer markup does not expose a price.",
+              "suggestion": "Update the theme's product JSON-LD to output the current variant price using Shopify's money value, without currency symbols in the numeric field."
+            },
+            "WARNING": {
+              "message": "Product price markup needs review.",
+              "suggestion": "Validate that a numeric price is present and agrees with the storefront."
+            }
+          },
+          "pageType": "PRODUCT"
+        },
+        {
+          "name": "Product Availability Schema",
+          "fieldKey": "shopify_product.schema_availability",
+          "description": "Checks that Product offers expose availability.",
+          "category": "Structured data",
+          "planAccess": "BOTH",
+          "severity": "HIGH",
+          "score": 1,
+          "weight": 1.5,
+          "passLabel": "Present",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "appliesWhen": "{\"var\":\"shopify.product.hasProductSchema\"}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.product.schemaHasAvailability\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Product offer markup includes availability.",
+              "suggestion": "Keep availability synchronized with Shopify inventory and the selected variant."
+            },
+            "FAIL": {
+              "message": "Product offer markup does not expose availability.",
+              "suggestion": "Update the product structured-data snippet to emit the correct schema.org InStock, OutOfStock, PreOrder, or BackOrder URL from Shopify inventory state."
+            },
+            "WARNING": {
+              "message": "Product availability markup needs review.",
+              "suggestion": "Validate the emitted availability against the selected variant's actual inventory state."
+            }
+          },
+          "pageType": "PRODUCT"
+        },
+        {
+          "name": "Product Currency Schema",
+          "fieldKey": "shopify_product.schema_currency",
+          "description": "Checks that Product offers expose priceCurrency.",
+          "category": "Structured data",
+          "planAccess": "PREMIUM",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1,
+          "passLabel": "Present",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "appliesWhen": "{\"var\":\"shopify.product.hasProductSchema\"}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.product.schemaHasCurrency\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Product offer markup includes a currency.",
+              "suggestion": "Keep priceCurrency aligned with the market and visible product price."
+            },
+            "FAIL": {
+              "message": "Product offer markup does not expose priceCurrency.",
+              "suggestion": "Update the theme's product JSON-LD to emit a valid three-letter currency code from Shopify's active currency."
+            },
+            "WARNING": {
+              "message": "Product currency markup needs review.",
+              "suggestion": "Confirm priceCurrency is present and matches the price shown to the visitor."
+            }
+          },
+          "pageType": "PRODUCT"
+        },
+        {
+          "name": "Aggregate Rating Schema",
+          "fieldKey": "shopify_product.aggregate_rating",
+          "description": "Checks whether Product JSON-LD includes aggregateRating.",
+          "category": "Structured data",
+          "planAccess": "PREMIUM",
+          "severity": "LOW",
+          "score": 1,
+          "weight": 0.5,
+          "passLabel": "Present",
+          "failLabel": "Absent",
+          "warningLabel": "Review",
+          "appliesWhen": "{\"var\":\"shopify.product.hasProductSchema\"}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.product.hasAggregateRating\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Product JSON-LD includes aggregate rating data.",
+              "suggestion": "Keep rating counts synchronized with visible, genuine reviews."
+            },
+            "FAIL": {
+              "message": "No aggregate rating was found in Product JSON-LD.",
+              "suggestion": "If the product has genuine visible reviews, configure the review app or theme integration to add matching aggregateRating markup. Do not fabricate ratings."
+            },
+            "WARNING": {
+              "message": "Aggregate rating markup needs review.",
+              "suggestion": "Only publish rating schema when the same reviews are visible to customers on the page."
+            }
+          },
+          "pageType": "PRODUCT"
+        },
+        {
+          "name": "Product Schema Image Set",
+          "fieldKey": "shopify_product.schema_images",
+          "description": "Counts images exposed by the Product JSON-LD image property.",
+          "category": "Product content",
+          "planAccess": "BOTH",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1,
+          "passLabel": "Rich",
+          "failLabel": "Sparse",
+          "warningLabel": "Basic",
+          "appliesWhen": "{\"var\":\"shopify.product.isProductPage\"}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "HTML",
+            "operator": "GREATER_THAN_OR_EQUAL",
+            "minValue": 3,
+            "warnOperator": "GREATER_THAN_OR_EQUAL",
+            "warnMinValue": 1,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.product.imageCount\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Product schema exposes {{count}} images.",
+              "suggestion": "Keep the image list aligned with strong, indexable product media."
+            },
+            "FAIL": {
+              "message": "Product schema does not expose a usable image.",
+              "suggestion": "Update the product JSON-LD snippet to include at least the featured product image, using an absolute Shopify CDN URL."
+            },
+            "WARNING": {
+              "message": "Product schema exposes only {{count}} image.",
+              "suggestion": "Include additional high-quality product angles in the Product image array when they are available on the page."
+            }
+          },
+          "pageType": "PRODUCT"
+        },
+        {
+          "name": "Size Guidance",
+          "fieldKey": "shopify_product.size_guide",
+          "description": "Looks for size-guide or size-chart language on the product page.",
+          "category": "Decision support",
+          "planAccess": "PREMIUM",
+          "severity": "LOW",
+          "score": 1,
+          "weight": 0.5,
+          "passLabel": "Found",
+          "failLabel": "Not found",
+          "warningLabel": "Review",
+          "appliesWhen": "{\"var\":\"shopify.product.isProductPage\"}",
+          "isEnabled": true,
+          "adminNotes": "This is a merchandising opportunity, not a universal compliance requirement; keep the low severity because non-sized products legitimately fail it.",
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.product.hasSizeGuide\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Size guidance is visible on the product page.",
+              "suggestion": "Keep measurements product-specific and easy to open near the variant selector."
+            },
+            "FAIL": {
+              "message": "No size guide or size chart was detected.",
+              "suggestion": "If this product has fit or dimension choices, add a size-guide block near the selector using a product metafield or metaobject. Ignore this recommendation for products where sizing does not apply."
+            },
+            "WARNING": {
+              "message": "Size guidance needs review.",
+              "suggestion": "Confirm shoppers can find product-specific measurements before choosing a variant."
+            }
+          },
+          "pageType": "PRODUCT"
+        },
+        {
+          "name": "Shipping Information on Product Page",
+          "fieldKey": "shopify_product.shipping_info",
+          "description": "Looks for shipping or delivery language on the product page.",
+          "category": "Decision support",
+          "planAccess": "BOTH",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1,
+          "passLabel": "Visible",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "appliesWhen": "{\"var\":\"shopify.product.isProductPage\"}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.product.hasShippingInfo\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Shipping or delivery information is visible on the product page.",
+              "suggestion": "Keep estimates, regional limits, and any free-shipping threshold accurate."
+            },
+            "FAIL": {
+              "message": "No shipping or delivery information was detected on the product page.",
+              "suggestion": "Add a concise shipping block or collapsible row in Online Store > Themes > Customize > Product template, with a link to the full shipping policy."
+            },
+            "WARNING": {
+              "message": "Product-page shipping information needs review.",
+              "suggestion": "Place the key delivery promise close to the purchase decision and link to full terms."
+            }
+          },
+          "pageType": "PRODUCT"
+        },
+        {
+          "name": "Returns Information on Product Page",
+          "fieldKey": "shopify_product.returns_info",
+          "description": "Looks for returns or refund language on the product page.",
+          "category": "Decision support",
+          "planAccess": "BOTH",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1,
+          "passLabel": "Visible",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "appliesWhen": "{\"var\":\"shopify.product.isProductPage\"}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.product.hasReturnsInfo\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Returns or refund information is visible on the product page.",
+              "suggestion": "Keep the summary consistent with the full refund policy."
+            },
+            "FAIL": {
+              "message": "No returns or refund information was detected on the product page.",
+              "suggestion": "Add a concise returns row in Online Store > Themes > Customize > Product template and link it to /policies/refund-policy."
+            },
+            "WARNING": {
+              "message": "Product-page returns information needs review.",
+              "suggestion": "State the return window and main exclusions near the buying decision, then link to full terms."
+            }
+          },
+          "pageType": "PRODUCT"
+        }
+      ],
+      "pillar": "AI_ANSWER_ENGINES"
+    },
+    {
+      "name": "Shopify URL & Indexing Hygiene",
+      "slug": "shopify-url-hygiene",
+      "shortDescription": "Duplicate-prone product links, parameterized URLs, and Shopify sitemap discovery.",
+      "detailedDescription": "Reviews links exposed by the audited page for collection-scoped product paths and query parameters that can expand crawl space, plus Shopify sitemap children.",
+      "icon": "link",
+      "weight": 1.5,
+      "contributesToScore": true,
+      "planAccess": "BOTH",
+      "isEnabled": true,
+      "defaultExpanded": true,
+      "visibleInReport": true,
+      "accentColor": "#2563EB",
+      "appliesWhen": "{\"var\":\"site.isShopify\"}",
+      "adminNotes": "Parameter counts are page-local signals, not proof of indexation. Confirm canonical tags and Search Console evidence before blocking useful filters or variants.",
+      "fields": [
+        {
+          "name": "Canonical Product Link Shape",
+          "fieldKey": "shopify_urls.collection_scoped_products",
+          "description": "Detects /collections/{handle}/products/{handle} links that create alternate product paths.",
+          "category": "Duplicate paths",
+          "planAccess": "BOTH",
+          "severity": "HIGH",
+          "score": 1,
+          "weight": 2,
+          "passLabel": "Canonical",
+          "failLabel": "Duplicate-prone",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "HTML",
+            "operator": "IS_FALSE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.urls.hasCollectionScopedProductLinks\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "No collection-scoped product links were detected.",
+              "suggestion": "Keep internal links pointed at /products/{handle} and retain self-referencing product canonicals."
+            },
+            "FAIL": {
+              "message": "The page links to collection-scoped product URLs that can expose alternate product paths.",
+              "suggestion": "In product-card and collection snippets, remove the within: collection URL pattern and link to product.url so internal links resolve to /products/{handle}."
+            },
+            "WARNING": {
+              "message": "Product URL shape needs review.",
+              "suggestion": "Verify product cards link directly to canonical /products/{handle} URLs."
+            }
+          }
+        },
+        {
+          "name": "Variant Parameter Link Volume",
+          "fieldKey": "shopify_urls.variant_parameters",
+          "description": "Counts links containing the Shopify ?variant= parameter.",
+          "category": "Query parameters",
+          "planAccess": "PREMIUM",
+          "severity": "LOW",
+          "score": 1,
+          "weight": 0.5,
+          "passLabel": "Controlled",
+          "failLabel": "High",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "HTML",
+            "operator": "LESS_THAN_OR_EQUAL",
+            "maxValue": 10,
+            "warnOperator": "LESS_THAN_OR_EQUAL",
+            "warnMaxValue": 25,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.urls.variantParamLinkCount\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Variant-parameter links are controlled on this page ({{count}} found).",
+              "suggestion": "Keep canonicals on the base product URL unless a variant page intentionally deserves separate indexing."
+            },
+            "FAIL": {
+              "message": "This page exposes {{count}} links with ?variant= parameters.",
+              "suggestion": "Review theme and swatch links. Preserve variant selection for shoppers, but avoid generating large crawlable sets when the base product URL can carry the experience."
+            },
+            "WARNING": {
+              "message": "This page exposes {{count}} variant-parameter links.",
+              "suggestion": "Confirm variant URLs canonicalize correctly and that internal linking is not multiplying near-duplicate pages."
+            }
+          }
+        },
+        {
+          "name": "Filter Parameter Link Volume",
+          "fieldKey": "shopify_urls.filter_parameters",
+          "description": "Counts links containing Shopify collection filter parameters.",
+          "category": "Query parameters",
+          "planAccess": "PREMIUM",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1,
+          "passLabel": "Controlled",
+          "failLabel": "High",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "HTML",
+            "operator": "LESS_THAN_OR_EQUAL",
+            "maxValue": 10,
+            "warnOperator": "LESS_THAN_OR_EQUAL",
+            "warnMaxValue": 30,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.urls.filterParamLinkCount\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Filter-parameter links are controlled on this page ({{count}} found).",
+              "suggestion": "Keep useful storefront filtering while monitoring which combinations search engines crawl."
+            },
+            "FAIL": {
+              "message": "This page exposes {{count}} filter-parameter links, creating a large crawl-space risk.",
+              "suggestion": "Review Shopify Search & Discovery filters and theme link generation. Keep customer-useful facets, but avoid linking every low-value filter combination."
+            },
+            "WARNING": {
+              "message": "This page exposes {{count}} filter-parameter links.",
+              "suggestion": "Check Search Console and canonical behavior before changing filters; the count is a crawl-space signal, not proof of duplicate indexation."
+            }
+          }
+        },
+        {
+          "name": "Pagination Parameter Link Volume",
+          "fieldKey": "shopify_urls.pagination_parameters",
+          "description": "Counts links containing ?page= pagination parameters.",
+          "category": "Query parameters",
+          "planAccess": "PREMIUM",
+          "severity": "LOW",
+          "score": 1,
+          "weight": 0.5,
+          "passLabel": "Controlled",
+          "failLabel": "High",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "HTML",
+            "operator": "LESS_THAN_OR_EQUAL",
+            "maxValue": 10,
+            "warnOperator": "LESS_THAN_OR_EQUAL",
+            "warnMaxValue": 30,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.urls.paginationLinkCount\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "Pagination links are controlled on this page ({{count}} found).",
+              "suggestion": "Keep paginated collection pages crawlable when they are needed to discover products."
+            },
+            "FAIL": {
+              "message": "This page exposes {{count}} pagination links.",
+              "suggestion": "Inspect collection pagination in the active theme. Avoid generating redundant page links, but do not hide product discovery from crawlers."
+            },
+            "WARNING": {
+              "message": "This page exposes {{count}} pagination links.",
+              "suggestion": "Verify the pagination is intentional, canonical behavior is consistent, and products remain discoverable."
+            }
+          }
+        },
+        {
+          "name": "Shopify Child Sitemaps",
+          "fieldKey": "shopify_urls.child_sitemaps",
+          "description": "Checks the sitemap index for Shopify product or collection child sitemaps.",
+          "category": "Sitemaps",
+          "planAccess": "BOTH",
+          "severity": "HIGH",
+          "score": 1,
+          "weight": 1.5,
+          "passLabel": "Found",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "REGEX_EVALUATOR",
+            "dataSource": "SITEMAP",
+            "operator": "MATCHES_REGEX",
+            "regexPattern": "sitemap_(products|collections)",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"shopify.sitemapChildren\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "The sitemap index exposes Shopify product or collection child sitemaps.",
+              "suggestion": "Keep /sitemap.xml accessible and submit it to the relevant search-engine webmaster tools."
+            },
+            "FAIL": {
+              "message": "No Shopify product or collection child sitemap was detected.",
+              "suggestion": "Check /sitemap.xml directly, confirm storefront password protection is off for production, and verify no proxy or robots rule is replacing Shopify's generated sitemap."
+            },
+            "WARNING": {
+              "message": "Shopify child sitemap discovery needs review.",
+              "suggestion": "Confirm /sitemap.xml lists the expected product and collection sitemap files."
+            }
+          }
+        }
+      ],
+      "pillar": "FOUNDATIONS"
+    },
+    {
+      "name": "AI Discoverability",
+      "slug": "ai-discoverability",
+      "shortDescription": "Machine-readable signals that help answer engines understand and cite the site.",
+      "detailedDescription": "Checks for a real root-level llms.txt file, basic file substance, a recognizable heading, and structured data. llms.txt is an emerging convention, so its checks carry modest weight.",
+      "icon": "sparkles",
+      "weight": 0.75,
+      "contributesToScore": true,
+      "planAccess": "BOTH",
+      "isEnabled": true,
+      "defaultExpanded": true,
+      "visibleInReport": true,
+      "accentColor": "#9333EA",
+      "adminNotes": "Universal section: do not add a Shopify platform gate. llms.txt is emerging rather than a formal ranking requirement, so absence is low severity.",
+      "fields": [
+        {
+          "name": "llms.txt Available",
+          "fieldKey": "ai_discoverability.llms_exists",
+          "description": "Checks for a non-HTML 200 response at /llms.txt.",
+          "category": "llms.txt",
+          "planAccess": "BOTH",
+          "severity": "LOW",
+          "score": 1,
+          "weight": 1,
+          "passLabel": "Available",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "BOOLEAN_CHECK",
+            "dataSource": "ROBOTS",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"llms.exists\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "A text llms.txt file is available at the site root.",
+              "suggestion": "Keep it concise, factual, and synchronized with the site's canonical pages."
+            },
+            "FAIL": {
+              "message": "No valid llms.txt file was found at /llms.txt.",
+              "suggestion": "Publish a plain-text /llms.txt that identifies the site and links to the most useful canonical content. On Shopify, this may require an app proxy, edge route, or supported routing integration."
+            },
+            "WARNING": {
+              "message": "The llms.txt endpoint needs review.",
+              "suggestion": "Confirm it returns plain text with a 200 response rather than an HTML soft-404 page."
+            }
+          }
+        },
+        {
+          "name": "llms.txt Substance",
+          "fieldKey": "ai_discoverability.llms_size",
+          "description": "Checks that llms.txt contains more than a token placeholder.",
+          "category": "llms.txt",
+          "planAccess": "PREMIUM",
+          "severity": "LOW",
+          "score": 1,
+          "weight": 0.5,
+          "passLabel": "Substantive",
+          "failLabel": "Thin",
+          "warningLabel": "Basic",
+          "appliesWhen": "{\"var\":\"llms.exists\"}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "NUMERIC_COMPARISON",
+            "dataSource": "ROBOTS",
+            "operator": "GREATER_THAN_OR_EQUAL",
+            "minValue": 200,
+            "warnOperator": "GREATER_THAN_OR_EQUAL",
+            "warnMinValue": 50,
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"llms.sizeBytes\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "llms.txt contains {{count}} bytes of content.",
+              "suggestion": "Keep the file focused on identity, key sections, and canonical references rather than copying the whole site."
+            },
+            "FAIL": {
+              "message": "llms.txt contains only {{count}} bytes and appears to be a placeholder.",
+              "suggestion": "Add a clear site heading, short description, and curated links to primary product, collection, policy, support, and editorial pages."
+            },
+            "WARNING": {
+              "message": "llms.txt is present but brief at {{count}} bytes.",
+              "suggestion": "Add enough context and canonical links to make the file useful without turning it into a content dump."
+            }
+          }
+        },
+        {
+          "name": "llms.txt Primary Heading",
+          "fieldKey": "ai_discoverability.llms_heading",
+          "description": "Checks that llms.txt begins with a Markdown H1 heading.",
+          "category": "llms.txt",
+          "planAccess": "PREMIUM",
+          "severity": "LOW",
+          "score": 1,
+          "weight": 0.5,
+          "passLabel": "Structured",
+          "failLabel": "Unstructured",
+          "warningLabel": "Review",
+          "appliesWhen": "{\"var\":\"llms.exists\"}",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "REGEX_EVALUATOR",
+            "dataSource": "ROBOTS",
+            "operator": "MATCHES_REGEX",
+            "regexPattern": "^#\\s+\\S",
+            "caseSensitive": false,
+            "configJson": "{\"path\":\"llms.content\"}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "llms.txt starts with a clear Markdown H1.",
+              "suggestion": "Use the official brand or site name and keep the description immediately below it accurate."
+            },
+            "FAIL": {
+              "message": "llms.txt does not start with a recognizable Markdown H1.",
+              "suggestion": "Begin the file with '# Brand or Site Name', followed by a concise description and curated Markdown links."
+            },
+            "WARNING": {
+              "message": "The llms.txt heading needs review.",
+              "suggestion": "Use one clear top-level heading before the descriptive text and link groups."
+            }
+          }
+        },
+        {
+          "name": "Structured Data Present",
+          "fieldKey": "ai_discoverability.structured_data",
+          "description": "Checks for JSON-LD that gives machines explicit entity and content context.",
+          "category": "Machine-readable context",
+          "planAccess": "BOTH",
+          "severity": "MEDIUM",
+          "score": 1,
+          "weight": 1.5,
+          "passLabel": "Present",
+          "failLabel": "Missing",
+          "warningLabel": "Review",
+          "isEnabled": true,
+          "criteria": {
+            "inspectionType": "STRUCTURED_DATA",
+            "dataSource": "HTML",
+            "operator": "IS_TRUE",
+            "caseSensitive": false,
+            "configJson": "{}"
+          },
+          "messages": {
+            "PASS": {
+              "message": "The page includes JSON-LD structured data.",
+              "suggestion": "Keep the markup valid and aligned with visible page content."
+            },
+            "FAIL": {
+              "message": "No JSON-LD structured data was detected.",
+              "suggestion": "Add schema appropriate to the page type. For Shopify, verify the active theme outputs Organization/WebSite context and Product data on product templates."
+            },
+            "WARNING": {
+              "message": "Structured data needs review.",
+              "suggestion": "Validate the page's JSON-LD and remove stale or conflicting blocks from old apps and theme snippets."
+            }
+          }
+        }
+      ],
+      "pillar": "AI_ANSWER_ENGINES"
+    }
+  ]
+}

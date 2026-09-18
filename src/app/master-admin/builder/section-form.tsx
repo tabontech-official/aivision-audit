@@ -8,6 +8,15 @@ import { SECTION_ICONS } from "@/lib/validation/builder";
 import { createSectionAction, updateSectionAction } from "./actions";
 import type { BuilderSection } from "./builder-client";
 
+const PILLAR_OPTIONS = [
+  { value: "FOUNDATIONS", label: "Foundations" },
+  { value: "SPEED_VITALS", label: "Speed & Vitals" },
+  { value: "ONPAGE_CONTENT", label: "On-page Content" },
+  { value: "AI_ANSWER_ENGINES", label: "AI & Answer Engines" },
+  { value: "TRUST_COMPLIANCE", label: "Trust & Compliance" },
+  { value: "CONVERSION_UX", label: "Conversion & UX" },
+];
+
 const PLAN_OPTIONS = [
   { value: "BOTH", label: "Free + Premium" },
   { value: "FREE", label: "Free only" },
@@ -51,6 +60,8 @@ export function SectionForm({
     defaultExpanded: section?.defaultExpanded ?? true,
     visibleInReport: section?.visibleInReport ?? true,
     accentColor: section?.accentColor ?? "#4F46E5",
+    pillar: section?.pillar ?? "FOUNDATIONS",
+    appliesWhen: section?.appliesWhen ?? "",
     adminNotes: section?.adminNotes ?? "",
   });
 
@@ -167,6 +178,24 @@ export function SectionForm({
       </div>
 
       <label className="block text-sm font-medium text-ink">
+        Pillar
+        <select
+          value={form.pillar}
+          onChange={(e) => set("pillar", e.target.value)}
+          className="mt-1.5 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+        >
+          {PILLAR_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <span className="mt-1 block text-xs font-normal text-ink-muted">
+          The customer-facing group this section renders under in the report.
+        </span>
+      </label>
+
+      <label className="block text-sm font-medium text-ink">
         Plan access
         <select
           value={form.planAccess}
@@ -201,6 +230,26 @@ export function SectionForm({
           </label>
         ))}
       </div>
+
+      <label className="block text-sm font-medium text-ink">
+        Applies when <span className="font-normal text-ink-muted">(optional platform gate)</span>
+        <textarea
+          value={form.appliesWhen}
+          onChange={(e) => set("appliesWhen", e.target.value)}
+          rows={2}
+          placeholder='JsonLogic over the snapshot, e.g. {"var":"site.isShopify"} — leave empty to always apply'
+          className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+        />
+        {fieldErrors.appliesWhen?.[0] && (
+          <span className="mt-1 block text-xs font-normal text-danger-600">
+            {fieldErrors.appliesWhen[0]}
+          </span>
+        )}
+        <span className="mt-1 block text-xs font-normal text-ink-muted">
+          When falsy, every check in this section resolves Not&nbsp;Applicable and the section is
+          excluded from the score. Same operations as the rules evaluator.
+        </span>
+      </label>
 
       <label className="block text-sm font-medium text-ink">
         Internal admin notes

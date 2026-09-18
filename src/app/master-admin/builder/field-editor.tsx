@@ -100,6 +100,8 @@ export function FieldEditor({
     warningLabel: field?.warningLabel ?? "Partial",
     helpArticleUrl: field?.helpArticleUrl ?? "",
     isEnabled: field?.isEnabled ?? true,
+    appliesWhen: field?.appliesWhen ?? "",
+    pageType: field?.pageType ?? "HOME",
     adminNotes: field?.adminNotes ?? "",
     criteria: {
       inspectionType: field?.criteria?.inspectionType ?? "ELEMENT_EXISTS",
@@ -158,7 +160,11 @@ export function FieldEditor({
   const runTest = () => {
     setTestResult(null);
     startTestTransition(async () => {
-      const result = await testCriterionAction({ url: testUrl, criteria: form.criteria });
+      const result = await testCriterionAction({
+        url: testUrl,
+        criteria: form.criteria,
+        appliesWhen: form.appliesWhen,
+      });
       if (result.ok && result.data) setTestResult(result.data);
       else if (!result.ok) setTestResult({ error: result.error });
     });
@@ -440,6 +446,15 @@ export function FieldEditor({
                       (HTTP {testResult.httpStatus} · {testResult.fetchedUrl})
                     </span>
                   </div>
+                  {testResult.appliesWhenPassed !== null && (
+                    <div className={testResult.appliesWhenPassed ? "text-ink-secondary" : "text-warning-700"}>
+                      Applies-when gate:{" "}
+                      {testResult.appliesWhenPassed
+                        ? "passed — the check runs on this site"
+                        : "did NOT pass — on a real audit this check would resolve Not Applicable here"}
+                      {testResult.detectedPlatform ? ` (detected: ${testResult.detectedPlatform})` : ""}
+                    </div>
+                  )}
                   <div className="text-ink-secondary">
                     Detected: <code className="rounded bg-slate-100 px-1">{testResult.actualValue ?? "—"}</code>
                     {" · "}Expected: {testResult.expectedSummary}
@@ -539,6 +554,43 @@ export function FieldEditor({
           placeholder="Optional grouping tag"
         />
       </div>
+
+      <label className="block text-sm font-medium text-ink">
+        Page inspected
+        <select
+          value={form.pageType}
+          onChange={(e) => set("pageType", e.target.value)}
+          className={selectCls}
+        >
+          <option value="HOME">Home — the audited URL itself</option>
+          <option value="PRODUCT">Product page (sampled from the sitemap)</option>
+          <option value="COLLECTION">Collection page (sampled)</option>
+          <option value="BLOG">Blog post (sampled)</option>
+        </select>
+        <span className="mt-1 block text-xs font-normal text-ink-muted">
+          Non-home types are sampled from the store&apos;s sitemap during the audit. If that page
+          type could not be sampled, the check reports Not&nbsp;Applicable — never a failure.
+        </span>
+      </label>
+
+      <label className="block text-sm font-medium text-ink">
+        Applies when <span className="font-normal text-ink-muted">(optional platform gate)</span>
+        <textarea
+          value={form.appliesWhen}
+          onChange={(e) => set("appliesWhen", e.target.value)}
+          rows={2}
+          placeholder='JsonLogic, e.g. {"var":"site.isShopify"} or {">":[{"var":"site.appCount"},0]} — empty = always applies'
+          className={textareaCls}
+        />
+        {fieldErrors.appliesWhen?.[0] && (
+          <p className="mt-1 text-xs text-danger-600">{fieldErrors.appliesWhen[0]}</p>
+        )}
+        <span className="mt-1 block text-xs font-normal text-ink-muted">
+          Falsy → the check resolves Not&nbsp;Applicable (excluded from scoring, never a FAIL).
+          Errors fail open. Use the test tool above to see whether the gate passes on a real URL.
+        </span>
+      </label>
+
       <div className={cn("flex items-center justify-between border-t border-slate-100 pt-4")}>
         <label className="flex items-center gap-2 text-sm text-ink-secondary">
           <input

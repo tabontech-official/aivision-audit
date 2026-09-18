@@ -72,6 +72,49 @@ async function connectBrowser(): Promise<MinimalBrowser | null> {
 }
 
 /**
+ * Cheap availability probe — no browser is launched. Local mode checks that
+ * the Playwright executable actually exists on disk: the B.10 study found
+ * production-shaped environments attempting 100% of renders and completing 0%
+ * because the binary was missing, failing silently by design. Renders now only
+ * fire for the JS-heavy storefronts this product targets, so a missing binary
+ * there would mean a plausible-looking report built on an empty DOM.
+ */
+export async function checkBrowserAvailability(): Promise<{
+  mode: "remote" | "local";
+  available: boolean;
+  detail: string;
+}> {
+  if (process.env.BROWSER_WS_ENDPOINT) {
+    // A remote endpoint cannot be probed cheaply without opening a session;
+    // report the configuration and let render logs confirm liveness.
+    return {
+      mode: "remote",
+      available: true,
+      detail: new URL(process.env.BROWSER_WS_ENDPOINT).host,
+    };
+  }
+  try {
+    const pw = await import("playwright-core");
+    const executable = pw.chromium.executablePath();
+    const { existsSync } = await import("node:fs");
+    if (executable && existsSync(executable)) {
+      return { mode: "local", available: true, detail: "Playwright binary present" };
+    }
+    return {
+      mode: "local",
+      available: false,
+      detail: "Playwright browser binary MISSING — renders will silently skip (npx playwright install chromium-headless-shell)",
+    };
+  } catch (err) {
+    return {
+      mode: "local",
+      available: false,
+      detail: `playwright-core unavailable: ${err instanceof Error ? err.message.split("\n")[0] : String(err)}`,
+    };
+  }
+}
+
+/**
  * Render a page and capture HTML + screenshot. Returns null when no browser
  * is available or rendering fails — the audit continues on static HTML.
  */

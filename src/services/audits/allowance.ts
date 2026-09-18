@@ -25,8 +25,17 @@ export async function getAllowance(userId: string, plan: UserPlan): Promise<Allo
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
 
+  // A SYSTEM failure (reaped orphan, dispatch failure, transaction error) is
+  // our fault — it must not consume the user's credit. A user-caused failure
+  // (bad URL, unreachable site) was a real attempt and still counts. There is
+  // no counter to decrement anywhere: the refund IS this exclusion.
   const used = await db.report.count({
-    where: { userId, createdAt: { gte: monthStart }, deletedAt: null },
+    where: {
+      userId,
+      createdAt: { gte: monthStart },
+      deletedAt: null,
+      NOT: { status: "FAILED", failureCategory: "SYSTEM" },
+    },
   });
 
   const periodResetsAt = new Date(monthStart);

@@ -8,6 +8,8 @@ export type LogCategory =
   | "AUDIT_PIPELINE"
   | "FETCH_HTML"
   | "PLAYWRIGHT_RENDER"
+  | "RENDER"
+  | "FINDINGS"
   | "PAGESPEED_API"
   | "CRITERIA_EVAL"
   | "ADMIN_ACTION"

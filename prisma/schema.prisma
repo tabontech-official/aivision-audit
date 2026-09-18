@@ -43,6 +43,63 @@ enum ReportStatus {
   PARTIAL
 }
 
+// Why an audit failed. Drives allowance refunds: a SYSTEM failure is our
+// fault and must not consume the user's monthly credit, while a bad URL or an
+// unreachable target site is a real attempt and still counts.
+enum FailureCategory {
+  SYSTEM // dispatch failure, reaped orphan, transaction error, uncaught crash
+  USER_INPUT // invalid or unauditable URL
+  TARGET_SITE // the audited site could not be fetched or rendered
+}
+
+// Which page type a check inspects (multi-page sampling). HOME is the audited
+// URL itself and always exists; the rest are sampled from the site's sitemap
+// when discovery succeeds. A check whose page type was not sampled resolves
+// NOT_APPLICABLE — never a false failure.
+enum ReportPageType {
+  HOME
+  PRODUCT
+  COLLECTION
+  BLOG
+}
+
+// Report pillars (Part F) — the customer-facing grouping above sections.
+// Order here is display order.
+enum ReportPillar {
+  FOUNDATIONS
+  SPEED_VITALS
+  ONPAGE_CONTENT
+  AI_ANSWER_ENGINES
+  TRUST_COMPLIANCE
+  CONVERSION_UX
+}
+
+// The Fix Loop (Phase 2). A Finding lives on the WEBSITE, not the report:
+// reports are observations of ongoing state, and this is what makes audit N
+// aware that audit N-1 existed.
+enum FindingState {
+  OPEN // detected, untouched
+  ACKNOWLEDGED // user confirms it's real
+  IN_PROGRESS // user is working on it
+  MARKED_FIXED // user claims fixed — awaiting verification
+  VERIFIED_FIXED // engine confirmed it now passes
+  STILL_FAILING // user said fixed; engine disagrees
+  REGRESSED // was verified fixed, now failing again
+  WONT_FIX // accepted risk — excluded from scoring
+  FALSE_POSITIVE // user disputes the check — excluded from scoring
+}
+
+enum FindingActor {
+  ENGINE
+  USER
+}
+
+enum AuditSchedule {
+  NONE
+  WEEKLY
+  MONTHLY
+}
+
 enum AuditStage {
   CONNECTING
   FETCHING_HTML
@@ -187,6 +244,12 @@ model User {
   lastLoginAt         DateTime? @map("last_login_at") @db.Timestamptz
   failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
   lockedUntil         DateTime? @map("locked_until") @db.Timestamptz
+  // Copied from the Lead on signup; marketing sends must check this, not the Lead.
+  marketingConsent    Boolean   @default(false) @map("marketing_consent")
+  marketingConsentAt  DateTime? @map("marketing_consent_at") @db.Timestamptz
+  // Delta/result audit emails — a separate switch from marketing consent:
+  // these are transactional, but the user may still opt out of them.
+  auditEmailsEnabled  Boolean   @default(true) @map("audit_emails_enabled")
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt           DateTime? @map("deleted_at") @db.Timestamptz
@@ -394,7 +457,14 @@ model ReportSection {
   planAccess          PlanAccess @default(BOTH) @map("plan_access")
   visibleInReport     Boolean    @default(true) @map("visible_in_report")
   accentColor         String?    @map("accent_color") // hex, validated
+  // Customer-facing grouping above sections (Part F). Migration maps existing
+  // sections explicitly by slug; only genuinely new sections take the default.
+  pillar              ReportPillar @default(FOUNDATIONS)
   isSystem            Boolean    @default(false) @map("is_system") // e.g. Page Speed — undeletable
+  // JsonLogic gate (same sandboxed evaluator as RULES_EVALUATOR) over the
+  // extracted snapshot. Falsy → every check in the section is NOT_APPLICABLE
+  // (excluded from scoring, recorded in scoreBasis). Absent → always applies.
+  appliesWhen         String?    @map("applies_when")
   adminNotes          String?    @map("admin_notes")
   createdAt           DateTime   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime   @updatedAt @map("updated_at") @db.Timestamptz
@@ -426,6 +496,11 @@ model AuditField {
   failLabel      String     @default("No") @map("fail_label")
   warningLabel   String     @default("Partial") @map("warning_label")
   helpArticleUrl String?    @map("help_article_url")
+  // Per-check JsonLogic gate; falsy → NOT_APPLICABLE. Errors fail OPEN (the
+  // check runs) — a misconfigured gate must not silently delete checks.
+  appliesWhen    String?    @map("applies_when")
+  // Which sampled page this check inspects. HOME (default) is the audited URL.
+  pageType       ReportPageType @default(HOME) @map("page_type")
   adminNotes     String?    @map("admin_notes")
   createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz
@@ -504,12 +579,19 @@ model Website {
   userId         String?   @map("user_id") @db.Uuid // null for anonymous, claimed on signup
   firstAuditedAt DateTime? @map("first_audited_at") @db.Timestamptz
   lastAuditedAt  DateTime? @map("last_audited_at") @db.Timestamptz
+  // Scheduled re-audits (§2.9): FREE plans may schedule MONTHLY at most,
+  // PREMIUM may schedule WEEKLY. Enforced at save and re-checked by the cron.
+  auditSchedule  AuditSchedule @default(NONE) @map("audit_schedule")
+  // "Skip and notify ONCE" when the allowance is exhausted — this remembers
+  // that the notice was sent so a full month never produces a notice storm.
+  scheduleSkipNotifiedAt DateTime? @map("schedule_skip_notified_at") @db.Timestamptz
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
 
-  user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reports Report[]
+  user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reports  Report[]
+  findings Finding[]
 
   @@unique([userId, url])
   @@index([userId])
@@ -538,6 +620,14 @@ model Report {
   criticalIssueCount Int           @default(0) @map("critical_issue_count")
   screenshotUrl      String?       @map("screenshot_url")
   errorMessage       String?       @map("error_message") // safe, user-facing failure summary
+  failureCategory    FailureCategory? @map("failure_category") // who is at fault — drives allowance refunds
+  retryCount         Int           @default(0) @map("retry_count") // watchdog auto-retries once
+  // Fix Loop (Phase 2). previousReportId is resolved at RECONCILIATION time —
+  // most recent COMPLETED/PARTIAL reconciled report for the same website —
+  // so out-of-order completion cannot produce a wrong chain.
+  previousReportId      String?   @map("previous_report_id") @db.Uuid
+  scoreDelta            Float?    @map("score_delta")
+  findingsReconciledAt  DateTime? @map("findings_reconciled_at") @db.Timestamptz
   startedAt          DateTime?     @map("started_at") @db.Timestamptz
   completedAt        DateTime?     @map("completed_at") @db.Timestamptz
   expiresAt          DateTime?     @map("expires_at") @db.Timestamptz // anonymous reports expire
@@ -554,6 +644,8 @@ model Report {
   rawData          WebsiteRawData?
   pageSpeedResults PageSpeedResult[]
   snapshot         ReportSnapshot?
+  findingEvents    FindingEvent[]
+  sampledPages     SampledPage[]
 
   @@index([userId, createdAt])
   @@index([websiteId])
@@ -600,6 +692,12 @@ model AuditResult {
   score             Float       @default(0)
   maxScore          Float       @default(0) @map("max_score")
   isQuickWin        Boolean     @default(false) @map("is_quick_win")
+  // Fix Loop: user-suppressed (WONT_FIX/FALSE_POSITIVE) — excluded from both
+  // sides of the score exactly like NOT_APPLICABLE. `status` still records the
+  // TRUE verdict; only its effect on the score is suppressed, never the
+  // observation itself. findingId is a loose reference (no FK by design).
+  suppressed        Boolean     @default(false)
+  findingId         String?     @map("finding_id") @db.Uuid
   createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz
 
   report        Report              @relation(fields: [reportId], references: [id], onDelete: Cascade)
@@ -628,11 +726,37 @@ model WebsiteRawData {
   htmlSizeBytes       Int?     @map("html_size_bytes")
   fetchDurationMs     Int?     @map("fetch_duration_ms")
   renderedWithBrowser Boolean  @default(false) @map("rendered_with_browser")
+  // Render-cost instrumentation (B.10): the pre-render decision with its
+  // signals and reasons, whether a render ran, how long it took, and whether
+  // the rendered DOM was actually richer. Queryable for the Pipeline Console
+  // render-rate stats and for tuning RENDER_DECISION_THRESHOLD.
+  renderMetrics       Json?    @map("render_metrics")
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
   @@map("website_raw_data")
+}
+
+// Additional pages sampled beyond the audited URL (multi-page sampling).
+// WebsiteRawData stays 1:1 as the PRIMARY page — that contract is relied on
+// throughout — and these are the extra page types discovered from the site's
+// sitemap. One row per page type per report.
+model SampledPage {
+  id         String         @id @default(uuid()) @db.Uuid
+  reportId   String         @map("report_id") @db.Uuid
+  pageType   ReportPageType @map("page_type")
+  url        String
+  httpStatus Int?           @map("http_status")
+  extracted  Json           @default("{}") // same ExtractedData shape as WebsiteRawData
+  html       String? // capped; enables selector checks on re-evaluation
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, pageType])
+  @@index([reportId])
+  @@map("sampled_pages")
 }
 
 model PageSpeedResult {
@@ -670,6 +794,10 @@ model ReportSnapshot {
   id        String   @id @default(uuid()) @db.Uuid
   reportId  String   @unique @map("report_id") @db.Uuid
   payload   Json
+  // What fraction of the intended scoring model this score was actually
+  // computed over, and which sections dropped out. A PARTIAL report's score is
+  // not comparable to a COMPLETED one, and this is how the UI can say so.
+  scoreBasis Json?   @map("score_basis")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
@@ -795,12 +923,133 @@ model StripeWebhookEvent {
 }
 
 // ----------------------------------------------------------------
+// LEADS — the primary business goal
+// ----------------------------------------------------------------
+
+// Captured on the landing form BEFORE the audit runs: a visitor who audits,
+// reads the teaser and leaves still gave us a URL and an email. One row per
+// email+domain pair; repeat audits update rather than duplicate.
+model Lead {
+  id         String @id @default(uuid()) @db.Uuid
+  email      String
+  websiteUrl String @map("website_url") // normalized
+  domain     String // for grouping and dedupe
+
+  // GDPR/UK-PECR: consent defaults unticked, stored with proof. The IP is
+  // hashed — proof of consent without retaining the address itself.
+  marketingConsent Boolean   @default(false) @map("marketing_consent")
+  consentAt        DateTime? @map("consent_at") @db.Timestamptz
+  consentIpHash    String?   @map("consent_ip_hash") // sha256(ip)
+  source           String? // landing | pricing | blog | partner
+
+  // Shopify pivot: which platforms show up is market data.
+  platform       String? // SHOPIFY | HYDROGEN | WORDPRESS | … | UNKNOWN
+  themeName      String? @map("theme_name")
+  appCount       Int?    @map("app_count")
+  plusLikelihood String? @map("plus_likelihood") // unknown | possible
+
+  anonymousSessionId String?   @map("anonymous_session_id") @db.Uuid
+  firstReportId      String?   @map("first_report_id") @db.Uuid
+  convertedUserId    String?   @map("converted_user_id") @db.Uuid
+  convertedAt        DateTime? @map("converted_at") @db.Timestamptz
+
+  unsubscribedAt DateTime? @map("unsubscribed_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([email, domain])
+  @@index([email])
+  @@index([domain])
+  @@index([convertedUserId])
+  @@index([platform])
+  @@map("leads")
+}
+
+// ----------------------------------------------------------------
+// THE FIX LOOP (Phase 2)
+// ----------------------------------------------------------------
+
+model Finding {
+  id        String  @id @default(uuid()) @db.Uuid
+  websiteId String  @map("website_id") @db.Uuid
+  website   Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  identityHash String @map("identity_hash") // sha256(fieldKey + ':' + normalizedPageUrl)
+  fieldKey     String @map("field_key")
+  pageUrl      String @map("page_url")
+
+  // Denormalized for display and filtering — REFRESHED on every reconciliation.
+  sectionSlug String   @map("section_slug")
+  sectionName String   @map("section_name")
+  checkName   String   @map("check_name")
+  severity    Severity
+  pillar      ReportPillar @default(FOUNDATIONS)
+
+  state    FindingState @default(OPEN)
+  userNote String?      @map("user_note") @db.Text
+
+  firstSeenAt  DateTime  @default(now()) @map("first_seen_at") @db.Timestamptz
+  lastSeenAt   DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz
+  resolvedAt   DateTime? @map("resolved_at") @db.Timestamptz // set entering VERIFIED_FIXED, cleared on exit
+  staleSince   DateTime? @map("stale_since") @db.Timestamptz // audit produced no result for this identity
+  lastReportId String?   @map("last_report_id") @db.Uuid
+
+  events FindingEvent[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([websiteId, identityHash])
+  @@index([websiteId, state])
+  @@index([websiteId, severity])
+  @@index([websiteId, staleSince])
+  @@map("findings")
+}
+
+model FindingEvent {
+  id        String  @id @default(uuid()) @db.Uuid
+  findingId String  @map("finding_id") @db.Uuid
+  finding   Finding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+
+  // Deleting a report must never destroy finding history — SetNull, not Cascade.
+  reportId String? @map("report_id") @db.Uuid
+  report   Report? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+
+  checkStatus CheckStatus?  @map("check_status") // what the engine observed this run
+  stateBefore FindingState? @map("state_before") // null = this event created the finding
+  stateAfter  FindingState  @map("state_after")
+  actor       FindingActor
+  userId      String?       @map("user_id") @db.Uuid
+  note        String?       @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([findingId, createdAt])
+  @@index([reportId])
+  @@map("finding_events")
+}
+
+// Lightweight funnel counters (Part D) — append-only, so the progressive
+// lead-capture decision can be evaluated rather than argued about. The number
+// that matters: emails captured per 100 audits started.
+model FunnelEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  event     String // audit_started | email_captured_progress | email_captured_signup | audit_completed | teaser_viewed | signup_completed
+  reportId  String?  @map("report_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([event, createdAt])
+  @@map("funnel_events")
+}
+
+// ----------------------------------------------------------------
 // SYSTEM
 // ----------------------------------------------------------------
 
 // Key-value settings. Typed access layer validates each key with Zod.
-// `isSecret` values are AES-256-GCM encrypted (SETTINGS_ENCRYPTION_KEY),
-// masked in all API responses.
+// `isSecret` values are AES-256-GCM encrypted (SETTINGS_ENCRYPTION_KEY) via
+// src/lib/security/secrets.ts, masked in all API responses. Migrate legacy
+// plaintext rows with scripts/encrypt-secret-settings.ts.
 // Seeded keys: product_name, support_email, free_audit_limit,
 // premium_audit_limit, anonymous_report_expiration_days, score_ranges,
 // pagespeed_api_key (secret), maintenance_mode, terms_url, privacy_url,
