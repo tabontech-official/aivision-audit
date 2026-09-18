@@ -86,8 +86,8 @@ export function Hero() {
               </div>
             </div>
 
-            {/* Main Headline - Structured across 3 lines with proper vertical gap */}
-            <h1 className="font-display font-semibold text-[#181D27] text-3xl sm:text-4xl md:text-[44px] lg:text-[48px] xl:text-[54px] 2xl:text-[58px] leading-[1.25] sm:leading-[1.28] tracking-[-0.025em] space-y-2 sm:space-y-2.5">
+            {/* Main Headline - Extra tight line spacing */}
+            <h1 className="font-display font-semibold text-[#181D27] text-3xl sm:text-4xl md:text-[44px] lg:text-[48px] xl:text-[54px] 2xl:text-[58px] leading-[1.0] sm:leading-[1.02] tracking-[-0.03em]">
               <span className="block sm:whitespace-nowrap">Reclaim Lost Traffic</span>
               <span className="block sm:whitespace-nowrap">with LLM-Ready</span>
               <span className="block sm:whitespace-nowrap">SEO Intelligence</span>
