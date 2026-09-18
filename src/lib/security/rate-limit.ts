@@ -54,33 +54,39 @@ async function redisLimit(
   const windowStart = now - windowMs;
   const redisKey = `rl:${key}`;
 
-  // Pipeline: prune old entries, add current, count, set TTL
-  const res = await fetch(`${url}/pipeline`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify([
-      ["ZREMRANGEBYSCORE", redisKey, "0", String(windowStart)],
-      ["ZADD", redisKey, String(now), `${now}:${Math.random().toString(36).slice(2, 8)}`],
-      ["ZCARD", redisKey],
-      ["PEXPIRE", redisKey, String(windowMs)],
-    ]),
-    cache: "no-store",
-  });
+  try {
+    // Pipeline: prune old entries, add current, count, set TTL
+    const res = await fetch(`${url}/pipeline`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify([
+        ["ZREMRANGEBYSCORE", redisKey, "0", String(windowStart)],
+        ["ZADD", redisKey, String(now), `${now}:${Math.random().toString(36).slice(2, 8)}`],
+        ["ZCARD", redisKey],
+        ["PEXPIRE", redisKey, String(windowMs)],
+      ]),
+      cache: "no-store",
+    });
 
-  if (!res.ok) {
-    // Redis unavailable — fail open but log; blocking all traffic is worse
-    console.error(`[rate-limit] Redis error ${res.status}`);
-    return { allowed: true, remaining: 1, resetAt: now + windowMs };
+    if (!res.ok) {
+      // Redis unavailable — fail open with memory fallback
+      console.error(`[rate-limit] Redis error ${res.status}, falling back to memory store`);
+      return memoryLimit(key, limit, windowMs);
+    }
+
+    const data = (await res.json()) as Array<{ result: number }>;
+    const count = data[2]?.result ?? 1;
+
+    return {
+      allowed: count <= limit,
+      remaining: Math.max(0, limit - count),
+      resetAt: now + windowMs,
+    };
+  } catch (err) {
+    // Network / DNS error (e.g. ENOTFOUND) — gracefully fallback to memory rate limiting
+    console.error("[rate-limit] Redis connection failed, falling back to memory store:", err);
+    return memoryLimit(key, limit, windowMs);
   }
-
-  const data = (await res.json()) as Array<{ result: number }>;
-  const count = data[2]?.result ?? 1;
-
-  return {
-    allowed: count <= limit,
-    remaining: Math.max(0, limit - count),
-    resetAt: now + windowMs,
-  };
 }
 
 export async function rateLimit(
