@@ -118,8 +118,9 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
               <div className="absolute top-full left-0 pt-2 z-50">
                 <div className="w-[620px] rounded-2xl border border-slate-200/90 bg-white p-6 shadow-2xl">
                   <div className="grid grid-cols-2 gap-x-7 gap-y-6">
-                    <a
-                      href="#features"
+                    <Link
+                      href="/tools/seo-health-check"
+                      onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3 rounded-lg p-1 transition"
                     >
                       <div className="mt-0.5 shrink-0 text-[#FF4D00]">
@@ -133,10 +134,11 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                           Meta tags, headings, canonicals, robots.txt, and sitemap health.
                         </p>
                       </div>
-                    </a>
+                    </Link>
 
-                    <a
-                      href="#features"
+                    <Link
+                      href="/tools/speed-core-vitals"
+                      onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3 rounded-lg p-1 transition"
                     >
                       <div className="mt-0.5 shrink-0 text-[#FF4D00]">
@@ -144,16 +146,17 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                       </div>
                       <div>
                         <div className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
-                          Speed & Core Vitals
+                          Speed &amp; Core Vitals
                         </div>
                         <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
                           Google PageSpeed metrics, LCP, CLS, FCP, and performance scoring.
                         </p>
                       </div>
-                    </a>
+                    </Link>
 
-                    <a
-                      href="#features"
+                    <Link
+                      href="/tools/mobile-ux-review"
+                      onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3 rounded-lg p-1 transition"
                     >
                       <div className="mt-0.5 shrink-0 text-[#FF4D00]">
@@ -161,16 +164,17 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                       </div>
                       <div>
                         <div className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
-                          Mobile & UX Review
+                          Mobile &amp; UX Review
                         </div>
                         <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
                           Mobile responsiveness, tap targets, contrast, and layout audits.
                         </p>
                       </div>
-                    </a>
+                    </Link>
 
-                    <a
-                      href="#features"
+                    <Link
+                      href="/tools/security-trust"
+                      onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3 rounded-lg p-1 transition"
                     >
                       <div className="mt-0.5 shrink-0 text-[#FF4D00]">
@@ -178,13 +182,13 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                       </div>
                       <div>
                         <div className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
-                          Security & Trust
+                          Security &amp; Trust
                         </div>
                         <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
                           SSL status, broken link checks, headers, and trust signal validation.
                         </p>
                       </div>
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>

@@ -16,7 +16,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="space-y-1.5">
         {label && (
-          <label htmlFor={inputId} className="block text-sm font-medium text-ink">
+          <label htmlFor={inputId} className="block text-sm font-semibold text-slate-900 mb-1.5">
             {label}
           </label>
         )}
@@ -26,9 +26,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           className={cn(
-            "h-10 w-full rounded-lg border bg-white px-3 text-sm text-ink placeholder:text-ink-muted",
-            "transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20",
-            error ? "border-danger-500" : "border-slate-300",
+            "h-12 w-full rounded-xl border bg-white px-4 text-sm sm:text-base text-slate-900 placeholder:text-slate-400",
+            "transition-all focus:border-[#FF4D00] focus:outline-none focus:ring-2 focus:ring-[#FF4D00]/25",
+            error ? "border-red-500" : "border-slate-200 hover:border-slate-300",
             className,
           )}
           {...props}

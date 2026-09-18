@@ -39,25 +39,25 @@ export function Modal({
         if (e.target === ref.current) onClose();
       }}
       className={cn(
-        "w-full rounded-xl border border-slate-200 bg-white p-0 shadow-modal backdrop:bg-slate-900/40 backdrop:backdrop-blur-[2px]",
+        "w-full rounded-2xl border border-slate-200/90 bg-white p-0 shadow-2xl backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm",
         "animate-fade-in",
         wide ? "max-w-3xl" : "max-w-lg",
       )}
     >
-      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-        <h2 className="font-semibold text-ink">{title}</h2>
+      <div className="flex items-center justify-between border-b border-slate-100 px-6 sm:px-7 py-5">
+        <h2 className="font-display text-xl font-bold tracking-tight text-slate-900">{title}</h2>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-slate-100 hover:text-ink"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/90 text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
         >
-          <X className="h-4 w-4" aria-hidden />
+          <X className="h-4.5 w-4.5" aria-hidden />
         </button>
       </div>
       {/* text-left: modals opened from centered layouts (e.g. the marketing
           hero) would otherwise inherit text-center onto every form label. */}
-      <div className="max-h-[75vh] overflow-y-auto px-6 py-5 text-left">{children}</div>
+      <div className="max-h-[75vh] overflow-y-auto px-6 sm:px-7 py-6 text-left">{children}</div>
     </dialog>
   );
 }

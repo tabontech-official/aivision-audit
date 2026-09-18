@@ -1,22 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Globe } from "lucide-react";
+import Link from "next/link";
+import { Search, Gauge, Smartphone, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { AuthGateModal } from "@/components/marketing/auth-gate-modal";
 
 /**
  * The primary conversion element: one URL field, one button — and an account
  * before any audit runs.
- *
- * Rather than asking up front, the visitor commits to a URL and posts it. The
- * server validates the URL FIRST and answers 401 if they aren't signed in,
- * which opens the gate; once authenticated we replay the same request, so the
- * audit they asked for is the one they get and they never retype the URL.
- *
- * An unauditable URL therefore never reaches the gate — a visitor is only
- * asked to sign up for a request that can actually succeed.
  */
 export function AuditUrlForm({
   size = "lg",
@@ -38,6 +31,19 @@ export function AuditUrlForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [gateUrl, setGateUrl] = useState<string | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsFocused(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   /** Returns true when the caller should open the sign-in gate. */
   const requestAudit = async (target: string): Promise<boolean> => {
@@ -65,6 +71,7 @@ export function AuditUrlForm({
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsFocused(false);
 
     const trimmed = url.trim();
     if (!trimmed) {
@@ -93,12 +100,16 @@ export function AuditUrlForm({
   const isLg = size === "lg";
 
   return (
-    <div className={cn("w-full", className)}>
+    <div ref={containerRef} className={cn("relative w-full", className)}>
       <form
         onSubmit={onSubmit}
         className={cn(
-          "flex w-full items-center gap-2 rounded-xl border bg-white p-1.5 shadow-sm transition-all focus-within:border-slate-400 focus-within:shadow-md",
-          error ? "border-red-500" : "border-slate-200",
+          "flex w-full items-center gap-2 rounded-xl border bg-white p-1.5 shadow-sm transition-all",
+          isFocused
+            ? "border-[#FF4D00] ring-2 ring-[#FF4D00]/25 shadow-md"
+            : error
+            ? "border-red-500"
+            : "border-slate-200 hover:border-slate-300",
         )}
         noValidate
       >
@@ -122,12 +133,13 @@ export function AuditUrlForm({
           autoComplete="url"
           autoFocus={autoFocus}
           value={url}
+          onFocus={() => setIsFocused(true)}
           onChange={(e) => setUrl(e.target.value)}
           placeholder={placeholder}
           aria-label="Website URL"
           aria-invalid={error ? true : undefined}
           className={cn(
-            "min-w-0 flex-1 bg-transparent text-slate-900 placeholder:text-slate-400 focus:outline-none pl-1",
+            "min-w-0 flex-1 border-none bg-transparent text-slate-900 placeholder:text-slate-400 outline-none ring-0 focus:border-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 pl-1",
             isLg ? "py-2.5 text-[15px]" : "py-1.5 text-sm",
           )}
         />
@@ -152,6 +164,7 @@ export function AuditUrlForm({
           )}
         </button>
       </form>
+
       {error && (
         <p role="alert" className="mt-2 text-sm font-medium text-red-600">
           {error}

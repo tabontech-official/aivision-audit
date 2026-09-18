@@ -120,11 +120,11 @@ export function AuthGateModal({
       }
     >
       {targetUrl && (
-        <div className="mb-5 flex items-start gap-2.5 rounded-lg bg-slate-50 px-3.5 py-3">
-          <Globe className="mt-0.5 h-4 w-4 shrink-0 text-ink-muted" aria-hidden />
+        <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+          <Globe className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden />
           <div className="min-w-0">
-            <p className="text-sm font-medium text-ink">Ready to analyze</p>
-            <p className="truncate text-sm text-ink-muted" title={targetUrl}>
+            <p className="text-sm font-semibold text-slate-900">Ready to analyze</p>
+            <p className="truncate text-sm text-slate-500 font-mono" title={targetUrl}>
               {targetUrl}
             </p>
           </div>
@@ -132,7 +132,7 @@ export function AuthGateModal({
       )}
 
       {returning === null ? (
-        <form onSubmit={onEmailStep} className="space-y-4" noValidate>
+        <form onSubmit={onEmailStep} className="space-y-5" noValidate>
           {serverError && <Alert variant="error">{serverError}</Alert>}
           <Input
             label="Email address"
@@ -146,34 +146,34 @@ export function AuthGateModal({
           <Button type="submit" className="w-full" size="lg" loading={pending}>
             Continue
           </Button>
-          <p className="text-center text-xs text-ink-muted">
+          <p className="text-center text-xs text-slate-500 leading-relaxed font-normal">
             We&apos;ll sign you in, or set up a free account if you&apos;re new.
           </p>
         </form>
       ) : (
-        <form onSubmit={onPasswordStep} className="space-y-4" noValidate>
+        <form onSubmit={onPasswordStep} className="space-y-5" noValidate>
           {serverError && <Alert variant="error">{serverError}</Alert>}
 
           <div
-            className={`flex items-start gap-2.5 rounded-lg px-3.5 py-3 ${
-              returning ? "bg-brand-50" : "bg-success-50"
+            className={`flex items-start gap-2.5 rounded-xl border p-3.5 ${
+              returning ? "bg-orange-50 border-orange-200/80" : "bg-emerald-50 border-emerald-200/80"
             }`}
           >
             {returning ? (
-              <UserCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+              <UserCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#FF4D00]" aria-hidden />
             ) : (
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-success-600" aria-hidden />
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
             )}
             <div className="min-w-0 flex-1">
-              <p className="text-sm text-ink">
+              <p className="text-sm text-slate-900">
                 {returning ? (
                   <>
-                    Signing in as <span className="font-medium">{email}</span>
+                    Signing in as <span className="font-bold text-slate-900">{email}</span>
                   </>
                 ) : (
                   <>
                     Creating a new account for{" "}
-                    <span className="font-medium">{email}</span>
+                    <span className="font-bold text-slate-900">{email}</span>
                   </>
                 )}
               </p>
@@ -183,7 +183,7 @@ export function AuthGateModal({
                   setServerError(null);
                   setReturning(null);
                 }}
-                className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700"
+                className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-[#FF4D00] hover:text-[#E64500] transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" aria-hidden />
                 Use a different email
@@ -210,7 +210,7 @@ export function AuthGateModal({
               <div className="flex justify-end pt-0.5">
                 <Link
                   href="/forgot-password"
-                  className="text-sm font-medium text-brand-600 hover:text-brand-700"
+                  className="text-sm font-semibold text-[#FF4D00] hover:text-[#E64500] transition-colors"
                 >
                   Forgot password?
                 </Link>
