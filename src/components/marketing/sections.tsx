@@ -16,6 +16,17 @@ import {
   Lock,
   Check,
   Minus,
+  Box,
+  BarChart3,
+  Users,
+  ShoppingBag,
+  ChevronRight,
+  Zap,
+  Link2,
+  Award,
+  Flag,
+  BookOpen,
+  Briefcase,
 } from "lucide-react";
 import { AuditUrlForm } from "./audit-url-form";
 
@@ -25,82 +36,136 @@ import { AuditUrlForm } from "./audit-url-form";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden bg-white pt-10 pb-16 sm:pt-14 sm:pb-24 border-b border-slate-100">
+      {/* Background grid lines pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none opacity-60" />
 
-      {/* Background */}
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(37,99,235,0.08),transparent)]"
-        aria-hidden
-      />
+      {/* Ambient background glow */}
+      <div className="absolute top-0 right-1/4 -z-10 h-96 w-96 rounded-full bg-orange-100/40 blur-3xl pointer-events-none" />
 
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8">
+          {/* Left Column: Copy, Input & Social Proof */}
+          <div className="flex flex-col items-start text-left lg:col-span-5 xl:col-span-5 z-10">
+            {/* Top AI Badge & Model Icon Boxes */}
+            <div className="mb-6 flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 shadow-2xs">
+                <span className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-slate-700">
+                  AI SEARCH IS YOUR GROWTH ADVANTAGE
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {/* OpenAI / ChatGPT icon box */}
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/90 bg-white shadow-2xs">
+                  <svg className="h-4 w-4 text-slate-800" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1683a.071.071 0 0 1 .038.052v5.5826a4.5045 4.5045 0 0 1-4.4945 4.4947zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4997 4.4997 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1683a.0757.0757 0 0 1-.071 0l-4.8303-2.7866A4.5045 4.5045 0 0 1 2.3408 7.8956zm16.0993 3.8558L12.5973 8.3829l2.02-1.1635a.0804.0804 0 0 1 .071 0l4.8303 2.7913a4.4947 4.4947 0 0 1-.6765 8.1042v-5.6773a.79.79 0 0 0-.4023-.6862zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.407 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4997 4.4997 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1635a.0804.0804 0 0 1-.038-.0568V6.06a4.4997 4.4997 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.445a.7948.7948 0 0 0-.3927.6813l-.0048 6.7368zm1.093-1.0744l2.6045-1.5046 2.6045 1.5046v3.0044l-2.6045 1.5046-2.6045-1.5046z"/>
+                  </svg>
+                </div>
+                {/* Anthropic sunburst icon box */}
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/90 bg-white shadow-2xs">
+                  <svg className="h-4 w-4 text-[#D97757]" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l1.2 5.3 4.2-3.4-1.8 5.1 5.3-.2-4.4 3.2 4.7 2.6-5.4 1 2.8 4.7-4.8-2.6.2 5.4-3.2-4.4-2.6 4.7-1-5.4-4.7 2.8 2.6-4.8-5.4.2 4.4-3.2-4.7-2.6 5.4-1-2.8-4.7 4.8 2.6-.2-5.4 3.2 4.4z" />
+                  </svg>
+                </div>
+                {/* Perplexity icon box */}
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/90 bg-white shadow-2xs">
+                  <svg className="h-4 w-4 text-[#20B2AA]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14" />
+                  </svg>
+                </div>
+                {/* Google G icon box */}
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/90 bg-white shadow-2xs">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
 
-      <div className="relative mx-auto flex max-w-6xl flex-col items-center px-4 pb-20 pt-16 text-center sm:px-6 sm:pt-24">
+            {/* Main Headline - Structured across 3 lines with proper vertical gap */}
+            <h1 className="font-display font-semibold text-[#181D27] text-3xl sm:text-4xl md:text-[44px] lg:text-[48px] xl:text-[54px] 2xl:text-[58px] leading-[1.25] sm:leading-[1.28] tracking-[-0.025em] space-y-2 sm:space-y-2.5">
+              <span className="block sm:whitespace-nowrap">Reclaim Lost Traffic</span>
+              <span className="block sm:whitespace-nowrap">with LLM-Ready</span>
+              <span className="block sm:whitespace-nowrap">SEO Intelligence</span>
+            </h1>
 
+            {/* Subtitle */}
+            <p className="mt-6 text-base sm:text-lg lg:text-[19px] leading-relaxed text-[#475467] max-w-xl">
+              SEO insights by page group. AI brand visibility. Domain-level audits. Keyword tracking. Backlinks checker. Plus much more.
+            </p>
 
-        {/* Badge */}
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm">
-          <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-          Built for Shopify stores
+            {/* Audit Input Form */}
+            <div className="mt-8 w-full max-w-lg">
+              <AuditUrlForm
+                size="lg"
+                placeholder="Website URL"
+                buttonText="Free Checkup"
+                hideFooterText
+              />
+            </div>
+
+            {/* Social Proof */}
+            <div className="mt-8 flex flex-wrap items-center gap-3.5">
+              <div className="flex -space-x-2 overflow-hidden">
+                <img
+                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
+                  alt="User avatar"
+                />
+                <img
+                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80"
+                  alt="User avatar"
+                />
+                <img
+                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
+                  alt="User avatar"
+                />
+                <img
+                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80"
+                  alt="User avatar"
+                />
+                <img
+                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80"
+                  alt="User avatar"
+                />
+              </div>
+
+              <div className="flex flex-col text-left">
+                <div className="flex items-center gap-1.5">
+                  <div className="flex text-amber-400 text-sm">
+                    {"★".repeat(5)}
+                  </div>
+                  <span className="text-xs font-bold text-slate-900">Trusted by +85,000</span>
+                </div>
+                <span className="text-[12px] text-slate-500 font-medium">
+                  SaaS Marketers &amp; Growth Agencies
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Top Portion of Dashboard Mockup Image */}
+          <div className="lg:col-span-7 xl:col-span-7 relative flex items-center justify-start lg:justify-end">
+            <div className="relative w-full lg:w-[860px] xl:w-[980px] 2xl:w-[1080px] lg:max-w-none lg:-mr-40 xl:-mr-60 2xl:-mr-72 transition-all duration-300">
+              <div className="rounded-2xl shadow-2xl border border-slate-200/90 bg-white overflow-hidden p-1 sm:p-1.5 h-[480px] sm:h-[560px] lg:h-[640px]">
+                <img
+                  src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/d7a7330e-80f9-4ad6-a50d-823d8b38385c.webp"
+                  alt="SEO and AI Search Intelligence Dashboard Preview"
+                  className="w-full h-full object-cover object-top rounded-xl block"
+                  loading="eager"
+                />
+              </div>
+            </div>
+          </div>
         </div>
-
-
-
-        {/* Heading */}
-        <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-6xl">
-
-          Free Shopify
-          <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
-            {" "}Store Audit
-          </span>
-
-        </h1>
-
-
-
-        {/* Description */}
-        <p className="mt-6 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
-
-          Find what&apos;s slowing your store down, hurting your search rankings, and
-          costing you conversions — app bloat, theme performance, product schema,
-          collection canonicals — with fixes that name the exact Shopify setting
-          or theme file to change.
-
-        </p>
-
-
-
-        {/* Audit Input */}
-        <div className="mt-8 w-full max-w-xl">
-          <AuditUrlForm size="md" />
-        </div>
-
-
-
-        {/* Trust line */}
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-slate-500">
-
-          <span className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            Free account, no credit card
-          </span>
-
-          <span className="text-slate-300">•</span>
-
-          <span>
-            Instant website analysis
-          </span>
-
-          <span className="text-slate-300">•</span>
-
-          <span>
-            Actionable recommendations
-          </span>
-
-        </div>
-
-
       </div>
-
     </section>
   );
 }
@@ -109,63 +174,202 @@ export function Hero() {
 /* Credibility strip                                                   */
 /* ------------------------------------------------------------------ */
 
-const CRED_STATS = [
-  { value: "60+", label: "Automated Checks Per Audit" },
-  { value: "10", label: "Audit Categories Covered" },
-  { value: "2 min", label: "Average Time To Results" },
-];
-
 export function CredibilityStrip() {
   return (
-    <section className="border-y border-slate-100 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-20 text-center sm:px-6">
-
-        {/* Heading */}
-        <h2 className="mx-auto max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-          The Audit Tool That{" "}
-          <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
-            Understands
-          </span>{" "}
-          Shopify
-        </h2>
-
-
-        {/* Sub heading */}
-        <p className="mt-4 text-xl font-medium text-slate-900 sm:text-2xl">
-          Generic tools say &ldquo;add a meta description.&rdquo; We say where — down to the
-          theme file.
-        </p>
-
-
-        {/* Optional logo row */}
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-x-12 gap-y-6 opacity-40">
-          <span className="text-lg font-semibold">Agency</span>
-          <span className="text-lg font-semibold">SaaS</span>
-          <span className="text-lg font-semibold">Commerce</span>
-          <span className="text-lg font-semibold">Startups</span>
-          <span className="text-lg font-semibold">Teams</span>
-        </div>
-
-
-        {/* Stats */}
-        <div className="mt-14 flex flex-col items-center justify-center gap-10 sm:flex-row sm:gap-24">
-
-          {CRED_STATS.map((s) => (
-            <div key={s.label} className="text-center">
-
-              <div className="text-4xl font-bold tracking-tight text-blue-700 sm:text-5xl">
-                {s.value}
-              </div>
-
-              <div className="mt-2 text-sm font-medium text-slate-400">
-                {s.label}
-              </div>
-
+    <section className="bg-white py-16 sm:py-24 border-b border-slate-100">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16 items-start">
+          {/* Left Column: Heading, Subtitle, Stats & CTAs */}
+          <div className="lg:col-span-7 xl:col-span-8 flex flex-col items-start text-left">
+            {/* Eyebrow Tag */}
+            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#FF4D00] font-mono">
+              <span className="inline-block h-2 w-2 rounded-full border-2 border-[#FF4D00] bg-white" />
+              <span>SMARTER INSIGHTS. BETTER RANKINGS. ZERO GUESSWORK</span>
             </div>
-          ))}
 
+            {/* Main Headline */}
+            <h2 className="mt-4 font-display text-3xl sm:text-4xl lg:text-[44px] font-bold text-slate-900 leading-[1.14] tracking-tight max-w-3xl">
+              SEO Site Checkup helps you rank higher on Google and AI Engines.
+            </h2>
+
+            {/* Description */}
+            <p className="mt-5 text-base sm:text-lg text-slate-600 leading-relaxed max-w-3xl font-normal">
+              Automated monitoring catches issues within 24 hours. AI visibility tracking shows exactly how you appear in ChatGPT, Gemini and other LLMs. Multi-site dashboard manages all your clients domains easily.
+            </p>
+
+            {/* Horizontal Line Divider */}
+            <div className="my-8 w-full border-t border-slate-100" />
+
+            {/* Stats 3x2 Grid */}
+            <div className="grid w-full grid-cols-1 sm:grid-cols-3 gap-y-7 gap-x-6">
+              {/* Stat 1 */}
+              <div className="border-l-2 border-[#FF4D00] pl-4">
+                <div className="font-display text-3xl sm:text-4xl lg:text-5xl font-normal text-[#FF4D00] tracking-tight">
+                  +85,000
+                </div>
+                <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  CLIENTS WORLDWIDE
+                </div>
+              </div>
+
+              {/* Stat 2 */}
+              <div className="border-l-2 border-[#FF4D00] pl-4">
+                <div className="font-display text-3xl sm:text-4xl lg:text-5xl font-normal text-[#FF4D00] tracking-tight">
+                  +12
+                </div>
+                <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  YEARS OF SEO EXCELLENCE
+                </div>
+              </div>
+
+              {/* Stat 3 */}
+              <div className="border-l-2 border-[#FF4D00] pl-4">
+                <div className="font-display text-3xl sm:text-4xl lg:text-5xl font-normal text-[#FF4D00] tracking-tight">
+                  +30M
+                </div>
+                <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  UNIQUE URLS CHECKED
+                </div>
+              </div>
+
+              {/* Stat 4 */}
+              <div className="border-l-2 border-[#FF4D00] pl-4">
+                <div className="font-display text-3xl sm:text-4xl lg:text-5xl font-normal text-[#FF4D00] tracking-tight">
+                  6 AI
+                </div>
+                <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  ENGINES TRACKED
+                </div>
+              </div>
+
+              {/* Stat 5 */}
+              <div className="border-l-2 border-[#FF4D00] pl-4">
+                <div className="font-display text-3xl sm:text-4xl lg:text-5xl font-normal text-[#FF4D00] tracking-tight">
+                  +70
+                </div>
+                <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  TECHNICAL SEO FACTORS
+                </div>
+              </div>
+
+              {/* Stat 6 */}
+              <div className="border-l-2 border-[#FF4D00] pl-4">
+                <div className="font-display text-3xl sm:text-4xl lg:text-5xl font-normal text-[#FF4D00] tracking-tight">
+                  +120
+                </div>
+                <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  COUNTRIES SERVED
+                </div>
+              </div>
+            </div>
+
+            {/* Horizontal Line Divider */}
+            <div className="my-8 w-full border-t border-slate-100" />
+
+            {/* CTA Buttons */}
+            <div className="flex flex-wrap items-center gap-4">
+              <Link
+                href="/signup"
+                className="inline-flex items-center justify-center rounded-xl bg-[#FF4D00] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#E64500]"
+              >
+                Start for Free
+              </Link>
+              <Link
+                href="#pricing"
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                See Pricing
+              </Link>
+            </div>
+          </div>
+
+          {/* Right Column: Use Cases Stack */}
+          <div className="lg:col-span-5 xl:col-span-4 flex flex-col space-y-6 pt-2">
+            {/* Item 1 */}
+            <div className="border-b border-slate-100 pb-6">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#FF4D00]">
+                  <Box className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">For SaaS Marketers</h3>
+                  <p className="mt-1 text-sm text-slate-600 leading-relaxed">
+                    Monitor product pages, track AI citations, prove marketing ROI fast.
+                  </p>
+                  <Link
+                    href="#saas"
+                    className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-slate-700 hover:text-[#FF4D00] transition-colors"
+                  >
+                    About SaaS Marketers <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Item 2 */}
+            <div className="border-b border-slate-100 pb-6">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#FF4D00]">
+                  <BarChart3 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">For Content-Led Companies</h3>
+                  <p className="mt-1 text-sm text-slate-600 leading-relaxed">
+                    Large-site audits. AI citation tracking. Content performance intel.
+                  </p>
+                  <Link
+                    href="#content"
+                    className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-slate-700 hover:text-[#FF4D00] transition-colors"
+                  >
+                    About Content-Led Companies <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Item 3 */}
+            <div className="border-b border-slate-100 pb-6">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#FF4D00]">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">For Growth Agencies</h3>
+                  <p className="mt-1 text-sm text-slate-600 leading-relaxed">
+                    Multi-client command center. White-label reports. AI + traditional SEO.
+                  </p>
+                  <Link
+                    href="#agencies"
+                    className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-slate-700 hover:text-[#FF4D00] transition-colors"
+                  >
+                    About Growth Agencies <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Item 4 */}
+            <div>
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#FF4D00]">
+                  <ShoppingBag className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">For E-commerce Brands</h3>
+                  <p className="mt-1 text-sm text-slate-600 leading-relaxed">
+                    Monitor product pages, schemas, feeds. Rank in Google and ChatGPT.
+                  </p>
+                  <Link
+                    href="#ecommerce"
+                    className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-slate-700 hover:text-[#FF4D00] transition-colors"
+                  >
+                    About E-commerce Brands <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-
       </div>
     </section>
   );
@@ -210,91 +414,526 @@ const FEATURES = [
 
 export function Features() {
   return (
-    <section
-      id="features"
-      className="border-y border-slate-100 bg-white"
-    >
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-
-
-        {/* Heading */}
+    <section id="features" className="bg-white py-16 sm:py-24 border-b border-slate-100">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Section Header (Centered) */}
         <div className="mx-auto max-w-3xl text-center">
-
-          <div className="mb-5 text-sm font-semibold uppercase tracking-wider text-blue-600">
-            FEATURES
+          {/* Eyebrow Tag */}
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#FF4D00] font-mono justify-center">
+            <span className="inline-block h-2 w-2 rounded-full border-2 border-[#FF4D00] bg-white" />
+            <span>FIND &amp; FIX SEO ISSUES IN MINUTES, NOT WEEKS</span>
+            <span className="inline-block h-2 w-2 rounded-full border-2 border-[#FF4D00] bg-white" />
           </div>
 
-
-          <h2 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-            Everything you need to
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
-              {" "}improve your website
-            </span>
+          {/* Main Headline */}
+          <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight">
+            SEO Site Checkup’s Features
           </h2>
 
-
-          <p className="mt-5 text-lg leading-relaxed text-slate-600">
-            AuditFlow analyzes your website from every important angle and
-            gives you clear recommendations instead of confusing reports.
+          {/* Description */}
+          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed font-normal">
+            Complete SEO intelligence without the chaos. Track traditional rankings, monitor AI visibility across 6 engines, audit 70+ technical factors, and get white-label reports, all automatically organized by page type.
           </p>
-
         </div>
 
-
-
-        {/* Feature Grid */}
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-
-
-          {FEATURES.map((f) => (
-
-            <div
-              key={f.title}
-              className="
-                group rounded-3xl border border-slate-200
-                bg-white p-7 transition-all
-                hover:-translate-y-1
-                hover:border-slate-300
-                hover:shadow-xl
-              "
-            >
-
-              {/* Icon */}
-              <div
-                className="
-                  flex h-12 w-12 items-center justify-center
-                  rounded-2xl bg-blue-50 text-blue-600
-                  transition group-hover:bg-blue-600
-                  group-hover:text-white
-                "
-              >
-                <f.icon
-                  className="h-6 w-6"
-                  aria-hidden
-                />
-              </div>
-
-
-
-              {/* Content */}
-              <h3 className="mt-6 text-lg font-semibold text-slate-950">
-                {f.title}
+        {/* Feature Blocks Stack */}
+        <div className="mt-16 sm:mt-20 space-y-20 lg:space-y-28">
+          {/* Feature 1: Deep Domain Analysis */}
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
+            {/* Left Content */}
+            <div className="flex flex-col items-start text-left lg:col-span-5">
+              <h3 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                Deep Domain Analysis
               </h3>
-
-
-              <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                {f.body}
+              <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
+                Stop Drowning in URL Lists. Start Making Strategic Decisions. Every other SEO tool treats your site as a flat list of URLs. We understand it’s a structured organization of page types, and optimize accordingly.
               </p>
 
+              {/* Bullet Checklist */}
+              <ul className="mt-6 space-y-3">
+                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span>Scan entire website for technical issues</span>
+                </li>
+                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span>Get domain authority score and improvements</span>
+                </li>
+                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span>Get top-performing pages and opportunities</span>
+                </li>
+              </ul>
 
+              {/* Action Buttons */}
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#FF4D00] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#E64500]"
+                >
+                  Run your Deep Analysis
+                </Link>
+                <Link
+                  href="#deep-analysis"
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  Learn more
+                </Link>
+              </div>
             </div>
 
-          ))}
+            {/* Right Image */}
+            <div className="lg:col-span-7">
+              <div className="relative rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl overflow-hidden">
+                <img
+                  src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/859bd674-2772-4e3b-aa58-38735ce25c78.webp"
+                  alt="Deep Domain Analysis Dashboard Preview"
+                  className="w-full h-auto object-cover rounded-xl block"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
 
+          {/* Feature 2: LLM Visibility Checker */}
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
+            {/* Left Image */}
+            <div className="order-2 lg:order-1 lg:col-span-7">
+              <div className="relative rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl overflow-hidden">
+                <img
+                  src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/72e5d272-688e-4864-862c-c3a325a11c97.webp"
+                  alt="LLM Visibility Checker Dashboard Preview"
+                  className="w-full h-auto object-cover rounded-xl block"
+                  loading="lazy"
+                />
+              </div>
+            </div>
 
+            {/* Right Content */}
+            <div className="order-1 lg:order-2 flex flex-col items-start text-left lg:col-span-5">
+              <h3 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                LLM Visibility Checker
+              </h3>
+              <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
+                Monitor brand mentions, citation frequency, sentiment analysis, and share of voice vs. competitors. Identify which content gets cited most often and optimize for AI recommendations before your competitors do.
+              </p>
+
+              {/* Bullet Checklist */}
+              <ul className="mt-6 space-y-3">
+                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span>Monitor brand mentions across AI platforms</span>
+                </li>
+                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span>Compare against competitors in AI search</span>
+                </li>
+                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span>See how you perform against prompts</span>
+                </li>
+              </ul>
+
+              {/* Action Buttons */}
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#FF4D00] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#E64500]"
+                >
+                  Check your LLM Visibility
+                </Link>
+                <Link
+                  href="#llm-visibility"
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  Learn more
+                </Link>
+              </div>
+            </div>
+          </div>
+          {/* Feature 3: AI Content Analysis */}
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
+            {/* Left Content */}
+            <div className="flex flex-col items-start text-left lg:col-span-5">
+              <h3 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                AI Content Analysis
+              </h3>
+              <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
+                Understand how LLMs perceive your domain’s content and trust. See exactly how ChatGPT, Gemini, Perplexity, Claude, Copilot, and AI Overviews interpret your brand authority, cite your content, and recommend your products.
+              </p>
+
+              {/* Bullet Checklist */}
+              <ul className="mt-6 space-y-3">
+                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span>Discover content gaps preventing AI citations</span>
+                </li>
+                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span>Optimize existing pages for LLM comprehension</span>
+                </li>
+                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span>Track trust signals that influence AI</span>
+                </li>
+              </ul>
+
+              {/* Action Buttons */}
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#FF4D00] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#E64500]"
+                >
+                  Check your Content
+                </Link>
+                <Link
+                  href="#ai-content"
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  Learn more
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Image */}
+            <div className="lg:col-span-7">
+              <div className="relative rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl overflow-hidden">
+                <img
+                  src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/72e5d272-688e-4864-862c-c3a325a11c97.webp"
+                  alt="AI Content Analysis Dashboard Preview"
+                  className="w-full h-auto object-cover rounded-xl block"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Feature 4: Technical SEO Audits */}
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
+            {/* Left Image */}
+            <div className="order-2 lg:order-1 lg:col-span-7">
+              <div className="relative rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl overflow-hidden">
+                <img
+                  src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/859bd674-2772-4e3b-aa58-38735ce25c78.webp"
+                  alt="Technical SEO Audits Dashboard Preview"
+                  className="w-full h-auto object-cover rounded-xl block"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+
+            {/* Right Content */}
+            <div className="order-1 lg:order-2 flex flex-col items-start text-left lg:col-span-5">
+              <h3 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                Technical SEO Audits
+              </h3>
+              <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
+                Analyze every page across your site for critical issues: page speed, mobile optimization, meta tags, schema markup, SSL security, crawlability, internal linking, image optimization, and more. Get detailed explanations of each issue.
+              </p>
+
+              {/* Bullet Checklist */}
+              <ul className="mt-6 space-y-3">
+                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span>70+ checks per page</span>
+                </li>
+                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span>Prioritized fix list</span>
+                </li>
+                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <span>How-to-fix guides</span>
+                </li>
+              </ul>
+
+              {/* Action Buttons */}
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#FF4D00] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#E64500]"
+                >
+                  Check your SEO
+                </Link>
+                <Link
+                  href="#technical-seo"
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  Learn more
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Other Features Section                                             */
+/* ------------------------------------------------------------------ */
+
+const OTHER_FEATURES = [
+  {
+    icon: Zap,
+    title: "Site Speed & Outage",
+    body: "Monitor uptime and page load speed across all key pages.",
+    checklist: [
+      "Real-time uptime monitoring",
+      "Page speed tracking",
+      "Instant alerts",
+    ],
+    linkText: "More on Site Speed & Outage",
+    linkHref: "#site-speed",
+  },
+  {
+    icon: Link2,
+    title: "Backlinks Checker",
+    body: "Track referring domains, authority, and new link growth.",
+    checklist: [
+      "Monitor backlink profile",
+      "Analyze link quality",
+      "Spot toxic links",
+    ],
+    linkText: "More on Backlinks Checker",
+    linkHref: "#backlinks",
+  },
+  {
+    icon: Award,
+    title: "Top Keywords",
+    body: "Identify your highest-performing keywords and traffic drivers.",
+    checklist: [
+      "Discover which keywords drive traffic",
+      "Track performance trends",
+      "Find quick-win opportunities",
+    ],
+    linkText: "More on Top Keywords",
+    linkHref: "#top-keywords",
+  },
+  {
+    icon: Flag,
+    title: "Keyword Position Tracker",
+    body: "Monitor keyword rankings across pages, countries, and SERPs.",
+    checklist: [
+      "Daily rank tracking",
+      "Multi-location monitoring",
+      "Competitor comparison",
+    ],
+    linkText: "More on Keyword Position Tracker",
+    linkHref: "#rank-tracker",
+  },
+  {
+    icon: BookOpen,
+    title: "Keyword Research",
+    body: "Find high-intent keyword ideas to grow your organic reach.",
+    checklist: [
+      "Discover untapped keywords",
+      "Analyze keyword difficulty",
+      "Get content ideas",
+    ],
+    linkText: "More on Keyword Research",
+    linkHref: "#keyword-research",
+  },
+  {
+    icon: Briefcase,
+    title: "White Label Reports",
+    body: "Generate branded SEO reports ready for clients or teams.",
+    checklist: [
+      "Customize layout and branding",
+      "Export and share reports instantly",
+      "Customize what metrics you show",
+    ],
+    linkText: "More on White Label Reports",
+    linkHref: "#white-label",
+  },
+];
+
+export function OtherFeatures() {
+  return (
+    <section className="bg-[#FCFCFB] py-16 sm:py-24 border-b border-slate-100">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Title */}
+        <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-8 sm:mb-10 text-left">
+          Other Features
+        </h2>
+
+        {/* 6 Cards Grid (3 cols x 2 rows) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {OTHER_FEATURES.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.title}
+                className="flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-2xs hover:shadow-md transition-all duration-200"
+              >
+                <div>
+                  {/* Icon & Title */}
+                  <div className="flex items-center gap-2.5">
+                    <Icon className="h-5 w-5 shrink-0 text-[#FF4D00]" />
+                    <h3 className="text-lg font-bold text-slate-900">
+                      {item.title}
+                    </h3>
+                  </div>
+
+                  {/* Body Subtitle */}
+                  <p className="mt-2.5 text-sm text-slate-600 leading-relaxed font-normal">
+                    {item.body}
+                  </p>
+
+                  {/* Divider Line */}
+                  <div className="my-4.5 w-full border-t border-slate-100" />
+
+                  {/* Checklist */}
+                  <ul className="space-y-2.5">
+                    {item.checklist.map((point) => (
+                      <li
+                        key={point}
+                        className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-700"
+                      >
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Bottom Link */}
+                <div className="mt-6 pt-2">
+                  <Link
+                    href={item.linkHref}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#FF4D00] hover:underline transition-all"
+                  >
+                    <span>{item.linkText}</span>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* AI Shift / Problem Section (Section 6)                            */
+/* ------------------------------------------------------------------ */
+
+export function AiShiftSection() {
+  return (
+    <section className="bg-white py-16 sm:py-24 border-b border-slate-100">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Top Header Area */}
+        <div className="flex flex-col items-start text-left max-w-3xl">
+          {/* Eyebrow Tag */}
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#FF4D00] font-mono">
+            <span className="inline-block h-2 w-2 rounded-full border-2 border-[#FF4D00] bg-white" />
+            <span>THE PROBLEM YOU DON'T KNOW YOU HAVE</span>
+          </div>
+
+          {/* Headline */}
+          <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-[46px] font-bold text-slate-900 leading-[1.12] tracking-tight">
+            Search is shifting to AI. And you're invisible.
+          </h2>
+
+          {/* Subtitle */}
+          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed font-normal">
+            40% of searches now happen in AI engines. Your competitors appear in ChatGPT, Gemini, Perplexity and other LLM generated answers. You are not.
+          </p>
         </div>
 
+        {/* 2-Column Content Grid */}
+        <div className="mt-12 sm:mt-16 grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-14 items-center">
+          {/* Left Column: 4 Problem Cards (2x2) + CTA */}
+          <div className="lg:col-span-6 xl:col-span-6 flex flex-col items-start text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-8">
+              {/* Card 1 */}
+              <div className="flex flex-col items-start text-left">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200/80 bg-red-50 text-red-500 shadow-2xs">
+                  <AlertTriangle className="h-4.5 w-4.5" />
+                </div>
+                <h3 className="mt-3.5 text-base font-bold text-slate-900 leading-snug">
+                  You're losing deals to competitors cited by AI
+                </h3>
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Prospects ask ChatGPT for recommendations. Your competitors get cited. You don't. By the time they reach your site, the decision's already made, without you in consideration.
+                </p>
+              </div>
 
+              {/* Card 2 */}
+              <div className="flex flex-col items-start text-left">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200/80 bg-red-50 text-red-500 shadow-2xs">
+                  <AlertTriangle className="h-4.5 w-4.5" />
+                </div>
+                <h3 className="mt-3.5 text-base font-bold text-slate-900 leading-snug">
+                  You don't know what prompts are triggering competitors
+                </h3>
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Competitors dominate specific AI prompts in your category. You don't know which questions trigger citations or how to compete.
+                </p>
+              </div>
+
+              {/* Card 3 */}
+              <div className="flex flex-col items-start text-left">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200/80 bg-red-50 text-red-500 shadow-2xs">
+                  <AlertTriangle className="h-4.5 w-4.5" />
+                </div>
+                <h3 className="mt-3.5 text-base font-bold text-slate-900 leading-snug">
+                  Your brand is not mentioned by LLM agents
+                </h3>
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  ChatGPT, Claude, Gemini, Perplexity, none cite your brand. Competitors with similar products appear in AI answers. You're invisible where 40% of searches now happen.
+                </p>
+              </div>
+
+              {/* Card 4 */}
+              <div className="flex flex-col items-start text-left">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200/80 bg-red-50 text-red-500 shadow-2xs">
+                  <AlertTriangle className="h-4.5 w-4.5" />
+                </div>
+                <h3 className="mt-3.5 text-base font-bold text-slate-900 leading-snug">
+                  You don't know how to optimize for AI visibility
+                </h3>
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  LLMs need structured data, clear facts, and trust signals, not keywords. Your Google #1 ranking might score 0/100 for AI-readiness. Different game, different rules.
+                </p>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <div className="mt-10">
+              <Link
+                href="/signup"
+                className="inline-flex items-center justify-center rounded-xl bg-[#FF4D00] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#E64500]"
+              >
+                Check your AI Visibility
+              </Link>
+            </div>
+          </div>
+
+          {/* Right Column: Hand-Drawn Arrow & AI Search Comparison Illustration */}
+          <div className="lg:col-span-6 xl:col-span-6 relative flex flex-col items-center">
+            {/* Orange Curved Arrow SVG Accent */}
+            <div className="absolute -top-12 right-12 z-10 hidden sm:block">
+              <svg className="w-28 h-28 text-[#FF4D00]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M15,20 C45,5 85,25 70,60 C60,85 30,70 45,45 C55,30 75,50 72,75" />
+                <path d="M62,68 L72,77 L80,65" />
+              </svg>
+            </div>
+
+            {/* AI Search Comparison Graphic */}
+            <div className="relative w-full rounded-2xl border border-slate-200 bg-white p-1 sm:p-1.5 shadow-xl overflow-hidden">
+              <img
+                src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/6e33c578-ab31-4a3a-a6ce-6766a3e27b5b.jpg?w=1216&format=webp&quality=100"
+                alt="AI Engine Search Shift Comparison Preview"
+                className="w-full h-auto object-cover rounded-xl block"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

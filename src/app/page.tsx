@@ -4,6 +4,8 @@ import {
   Hero,
   CredibilityStrip,
   Features,
+  OtherFeatures,
+  AiShiftSection,
   HowItWorks,
   ReportPreview,
   Pricing,
@@ -22,6 +24,8 @@ export default async function HomePage() {
         <Hero />
         <CredibilityStrip />
         <Features />
+        <OtherFeatures />
+        <AiShiftSection />
         <HowItWorks />
         <ReportPreview />
         <Pricing />

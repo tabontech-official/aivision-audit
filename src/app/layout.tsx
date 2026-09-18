@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Familjen_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
+});
+
+const familjenGrotesk = Familjen_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-familjen",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -23,12 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      {/* suppressHydrationWarning: browser extensions (ColorZilla, Grammarly,
-          password managers) write attributes onto <body> before React
-          hydrates, which React reports as a mismatch. This is one level deep —
-          it covers only <body>'s own attributes, never its descendants — so
-          genuine hydration bugs inside the tree are still reported. */}
+    <html lang="en" className={`${inter.variable} ${familjenGrotesk.variable}`}>
       <body className="min-h-screen font-sans" suppressHydrationWarning>
         {children}
       </body>

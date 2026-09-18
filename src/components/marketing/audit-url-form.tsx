@@ -21,9 +21,17 @@ import { AuthGateModal } from "@/components/marketing/auth-gate-modal";
 export function AuditUrlForm({
   size = "lg",
   autoFocus = false,
+  placeholder = "Website URL",
+  buttonText = "Free Checkup",
+  hideFooterText = false,
+  className,
 }: {
   size?: "md" | "lg";
   autoFocus?: boolean;
+  placeholder?: string;
+  buttonText?: string;
+  hideFooterText?: boolean;
+  className?: string;
 }) {
   const router = useRouter();
   const [url, setUrl] = useState("");
@@ -60,7 +68,7 @@ export function AuditUrlForm({
 
     const trimmed = url.trim();
     if (!trimmed) {
-      setError("Enter your store URL to get started.");
+      setError("Enter your website URL to get started.");
       return;
     }
 
@@ -85,19 +93,29 @@ export function AuditUrlForm({
   const isLg = size === "lg";
 
   return (
-    <div className="w-full max-w-xl">
+    <div className={cn("w-full", className)}>
       <form
         onSubmit={onSubmit}
         className={cn(
-          "flex w-full items-center gap-2 rounded-xl border bg-white p-1.5 shadow-card transition-shadow focus-within:shadow-card-hover",
-          error ? "border-danger-500" : "border-slate-200",
+          "flex w-full items-center gap-2 rounded-xl border bg-white p-1.5 shadow-sm transition-all focus-within:border-slate-400 focus-within:shadow-md",
+          error ? "border-red-500" : "border-slate-200",
         )}
         noValidate
       >
-        <Globe
-          className={cn("ml-2.5 shrink-0 text-ink-muted", isLg ? "h-5 w-5" : "h-4 w-4")}
-          aria-hidden
-        />
+        <div className="ml-2.5 flex items-center text-slate-400">
+          <svg
+            className="h-4.5 w-4.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+        </div>
         <input
           type="text"
           inputMode="url"
@@ -105,43 +123,45 @@ export function AuditUrlForm({
           autoFocus={autoFocus}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://yourstore.com"
-          aria-label="Store URL"
+          placeholder={placeholder}
+          aria-label="Website URL"
           aria-invalid={error ? true : undefined}
           className={cn(
-            "min-w-0 flex-1 bg-transparent text-ink placeholder:text-ink-muted focus:outline-none",
-            isLg ? "py-2.5 text-base" : "py-1.5 text-sm",
+            "min-w-0 flex-1 bg-transparent text-slate-900 placeholder:text-slate-400 focus:outline-none pl-1",
+            isLg ? "py-2.5 text-[15px]" : "py-1.5 text-sm",
           )}
         />
+        <div className="hidden sm:flex items-center justify-center h-5 w-5 rounded border border-slate-200 bg-slate-50/80 text-slate-400 text-xs font-semibold select-none mr-1">
+          +
+        </div>
         <button
           type="submit"
           disabled={pending}
           className={cn(
-            "inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-600 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-400",
-            isLg ? "px-5 py-3 text-sm" : "px-4 py-2 text-sm",
+            "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#FF4D00] font-semibold text-white shadow-sm transition-colors hover:bg-[#E64500] disabled:cursor-not-allowed disabled:bg-orange-300",
+            isLg ? "px-6 py-3 text-sm" : "px-4 py-2 text-sm",
           )}
         >
           {pending ? (
             <>
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-              Starting…
+              Checking…
             </>
           ) : (
-            <>
-              Audit my store
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </>
+            buttonText
           )}
         </button>
       </form>
       {error && (
-        <p role="alert" className="mt-2 text-sm text-danger-600">
+        <p role="alert" className="mt-2 text-sm font-medium text-red-600">
           {error}
         </p>
       )}
-      <p className="mt-2.5 text-sm text-ink-muted">
-        Free · No credit card · Not on Shopify? We&apos;ll still run our universal checks.
-      </p>
+      {!hideFooterText && (
+        <p className="mt-2.5 text-xs text-slate-500">
+          Free · No credit card required · Instant automated checkup
+        </p>
+      )}
 
       <AuthGateModal
         open={gateUrl !== null}
