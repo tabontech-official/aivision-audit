@@ -831,12 +831,12 @@ export function AiShiftSection() {
           {/* Eyebrow Tag */}
           <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#FF4D00] font-mono">
             <span className="inline-block h-2 w-2 rounded-full border-2 border-[#FF4D00] bg-white" />
-            <span>THE PROBLEM YOU DON'T KNOW YOU HAVE</span>
+            <span>THE PROBLEM YOU DON&apos;T KNOW YOU HAVE</span>
           </div>
 
           {/* Headline */}
           <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-[46px] font-bold text-slate-900 leading-[1.12] tracking-tight">
-            Search is shifting to AI. And you're invisible.
+            Search is shifting to AI. And you&apos;re invisible.
           </h2>
 
           {/* Subtitle */}
@@ -856,10 +856,10 @@ export function AiShiftSection() {
                   <AlertTriangle className="h-4.5 w-4.5" />
                 </div>
                 <h3 className="mt-3.5 text-base font-bold text-slate-900 leading-snug">
-                  You're losing deals to competitors cited by AI
+                  You&apos;re losing deals to competitors cited by AI
                 </h3>
                 <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Prospects ask ChatGPT for recommendations. Your competitors get cited. You don't. By the time they reach your site, the decision's already made, without you in consideration.
+                  Prospects ask ChatGPT for recommendations. Your competitors get cited. You don&apos;t. By the time they reach your site, the decision&apos;s already made, without you in consideration.
                 </p>
               </div>
 
@@ -869,10 +869,10 @@ export function AiShiftSection() {
                   <AlertTriangle className="h-4.5 w-4.5" />
                 </div>
                 <h3 className="mt-3.5 text-base font-bold text-slate-900 leading-snug">
-                  You don't know what prompts are triggering competitors
+                  You don&apos;t know what prompts are triggering competitors
                 </h3>
                 <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Competitors dominate specific AI prompts in your category. You don't know which questions trigger citations or how to compete.
+                  Competitors dominate specific AI prompts in your category. You don&apos;t know which questions trigger citations or how to compete.
                 </p>
               </div>
 
@@ -885,7 +885,7 @@ export function AiShiftSection() {
                   Your brand is not mentioned by LLM agents
                 </h3>
                 <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  ChatGPT, Claude, Gemini, Perplexity, none cite your brand. Competitors with similar products appear in AI answers. You're invisible where 40% of searches now happen.
+                  ChatGPT, Claude, Gemini, Perplexity, none cite your brand. Competitors with similar products appear in AI answers. You&apos;re invisible where 40% of searches now happen.
                 </p>
               </div>
 
@@ -895,7 +895,7 @@ export function AiShiftSection() {
                   <AlertTriangle className="h-4.5 w-4.5" />
                 </div>
                 <h3 className="mt-3.5 text-base font-bold text-slate-900 leading-snug">
-                  You don't know how to optimize for AI visibility
+                  You don&apos;t know how to optimize for AI visibility
                 </h3>
                 <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
                   LLMs need structured data, clear facts, and trust signals, not keywords. Your Google #1 ranking might score 0/100 for AI-readiness. Different game, different rules.
