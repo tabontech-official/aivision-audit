@@ -6,10 +6,7 @@ import {
   Features,
   OtherFeatures,
   AiShiftSection,
-  HowItWorks,
-  ReportPreview,
-  Pricing,
-  Faq,
+  LatestWritings,
   FinalCta,
   MarketingFooter,
 } from "@/components/marketing/sections";
@@ -26,10 +23,7 @@ export default async function HomePage() {
         <Features />
         <OtherFeatures />
         <AiShiftSection />
-        <HowItWorks />
-        <ReportPreview />
-        <Pricing />
-        <Faq />
+        <LatestWritings />
         <FinalCta />
       </main>
       <MarketingFooter />
