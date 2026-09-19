@@ -16,8 +16,9 @@ export default async function DashboardLayout({
 }) {
   const user = await requireUser();
 
-  // Query Real Websites from Database safely for the active user only
+  // Query Real Websites and section scores from Database safely for the active user only
   let dbProjects: string[] = [];
+  const projectSectionScores: Record<string, Record<string, number | null>> = {};
   try {
     const dbWebsites = await db.website.findMany({
       where: {
@@ -26,11 +27,37 @@ export default async function DashboardLayout({
       },
       orderBy: { updatedAt: "desc" },
       take: 20,
-      select: { domain: true },
+      select: {
+        domain: true,
+        reports: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: {
+            snapshot: {
+              select: { payload: true },
+            },
+          },
+        },
+      },
     });
     dbProjects = Array.from(
       new Set(dbWebsites.map((w) => w.domain).filter(Boolean))
     );
+
+    dbWebsites.forEach((w) => {
+      const latestReport = w.reports[0];
+      const payload = latestReport?.snapshot?.payload as { sections?: { slug: string; score: number | null }[] } | null;
+      if (payload?.sections && Array.isArray(payload.sections)) {
+        const scores: Record<string, number | null> = {};
+        payload.sections.forEach((s) => {
+          if (s.slug) {
+            scores[s.slug] = s.score !== null && s.score !== undefined ? Math.round(s.score) : null;
+          }
+        });
+        projectSectionScores[w.domain] = scores;
+      }
+    });
   } catch (err) {
     console.error("Layout website query error:", err);
   }
@@ -104,6 +131,7 @@ export default async function DashboardLayout({
           plan={user.plan}
           initialProjects={dbProjects}
           reportSections={reportSections}
+          projectSectionScores={projectSectionScores}
         />
         <div className="min-w-0 flex-1 bg-slate-50/60">
           <DashboardTopBar

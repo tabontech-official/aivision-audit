@@ -592,6 +592,7 @@ model Website {
   user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   reports  Report[]
   findings Finding[]
+  backlinkAudits BacklinkAudit[]
 
   @@unique([userId, url])
   @@index([userId])
@@ -1190,4 +1191,143 @@ model SystemExecutionLog {
   @@index([createdAt])
   @@map("system_execution_logs")
 }
+
+// ----------------------------------------------------------------
+// BACKLINKS MODULE (RankParse Integration)
+// ----------------------------------------------------------------
+
+enum AnchorType {
+  BRANDED
+  EXACT_MATCH
+  PARTIAL_MATCH
+  NAKED_URL
+  GENERIC
+  OTHER
+}
+
+model BacklinkAudit {
+  id                  String   @id @default(uuid()) @db.Uuid
+  websiteId           String   @map("website_id") @db.Uuid
+  domain              String
+  totalBacklinks      Int      @default(0) @map("total_backlinks")
+  referringDomains    Int      @default(0) @map("referring_domains")
+  referringPages      Int      @default(0) @map("referring_pages")
+  dofollowBacklinks   Int      @default(0) @map("dofollow_backlinks")
+  nofollowBacklinks   Int      @default(0) @map("nofollow_backlinks")
+  newBacklinks        Int      @default(0) @map("new_backlinks")
+  lostBacklinks       Int      @default(0) @map("lost_backlinks")
+  referringIps        Int      @default(0) @map("referring_ips")
+  referringSubnets    Int      @default(0) @map("referring_subnets")
+  domainRank          Int      @default(0) @map("domain_rank")
+  brokenBacklinks     Int      @default(0) @map("broken_backlinks")
+  suspiciousBacklinks Int      @default(0) @map("suspicious_backlinks")
+  healthStatus        String   @default("Good") @map("health_status") // Good | Needs Attention | Critical
+  metricsJson         Json?    @map("metrics_json")
+  fetchedAt           DateTime @default(now()) @map("fetched_at") @db.Timestamptz
+  expiresAt           DateTime @map("expires_at") @db.Timestamptz
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  website              Website               @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  backlinks            BacklinkRecord[]
+  referringDomainsList ReferringDomainItem[]
+  anchors              AnchorRecord[]
+  topPages             TopPageRecord[]
+
+  @@index([websiteId])
+  @@index([domain])
+  @@index([fetchedAt])
+  @@map("backlink_audits")
+}
+
+model BacklinkRecord {
+  id              String    @id @default(uuid()) @db.Uuid
+  auditId         String    @map("audit_id") @db.Uuid
+  referringDomain String    @map("referring_domain")
+  referringUrl    String    @map("referring_url")
+  targetUrl       String    @map("target_url")
+  anchor          String?
+  isDofollow      Boolean   @default(true) @map("is_dofollow")
+  domainRank      Int       @default(0) @map("domain_rank")
+  pageRank        Int       @default(0) @map("page_rank")
+  httpStatus      Int?      @map("http_status")
+  isNew           Boolean   @default(false) @map("is_new")
+  isLost          Boolean   @default(false) @map("is_lost")
+  isBroken        Boolean   @default(false) @map("is_broken")
+  isSuspicious    Boolean   @default(false) @map("is_suspicious")
+  lossReason      String?   @map("loss_reason")
+  firstSeen       DateTime? @map("first_seen") @db.Timestamptz
+  lastSeen        DateTime? @map("last_seen") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  audit BacklinkAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([auditId])
+  @@index([referringDomain])
+  @@index([isDofollow])
+  @@index([isNew])
+  @@index([isLost])
+  @@index([isBroken])
+  @@index([isSuspicious])
+  @@map("backlink_records")
+}
+
+model ReferringDomainItem {
+  id             String    @id @default(uuid()) @db.Uuid
+  auditId        String    @map("audit_id") @db.Uuid
+  domain         String
+  backlinksCount Int       @default(0) @map("backlinks_count")
+  dofollowCount  Int       @default(0) @map("dofollow_count")
+  nofollowCount  Int       @default(0) @map("nofollow_count")
+  domainRank     Int       @default(0) @map("domain_rank")
+  ip             String?
+  country        String?
+  firstSeen      DateTime? @map("first_seen") @db.Timestamptz
+  lastSeen       DateTime? @map("last_seen") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  audit BacklinkAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([auditId])
+  @@index([domain])
+  @@index([domainRank])
+  @@map("referring_domain_items")
+}
+
+model AnchorRecord {
+  id                    String     @id @default(uuid()) @db.Uuid
+  auditId               String     @map("audit_id") @db.Uuid
+  anchor                String
+  backlinksCount        Int        @default(0) @map("backlinks_count")
+  referringDomainsCount Int        @default(0) @map("referring_domains_count")
+  percentage            Float      @default(0)
+  classification        AnchorType @default(OTHER)
+  createdAt             DateTime   @default(now()) @map("created_at") @db.Timestamptz
+
+  audit BacklinkAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([auditId])
+  @@index([classification])
+  @@map("anchor_records")
+}
+
+model TopPageRecord {
+  id                    String   @id @default(uuid()) @db.Uuid
+  auditId               String   @map("audit_id") @db.Uuid
+  targetUrl             String   @map("target_url")
+  backlinksCount        Int      @default(0) @map("backlinks_count")
+  referringDomainsCount Int      @default(0) @map("referring_domains_count")
+  dofollowCount         Int      @default(0) @map("dofollow_count")
+  nofollowCount         Int      @default(0) @map("nofollow_count")
+  brokenCount           Int      @default(0) @map("broken_count")
+  httpStatus            Int?     @map("http_status")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  audit BacklinkAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([auditId])
+  @@index([targetUrl])
+  @@map("top_page_records")
+}
+
 

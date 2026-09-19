@@ -13,7 +13,7 @@ export type ReportActionResult =
 
 const idSchema = z.string().uuid();
 
-/** Soft-delete a report the user owns. */
+/** Soft-delete a report and its associated website if applicable. */
 export async function deleteReportAction(reportId: string): Promise<ReportActionResult> {
   const session = await auth();
   if (!session?.user) return { ok: false, error: "Not authorized." };
@@ -24,13 +24,19 @@ export async function deleteReportAction(reportId: string): Promise<ReportAction
     return { ok: false, error: "Report not found." };
   }
 
-  await db.report.update({ where: { id: reportId }, data: { deletedAt: new Date() } });
+  const now = new Date();
+  await db.$transaction([
+    db.report.update({ where: { id: reportId }, data: { deletedAt: now } }),
+    db.website.update({ where: { id: report.websiteId }, data: { deletedAt: now } }),
+  ]);
+
   revalidatePath("/dashboard/reports");
   revalidatePath("/dashboard");
-  return { ok: true, message: "Report deleted." };
+  revalidatePath("/dashboard/websites");
+  return { ok: true, message: "Site audit deleted successfully." };
 }
 
-/** Re-run an audit for the same website (subject to the user's allowance). */
+/** Re-run an audit for the same website (subject to allowance). */
 export async function rerunAuditAction(reportId: string): Promise<ReportActionResult> {
   const session = await auth();
   if (!session?.user) return { ok: false, error: "Not authorized." };
@@ -51,5 +57,29 @@ export async function rerunAuditAction(reportId: string): Promise<ReportActionRe
   });
 
   if (!result.ok) return { ok: false, error: result.error };
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/reports");
+  return { ok: true, redirectTo: `/analyze/${result.reportPublicId}` };
+}
+
+/** Trigger a fresh re-scan for a website domain or URL. */
+export async function rescanWebsiteAction(domainOrUrl: string): Promise<ReportActionResult> {
+  const session = await auth();
+  if (!session?.user) return { ok: false, error: "Not authorized." };
+  if (!domainOrUrl || !domainOrUrl.trim()) return { ok: false, error: "Invalid domain or URL." };
+
+  const formattedUrl = domainOrUrl.startsWith("http://") || domainOrUrl.startsWith("https://")
+    ? domainOrUrl
+    : `https://${domainOrUrl}`;
+
+  const result = await createAudit(formattedUrl, {
+    kind: "user",
+    userId: session.user.id,
+    plan: session.user.plan as UserPlan,
+  });
+
+  if (!result.ok) return { ok: false, error: result.error };
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/reports");
   return { ok: true, redirectTo: `/analyze/${result.reportPublicId}` };
 }

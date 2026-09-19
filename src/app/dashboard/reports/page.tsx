@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/rbac";
 import { db } from "@/lib/db/client";
 import { ReportsList, type ReportRow } from "./reports-list";
@@ -12,10 +13,41 @@ const PAGE_SIZE = 12;
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; project?: string; section?: string; status?: string; page?: string }>;
 }) {
   const user = await requireUser();
-  const { q = "", status = "", page = "1" } = await searchParams;
+  const { q = "", project = "", section = "", status = "", page = "1" } = await searchParams;
+
+  // If a project is specified (from sidebar or project selector), open its latest report directly
+  if (project) {
+    const activeWebsite = await db.website.findFirst({
+      where: {
+        userId: user.id,
+        deletedAt: null,
+        OR: [
+          { domain: { contains: project, mode: "insensitive" } },
+          { url: { contains: project, mode: "insensitive" } },
+        ],
+      },
+      include: {
+        reports: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+      },
+    });
+
+    const activeReport = activeWebsite?.reports[0];
+    if (activeReport) {
+      const sectionQuery = section ? `?section=${encodeURIComponent(section)}` : "";
+      const targetPath = (activeReport.status === "COMPLETED" || activeReport.status === "PARTIAL")
+        ? `/dashboard/reports/${activeReport.publicId}${sectionQuery}`
+        : `/analyze/${activeReport.publicId}`;
+      redirect(targetPath);
+    }
+  }
+
   const pageNum = Math.max(1, Number(page) || 1);
 
   const where: Prisma.ReportWhereInput = {

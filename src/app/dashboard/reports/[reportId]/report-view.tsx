@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useTransition } from "react";
+import { createContext, useContext, useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -50,11 +50,32 @@ export function ReportView(props: {
   scoreBasis: ScoreBasis | null;
   /** Live Fix Loop state by fieldKey (§2.14) — frozen status + live badge. */
   findingStates?: Record<string, { state: string; resolvedAt: string | null }>;
+  targetSection?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const { projected } = props;
+
+  const hasTargetSection = Boolean(
+    props.targetSection && projected.sections.some((s) => s.slug === props.targetSection)
+  );
+
+  const sectionsToRender = hasTargetSection
+    ? projected.sections.filter((s) => s.slug === props.targetSection)
+    : projected.sections;
+
+  useEffect(() => {
+    if (props.targetSection) {
+      const targetId = `section-${props.targetSection}`;
+      const element = document.getElementById(targetId);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 150);
+      }
+    }
+  }, [props.targetSection]);
 
   const rerun = () => {
     setError(null);
@@ -233,44 +254,33 @@ export function ReportView(props: {
       </div>
 
       {/* Prioritized action plan — top of the report, before the detail */}
-      <ActionPlan rows={buildActionPlan(projected.sections)} />
+      <ActionPlan rows={buildActionPlan(sectionsToRender)} />
 
-      {/* Layout: sidebar nav + sections */}
-      <div className="grid gap-6 lg:grid-cols-[200px_1fr]">
-        <nav
-          className="sticky top-6 hidden h-fit space-y-0.5 lg:block"
-          aria-label="Report sections"
-        >
-          {projected.sections.map((s) => (
-            <a
-              key={s.sectionId}
-              href={`#section-${s.slug}`}
-              className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm text-ink-secondary hover:bg-white hover:text-ink"
-            >
-              <span className="truncate">{s.name}</span>
-              {s.locked ? (
-                <Lock className="h-3.5 w-3.5 shrink-0 text-premium-600" aria-hidden />
-              ) : (
-                <span
-                  className="shrink-0 text-xs font-semibold tabular-nums"
-                  style={{ color: scoreColor(s.score) }}
-                >
-                  {s.score !== null ? Math.round(s.score) : "—"}
-                </span>
-              )}
-            </a>
-          ))}
-        </nav>
+      {/* Report sections detail */}
+      <div className="space-y-4">
+          {hasTargetSection && sectionsToRender.length === 1 && (
+            <div className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50/80 px-4 py-3 text-sm text-slate-800 shadow-2xs">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-[#FF4D00]">Showing section:</span>
+                <span className="font-bold text-slate-900">{sectionsToRender[0]?.name}</span>
+              </div>
+              <Link
+                href={`/dashboard/reports/${props.publicId}`}
+                className="text-xs font-bold text-[#FF4D00] hover:underline"
+              >
+                Show all sections →
+              </Link>
+            </div>
+          )}
 
-        <div className="space-y-4">
-          {groupByPillar(projected.sections).map((group) =>
+          {groupByPillar(sectionsToRender).map((group) =>
             group.pillar === null ? (
               // v1 snapshots (no pillar data): the flat list, exactly as before
               group.sections.map((section) =>
                 section.locked ? (
                   <LockedSection key={section.sectionId} section={section} />
                 ) : (
-                  <SectionCard key={section.sectionId} section={section} />
+                  <SectionCard key={section.sectionId} section={section} targetSection={props.targetSection} />
                 ),
               )
             ) : (
@@ -278,6 +288,7 @@ export function ReportView(props: {
                 key={group.pillar}
                 group={group}
                 scoreBasis={props.scoreBasis}
+                targetSection={props.targetSection}
               />
             ),
           )}
@@ -290,7 +301,6 @@ export function ReportView(props: {
           )}
         </div>
       </div>
-    </div>
     </FindingStatesContext.Provider>
   );
 }
@@ -389,8 +399,25 @@ function SummaryCard({
   );
 }
 
-function SectionCard({ section }: { section: Extract<ProjectedSection, { locked: false }> }) {
-  const [open, setOpen] = useState(section.defaultExpanded);
+function SectionCard({
+  section,
+  targetSection,
+}: {
+  section: Extract<ProjectedSection, { locked: false }>;
+  targetSection?: string;
+}) {
+  const isMatch = Boolean(
+    targetSection &&
+      (section.slug === targetSection ||
+        section.slug.includes(targetSection) ||
+        targetSection.includes(section.slug))
+  );
+
+  const [open, setOpen] = useState(section.defaultExpanded || isMatch);
+
+  useEffect(() => {
+    if (isMatch) setOpen(true);
+  }, [isMatch]);
 
   return (
     <section id={`section-${section.slug}`} className="card scroll-mt-6 overflow-hidden">
@@ -652,9 +679,11 @@ function groupByPillar(sections: ProjectedSection[]): PillarBucket[] {
 function PillarGroup({
   group,
   scoreBasis,
+  targetSection,
 }: {
   group: PillarBucket;
   scoreBasis: ScoreBasis | null;
+  targetSection?: string;
 }) {
   const pillar = group.pillar!;
   const excludedSlugs = new Set(scoreBasis?.excludedSections.map((s) => s.slug) ?? []);
@@ -705,7 +734,7 @@ function PillarGroup({
             section.locked ? (
               <LockedSection key={section.sectionId} section={section} />
             ) : (
-              <SectionCard key={section.sectionId} section={section} />
+              <SectionCard key={section.sectionId} section={section} targetSection={targetSection} />
             ),
           )}
         </div>
@@ -739,7 +768,7 @@ function PillarGroup({
           section.locked ? (
             <LockedSection key={section.sectionId} section={section} />
           ) : (
-            <SectionCard key={section.sectionId} section={section} />
+            <SectionCard key={section.sectionId} section={section} targetSection={targetSection} />
           ),
         )}
       </div>

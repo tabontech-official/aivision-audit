@@ -18,8 +18,11 @@ import {
   Globe,
   CheckCircle2,
   SearchCheck,
+  Link2,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { rescanWebsiteAction } from "@/app/dashboard/reports/actions";
+import { scoreColor } from "@/components/report/score-ring";
 
 const DEFAULT_REPORT_SECTIONS = [
   { name: "Technical SEO Core", slug: "technical-seo-core", count: 10 },
@@ -58,17 +61,20 @@ export function DashboardSidebar({
   name: _name,
   initialProjects = [],
   reportSections = [],
+  projectSectionScores = {},
 }: {
   email: string;
   name: string | null;
   plan?: string;
   initialProjects?: string[];
   reportSections?: { name: string; slug: string; count: number }[];
+  projectSectionScores?: Record<string, Record<string, number | null>>;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentProjectParam = searchParams.get("project");
+  const currentSectionParam = searchParams.get("section");
 
   const [aiFixesOpen, setAiFixesOpen] = useState(true);
 
@@ -164,50 +170,31 @@ export function DashboardSidebar({
     router.push(targetUrl);
   };
 
-  // Handle Project Analysis Submit
-  const handleAnalyzeSubmit = (e: React.FormEvent) => {
+  // Handle Project Analysis Submit (Real Audit Engine)
+  const handleAnalyzeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUrlInput.trim()) return;
 
     setIsAnalyzing(true);
     setModalFeedback(null);
 
-    setTimeout(() => {
+    const res = await rescanWebsiteAction(newUrlInput.trim());
+
+    if (res.ok && res.redirectTo) {
       const extractedDomain = extractDomain(newUrlInput);
-      const existingMatch = projects.find(
-        (p) => p.toLowerCase() === extractedDomain.toLowerCase()
-      );
-
-      let targetProject = extractedDomain;
-
-      if (existingMatch) {
-        targetProject = existingMatch;
-        setSelectedProject(existingMatch);
-        setModalFeedback({
-          type: "existing",
-          message: `Audit generated & attached to existing project "${existingMatch}".`,
-        });
-      } else {
-        targetProject = extractedDomain;
-        setProjects((prev) => [extractedDomain, ...prev]);
-        setSelectedProject(extractedDomain);
-        setModalFeedback({
-          type: "new",
-          message: `New project "${extractedDomain}" created and analyzed successfully!`,
-        });
-      }
-
+      setProjects((prev) => (prev.includes(extractedDomain) ? prev : [extractedDomain, ...prev]));
+      setSelectedProject(extractedDomain);
+      setIsModalOpen(false);
+      setNewUrlInput("");
       setIsAnalyzing(false);
-      setTimeout(() => {
-        setIsModalOpen(false);
-        setModalFeedback(null);
-        setNewUrlInput("");
-        const targetUrl = pendingSectionSlug
-          ? `/dashboard/reports?project=${encodeURIComponent(targetProject)}&section=${encodeURIComponent(pendingSectionSlug)}`
-          : `/dashboard?project=${encodeURIComponent(targetProject)}`;
-        router.push(targetUrl);
-      }, 1200);
-    }, 1000);
+      router.push(res.redirectTo);
+    } else {
+      setIsAnalyzing(false);
+      setModalFeedback({
+        type: "existing",
+        message: !res.ok ? res.error : "Failed to start site audit. Check domain URL.",
+      });
+    }
   };
 
   return (
@@ -335,13 +322,33 @@ export function DashboardSidebar({
             <Link
               href={selectedProject ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}` : "/dashboard/reports"}
               onClick={(e) => handleSidebarItemClick(e)}
-              className="flex items-center gap-3 rounded-xl bg-orange-50/70 px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide text-[#FF4D00] hover:bg-orange-100/80 transition-all"
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide transition-all",
+                pathname.startsWith("/dashboard/reports")
+                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-xs"
+                  : "bg-orange-50/70 text-[#FF4D00] hover:bg-orange-100/80"
+              )}
             >
               <FileText className="h-4 w-4 shrink-0" />
               <span>PAGE AUDIT</span>
             </Link>
 
-            {/* 3. AI Automation Fixes Accordion Header */}
+            {/* 3. Backlinks */}
+            <Link
+              href={selectedProject ? `/dashboard/backlinks?project=${encodeURIComponent(selectedProject)}` : "/dashboard/backlinks"}
+              onClick={(e) => handleSidebarItemClick(e)}
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide transition-all",
+                pathname.startsWith("/dashboard/backlinks")
+                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-xs"
+                  : "bg-orange-50/70 text-[#FF4D00] hover:bg-orange-100/80"
+              )}
+            >
+              <Link2 className="h-4 w-4 shrink-0" />
+              <span>BACKLINKS</span>
+            </Link>
+
+            {/* 4. AI Automation Fixes Accordion Header */}
             <button
               type="button"
               onClick={() => setAiFixesOpen(!aiFixesOpen)}
@@ -365,21 +372,40 @@ export function DashboardSidebar({
         <div className="flex-1 overflow-y-auto px-3 py-1 space-y-1">
           {aiFixesOpen && (
             <div className="space-y-0.5 pl-3 border-l-2 border-slate-100 my-1 font-sans">
-              {activeSections.map((item, idx) => (
-                <Link
-                  key={idx}
-                  href={selectedProject ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}&section=${encodeURIComponent(item.slug)}` : "/dashboard/reports"}
-                  onClick={(e) => handleSidebarItemClick(e, item.slug)}
-                  className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer"
-                >
-                  <span className="truncate pr-2" title={item.name}>{item.name}</span>
-                  {Boolean(selectedProject) && (
-                    <span className="shrink-0 rounded-full bg-[#1E293B] px-2 py-0.5 text-[10px] font-bold text-white shadow-2xs">
-                      {item.count}
-                    </span>
-                  )}
-                </Link>
-              ))}
+              {activeSections.map((item, idx) => {
+                const isSelected = currentSectionParam === item.slug;
+                const rawScore = selectedProject ? projectSectionScores[selectedProject]?.[item.slug] : null;
+                const displayValue = rawScore !== null && rawScore !== undefined ? Math.round(rawScore) : null;
+                const colorHex = displayValue !== null ? scoreColor(displayValue) : "#94a3b8";
+
+                return (
+                  <Link
+                    key={idx}
+                    href={
+                      selectedProject
+                        ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}&section=${encodeURIComponent(item.slug)}`
+                        : `/dashboard/reports?section=${encodeURIComponent(item.slug)}`
+                    }
+                    onClick={(e) => handleSidebarItemClick(e, item.slug)}
+                    className={cn(
+                      "flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px] font-semibold font-sans transition-colors cursor-pointer",
+                      isSelected
+                        ? "bg-orange-50/80 text-[#FF4D00]"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    )}
+                  >
+                    <span className="truncate pr-2" title={item.name}>{item.name}</span>
+                    {Boolean(selectedProject) && (
+                      <span
+                        className="shrink-0 font-semibold tabular-nums text-[11px]"
+                        style={{ color: colorHex }}
+                      >
+                        {displayValue !== null ? displayValue : item.count}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

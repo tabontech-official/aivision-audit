@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireUser } from "@/lib/auth/rbac";
 import { db } from "@/lib/db/client";
 import {
@@ -18,7 +19,10 @@ import {
   Scan,
   SearchCheck,
   TrendingUp,
+  RotateCw,
+  ArrowRight,
 } from "lucide-react";
+import { RescanButton } from "@/components/dashboard/rescan-button";
 
 export const metadata: Metadata = { title: "SEO Dashboard" };
 
@@ -120,7 +124,7 @@ export default async function DashboardPage({
         ? Math.round(activeReport.desktopScore > 1 ? activeReport.desktopScore : activeReport.desktopScore * 100)
         : desktopRes?.performanceScore
         ? Math.round(desktopRes.performanceScore > 1 ? desktopRes.performanceScore : desktopRes.performanceScore * 100)
-        : overallScore)
+        : 0)
     : 0;
 
   const mobileSpeed = hasReport
@@ -128,7 +132,7 @@ export default async function DashboardPage({
         ? Math.round(activeReport.mobileScore > 1 ? activeReport.mobileScore : activeReport.mobileScore * 100)
         : mobileRes?.performanceScore
         ? Math.round(mobileRes.performanceScore > 1 ? mobileRes.performanceScore : mobileRes.performanceScore * 100)
-        : Math.round(overallScore * 0.88))
+        : 0)
     : 0;
 
   // Extracted Data
@@ -154,46 +158,74 @@ export default async function DashboardPage({
     ? linksData.total
     : externalLinkCount + internalLinkCount;
 
-  // Key Metrics Overview (Dynamic per Project)
-  const domainAuthority = hasReport ? Math.min(99, Math.max(0, Math.round(overallScore * 0.72))) : 0;
-  const organicTraffic = hasReport ? (totalLinksCount > 0 ? totalLinksCount * 3 : (passedCount > 0 ? passedCount * 45 : 0)) : 0;
-  const organicCost = hasReport ? Math.round(organicTraffic * 1.65) : 0;
-  const organicKeywords = hasReport ? (passedCount > 0 ? passedCount * 4 + warningCount * 2 : 0) : 0;
+  // Key Metrics Overview (Extracted directly from real audit report data, zero calculations)
+  const domainAuthority = typeof rawExtracted.domainAuthority === "number"
+    ? rawExtracted.domainAuthority
+    : typeof rawExtracted.trust?.domainAuthority === "number"
+    ? rawExtracted.trust.domainAuthority
+    : 0;
 
-  // Backlinks Overview (Dynamic per Project)
-  const totalBacklinks = hasReport ? (externalLinkCount > 0 ? externalLinkCount : (passedCount > 0 ? passedCount * 52 : 0)) : 0;
-  const referringDomains = hasReport && totalBacklinks > 0 ? Math.max(1, Math.round(totalBacklinks / 8.2)) : 0;
-  const dofollowLinks = hasReport && totalBacklinks > 0 ? Math.round(totalBacklinks * 0.91) : 0;
-  const nofollowLinks = hasReport && totalBacklinks > 0 ? totalBacklinks - dofollowLinks : 0;
+  const organicTraffic = typeof rawExtracted.organicTraffic === "number"
+    ? rawExtracted.organicTraffic
+    : typeof rawExtracted.traffic?.organic === "number"
+    ? rawExtracted.traffic.organic
+    : 0;
 
-  // Top Keywords (Dynamic per Project Heading / Title)
-  const pageTitle = typeof pageData.title === "string" ? pageData.title : domainName;
-  const cleanTitleParts = pageTitle
-    .split(/[-|–:]/)
-    .map((s: string) => s.trim())
-    .filter(Boolean);
+  const organicCost = typeof rawExtracted.organicCost === "number"
+    ? rawExtracted.organicCost
+    : typeof rawExtracted.traffic?.cost === "number"
+    ? rawExtracted.traffic.cost
+    : 0;
 
-  const keywordsList = hasReport && domainName ? [
-    { label: cleanTitleParts[0] || domainName, position: Math.max(1, Math.round(100 - overallScore + 3)) },
-    { label: cleanTitleParts[1] || `${domainName} services`, position: Math.max(4, Math.round(100 - overallScore + 12)) },
-    { label: cleanTitleParts[2] || `${domainName} online`, position: Math.max(8, Math.round(100 - overallScore + 25)) },
-    { label: `best ${domainName.replace(/\.[a-z]+$/, "")} solutions`, position: Math.max(14, Math.round(100 - overallScore + 38)) },
-    { label: `${domainName.replace(/\.[a-z]+$/, "")} agency`, position: Math.max(19, Math.round(100 - overallScore + 46)) },
-  ] : [];
+  const organicKeywords = typeof rawExtracted.organicKeywords === "number"
+    ? rawExtracted.organicKeywords
+    : typeof rawExtracted.content?.keywordsCount === "number"
+    ? rawExtracted.content.keywordsCount
+    : 0;
 
-  // Pages Scanned Overview (Dynamic per Project)
+  // Backlinks Overview (Extracted directly from real audit report links data, zero calculations)
+  const totalBacklinks = externalLinkCount;
+  const referringDomains = typeof linksData.domains === "number"
+    ? linksData.domains
+    : Array.isArray(linksData.domains)
+    ? linksData.domains.length
+    : 0;
+  const dofollowLinks = typeof linksData.dofollow === "number"
+    ? linksData.dofollow
+    : Array.isArray(linksData.dofollow)
+    ? linksData.dofollow.length
+    : 0;
+  const nofollowLinks = typeof linksData.nofollow === "number"
+    ? linksData.nofollow
+    : Array.isArray(linksData.nofollow)
+    ? linksData.nofollow.length
+    : 0;
+
+  // Top Keywords (Extracted directly from real audit report keywords data, zero calculations)
+  const rawKeywordsList = Array.isArray(rawExtracted.keywords)
+    ? rawExtracted.keywords
+    : Array.isArray(rawExtracted.content?.keywords)
+    ? rawExtracted.content.keywords
+    : [];
+
+  const keywordsList = rawKeywordsList.map((item: any) => ({
+    label: typeof item === "string" ? item : (item.keyword || item.label || item.text || ""),
+    position: typeof item === "object" && typeof item.position === "number" ? item.position : 0,
+  })).filter((k: any) => k.label.length > 0);
+
+  // Pages Scanned Overview (Exact 1-to-1 match with Report DB audit results)
   const totalPagesCount = hasReport
-    ? (typeof sitemapData.totalUrlCount === "number"
+    ? (typeof sitemapData.totalUrlCount === "number" && sitemapData.totalUrlCount > 0
         ? sitemapData.totalUrlCount
         : (passedCount + failedCount + warningCount))
     : 0;
-  const blockPagesCount = hasReport ? failedCount + warningCount : 0;
-  const scannedPagesCount = hasReport ? passedCount + failedCount : 0;
+  const blockPagesCount = hasReport ? warningCount : 0;
+  const scannedPagesCount = hasReport ? (passedCount + failedCount + warningCount) : 0;
 
-  // Critical Error Overview (Dynamic per Project)
-  const pageErrorCount = hasReport && failedCount > 0 ? failedCount * 12 + criticalIssueCount * 3 : 0;
-  const indexIssuesCount = hasReport && warningCount > 0 ? warningCount * 5 : 0;
-  const contentErrorCount = hasReport && (criticalIssueCount > 0 || failedCount > 0) ? (criticalIssueCount * 4 || 2) : 0;
+  // Critical Error Overview (Exact 1-to-1 match with Report DB audit results)
+  const pageErrorCount = hasReport ? failedCount : 0;
+  const indexIssuesCount = hasReport ? warningCount : 0;
+  const contentErrorCount = hasReport ? criticalIssueCount : 0;
 
   return (
     <div className="space-y-6 pb-12 font-sans text-slate-800">
@@ -211,13 +243,7 @@ export default async function DashboardPage({
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-display font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition-colors"
-          >
-            <Scan className="h-4 w-4 text-slate-500" />
-            <span>Re-Scan</span>
-          </button>
+          <RescanButton reportId={activeReport?.id} domain={activeWebsite?.domain} />
           <button
             type="button"
             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] px-5 py-2.5 text-sm font-display font-bold text-white shadow-md hover:opacity-95 transition-opacity"
@@ -227,6 +253,32 @@ export default async function DashboardPage({
           </button>
         </div>
       </div>
+
+      {/* Active Audit Running Progress Banner */}
+      {activeReport && (activeReport.status === "PROCESSING" || activeReport.status === "QUEUED") && (
+        <div className="flex flex-col sm:flex-row items-center justify-between rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] p-4 text-white shadow-md gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-xs shrink-0">
+              <RotateCw className="h-5 w-5 animate-spin text-white" />
+            </div>
+            <div>
+              <h3 className="font-display text-sm font-bold">
+                Audit scan in progress for {domainName}...
+              </h3>
+              <p className="text-xs text-orange-100 font-sans">
+                Scanning speed, SEO vitals, crawlability, and indexability ({activeReport.progressPercent ?? 15}% complete).
+              </p>
+            </div>
+          </div>
+          <Link
+            href={`/analyze/${activeReport.publicId}`}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-display font-bold text-slate-900 shadow-sm hover:bg-orange-50 transition-colors shrink-0"
+          >
+            <span>View Live Progress</span>
+            <ArrowRight className="h-3.5 w-3.5 text-[#FF4D00]" />
+          </Link>
+        </div>
+      )}
 
       {/* Row 1: 3 Top Metric Cards */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -352,7 +404,7 @@ export default async function DashboardPage({
 
           <div className="space-y-2.5 pt-1">
             {keywordsList.length > 0 ? (
-              keywordsList.map((kw, i) => (
+              keywordsList.map((kw: { label: string; position: number }, i: number) => (
                 <KeywordRow key={i} label={kw.label} value={kw.position} />
               ))
             ) : (

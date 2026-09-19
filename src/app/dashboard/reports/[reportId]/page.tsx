@@ -10,18 +10,17 @@ import type { UserPlan } from "@prisma/client";
 export const metadata: Metadata = { title: "Report" };
 export const dynamic = "force-dynamic";
 
-/**
- * Full report page for authenticated owners.
- * Ownership is enforced here; the snapshot is projected server-side by the
- * viewer's plan, so premium detail never reaches a free user's browser.
- */
 export default async function ReportDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ reportId: string }>;
+  searchParams?: Promise<{ section?: string }>;
 }) {
   const user = await requireUser();
   const { reportId: publicId } = await params;
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const targetSection = resolvedSearchParams.section;
 
   if (!publicId || publicId.length > 40) notFound();
 
@@ -49,9 +48,6 @@ export default async function ReportDetailPage({
       where: { reportId: report.id },
       select: { scoreBasis: true },
     }),
-    // Live finding state (§2.14): the snapshot stays frozen; the badge is
-    // fetched live. Where no finding exists (anonymous, never claimed) there
-    // is simply no badge — never an error.
     db.finding.findMany({
       where: { websiteId: report.websiteId },
       select: { fieldKey: true, state: true, resolvedAt: true },
@@ -64,7 +60,6 @@ export default async function ReportDetailPage({
   }
 
   if (!projected) {
-    // Failed audit or missing snapshot
     return (
       <div className="mx-auto max-w-lg py-16 text-center">
         <h1 className="text-xl font-bold text-ink">Report unavailable</h1>
@@ -98,6 +93,7 @@ export default async function ReportDetailPage({
       projected={projected}
       scoreBasis={(snapshotRow?.scoreBasis as ScoreBasis | null) ?? null}
       findingStates={findingStates}
+      targetSection={targetSection}
     />
   );
 }

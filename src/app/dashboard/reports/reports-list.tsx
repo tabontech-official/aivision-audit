@@ -75,12 +75,12 @@ export function ReportsList({
   };
 
   const del = (id: string) => {
-    if (!confirm("Delete this report? This cannot be undone.")) return;
+    if (!confirm("Delete this audited site? This will remove the site and its reports from your account.")) return;
     setFlash(null);
     startTransition(async () => {
       const r = await deleteReportAction(id);
       if (r.ok) {
-        setFlash({ kind: "success", text: r.message ?? "Deleted." });
+        setFlash({ kind: "success", text: r.message ?? "Site audit deleted." });
         router.refresh();
       } else setFlash({ kind: "error", text: r.error });
     });
@@ -98,8 +98,8 @@ export function ReportsList({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-ink">Reports</h1>
-        <p className="mt-1 text-sm text-ink-secondary">{total} audits</p>
+        <h1 className="text-2xl font-bold tracking-tight text-ink">Audited Sites & Page Reports</h1>
+        <p className="mt-1 text-sm text-ink-secondary">{total} audited sites</p>
       </div>
 
       {/* Filters */}
