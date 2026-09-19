@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth/rbac";
+import { db } from "@/lib/db/client";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { DashboardTopBar } from "@/components/dashboard/top-bar";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 
 export const metadata: Metadata = {
-  title: { default: "Dashboard", template: "%s · AuditFlow" },
+  title: { default: "Dashboard", template: "%s · The Rank Writers" },
 };
 
 export default async function DashboardLayout({
@@ -15,21 +16,104 @@ export default async function DashboardLayout({
 }) {
   const user = await requireUser();
 
+  // Query Real Websites from Database safely for the active user only
+  let dbProjects: string[] = [];
+  try {
+    const dbWebsites = await db.website.findMany({
+      where: {
+        userId: user.id,
+        deletedAt: null,
+      },
+      orderBy: { updatedAt: "desc" },
+      take: 20,
+      select: { domain: true },
+    });
+    dbProjects = Array.from(
+      new Set(dbWebsites.map((w) => w.domain).filter(Boolean))
+    );
+  } catch (err) {
+    console.error("Layout website query error:", err);
+  }
+
+  // Query Real Report Sections from Master Admin Report Builder
+  let reportSections: { name: string; slug: string; count: number }[] = [];
+  try {
+    const templateVersion = await db.templateVersion.findFirst({
+      where: {
+        status: "PUBLISHED",
+        template: { isDefault: true, deletedAt: null },
+      },
+      orderBy: { versionNumber: "desc" },
+      select: {
+        sections: {
+          where: { deletedAt: null },
+          orderBy: { displayOrder: "asc" },
+          select: {
+            name: true,
+            slug: true,
+            fields: {
+              where: { deletedAt: null, isEnabled: true },
+              select: { id: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (templateVersion?.sections && templateVersion.sections.length > 0) {
+      reportSections = templateVersion.sections.map((s) => ({
+        name: s.name,
+        slug: s.slug,
+        count: s.fields.length,
+      }));
+    } else {
+      const dbSections = await db.reportSection.findMany({
+        where: { deletedAt: null },
+        orderBy: { displayOrder: "asc" },
+        select: {
+          name: true,
+          slug: true,
+          fields: {
+            where: { deletedAt: null, isEnabled: true },
+            select: { id: true },
+          },
+        },
+      });
+      const uniqueMap = new Map();
+      dbSections.forEach((s) => {
+        if (!uniqueMap.has(s.name)) {
+          uniqueMap.set(s.name, {
+            name: s.name,
+            slug: s.slug,
+            count: s.fields.length,
+          });
+        }
+      });
+      reportSections = Array.from(uniqueMap.values());
+    }
+  } catch (err) {
+    console.error("Layout report sections query error:", err);
+  }
+
   return (
     <AuthSessionProvider>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen font-sans">
         <DashboardSidebar
           email={user.email ?? ""}
           name={user.name ?? null}
           plan={user.plan}
+          initialProjects={dbProjects}
+          reportSections={reportSections}
         />
-        <div className="min-w-0 flex-1 bg-surface-subtle">
+        <div className="min-w-0 flex-1 bg-slate-50/60">
           <DashboardTopBar
             email={user.email ?? ""}
             name={user.name ?? null}
             plan={user.plan}
           />
-          <main className="mx-auto max-w-[1600px] w-full px-4 py-6 sm:px-8">{children}</main>
+          <main className="mx-auto max-w-[1600px] w-full px-4 py-6 sm:px-8 font-sans">
+            {children}
+          </main>
         </div>
       </div>
     </AuthSessionProvider>

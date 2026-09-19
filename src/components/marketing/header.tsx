@@ -63,30 +63,13 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
       <div className="mx-auto flex h-[74px] sm:h-[78px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left: Brand Logo & Title */}
         <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
-          {/* Exact Brand Logo SVG */}
-          <div className="flex h-8 w-8 items-center justify-center">
-            <svg
-              viewBox="0 0 36 36"
-              className="h-8 w-8 text-[#FF4D00]"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M4 22L11 11L18 25L25 10L32 18"
-                stroke="#FF4D00"
-                strokeWidth="2.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="4" cy="22" r="3" fill="#FFFFFF" stroke="#FF4D00" strokeWidth="2.4" />
-              <circle cx="11" cy="11" r="3" fill="#FFFFFF" stroke="#FF4D00" strokeWidth="2.4" />
-              <circle cx="18" cy="25" r="3" fill="#FFFFFF" stroke="#FF4D00" strokeWidth="2.4" />
-              <circle cx="25" cy="10" r="3" fill="#FFFFFF" stroke="#FF4D00" strokeWidth="2.4" />
-              <circle cx="32" cy="18" r="3" fill="#FFFFFF" stroke="#FF4D00" strokeWidth="2.4" />
-            </svg>
-          </div>
-          <span className="text-[19px] sm:text-[20px] font-semibold tracking-tight text-slate-900">
-            SEO Site Checkup
+          <img
+            src="/images/rank_writers_logo.png"
+            alt="The Rank Writers logo"
+            className="h-8 w-8 object-contain shrink-0"
+          />
+          <span className="text-[18px] sm:text-[19px] font-bold tracking-tight text-slate-900">
+            The Rank Writers
           </span>
         </Link>
 

@@ -190,7 +190,7 @@ export function CredibilityStrip() {
 
             {/* Main Headline */}
             <h2 className="mt-4 font-display text-3xl sm:text-4xl lg:text-[44px] font-bold text-slate-900 leading-[1.14] tracking-tight max-w-3xl">
-              SEO Site Checkup helps you rank higher on Google and AI Engines.
+              The Rank Writers helps you rank higher on Google and AI Engines.
             </h2>
 
             {/* Description */}
@@ -428,7 +428,7 @@ export function Features() {
 
           {/* Main Headline */}
           <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight">
-            SEO Site Checkup’s Features
+            The Rank Writers’ Features
           </h2>
 
           {/* Description */}
@@ -1776,13 +1776,13 @@ export function MarketingFooter() {
           <div className="lg:col-span-3 xl:col-span-4 flex flex-col items-start text-left space-y-6">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FF4D00] text-white shadow-sm">
-                <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
-                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                </svg>
-              </div>
+              <img
+                src="/images/rank_writers_logo.png"
+                alt="The Rank Writers logo"
+                className="h-8 w-8 object-contain shrink-0"
+              />
               <span className="font-display text-xl font-bold text-slate-900 tracking-tight whitespace-nowrap">
-                SEO Site Checkup
+                The Rank Writers
               </span>
             </Link>
 
@@ -1905,7 +1905,7 @@ export function MarketingFooter() {
 
         {/* Bottom Bar */}
         <div className="mt-16 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500 whitespace-nowrap">
-          <p>© {new Date().getFullYear()} SEO Site Checkup. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} The Rank Writers. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>

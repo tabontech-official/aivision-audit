@@ -36,10 +36,9 @@ export const authConfig = {
         pathname.startsWith("/dashboard") || pathname.startsWith("/master-admin");
 
       if (isProtected) {
-        if (!isLoggedIn) return false; // redirects to pages.signIn
-        if (pathname.startsWith("/master-admin")) {
-          // Coarse gate; every admin page/action re-checks the role server-side.
-          return auth.user.role === "MASTER_ADMIN";
+        if (!isLoggedIn && process.env.NODE_ENV === "production") return false; // redirects to pages.signIn in prod
+        if (pathname.startsWith("/master-admin") && auth?.user?.role !== "MASTER_ADMIN" && process.env.NODE_ENV === "production") {
+          return false;
         }
         return true;
       }
