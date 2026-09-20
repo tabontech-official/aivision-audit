@@ -17,6 +17,8 @@ export const metadata: Metadata = {
     "Audit your Shopify store in minutes: app bloat, theme performance, product schema, SEO and AI readiness — with fixes that name the exact Shopify setting or theme file to change.",
 };
 
+import { NavigationProgressBar } from "@/components/ui/navigation-progress-bar";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen font-sans" suppressHydrationWarning>
+        <NavigationProgressBar />
         {children}
       </body>
     </html>

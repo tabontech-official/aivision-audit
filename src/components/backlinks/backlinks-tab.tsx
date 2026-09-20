@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useTransition } from "react";
 import {
   Search,
   ExternalLink,
@@ -13,11 +11,16 @@ import {
   Layers,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   Eye,
   X,
   Globe2,
+  RotateCw,
+  Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { getFilteredBacklinksAction } from "@/app/dashboard/backlinks/actions";
 
 export interface BacklinkItem {
   id: string;
@@ -41,10 +44,33 @@ export interface BacklinkItem {
 interface BacklinksTabProps {
   backlinks: BacklinkItem[];
   domain: string;
+  totalIndexedBacklinks?: number;
+  detailedBacklinksAvailable?: number;
+  detailedBacklinksFetched?: number;
   totalBacklinks?: number;
+  status?: string;
+  onResumeFetch?: () => void;
+  isResuming?: boolean;
 }
 
-export function BacklinksTab({ backlinks, domain: _domain, totalBacklinks }: BacklinksTabProps) {
+export function BacklinksTab({
+  backlinks: initialBacklinks,
+  domain,
+  totalIndexedBacklinks,
+  detailedBacklinksAvailable,
+  detailedBacklinksFetched,
+  totalBacklinks,
+  status,
+  onResumeFetch,
+  isResuming,
+}: BacklinksTabProps) {
+  const totalIndexed = totalIndexedBacklinks ?? totalBacklinks ?? initialBacklinks.length;
+  const detailedAvailable = detailedBacklinksAvailable ?? (detailedBacklinksFetched || initialBacklinks.length);
+  const detailedFetched = detailedBacklinksFetched ?? initialBacklinks.length;
+  const isPartial = status === "partially_completed" || (detailedFetched < detailedAvailable && detailedAvailable > 0);
+
+  const [items, setItems] = useState<BacklinkItem[]>(initialBacklinks);
+  const [totalCount, setTotalCount] = useState<number>(detailedFetched);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | "dofollow" | "nofollow" | "new" | "lost" | "broken" | "suspicious">("all");
   const [minRankFilter, setMinRankFilter] = useState<number>(0);
@@ -52,60 +78,48 @@ export function BacklinksTab({ backlinks, domain: _domain, totalBacklinks }: Bac
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
+  const [pageSize, setPageSize] = useState(50);
   const [inspectItem, setInspectItem] = useState<BacklinkItem | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-  // Client-side filtering & sorting
-  const filteredList = useMemo(() => {
-    return backlinks.filter((b) => {
-      // 1. Type filter
-      if (selectedType === "dofollow" && !b.isDofollow) return false;
-      if (selectedType === "nofollow" && b.isDofollow) return false;
-      if (selectedType === "new" && !b.isNew) return false;
-      if (selectedType === "lost" && !b.isLost) return false;
-      if (selectedType === "broken" && !b.isBroken) return false;
-      if (selectedType === "suspicious" && !b.isSuspicious) return false;
+  // Fetch paginated & filtered records from server
+  const fetchPage = (
+    page: number,
+    size: number,
+    type: "all" | "dofollow" | "nofollow" | "new" | "lost" | "broken" | "suspicious",
+    search: string,
+    minRank: number,
+    sort: "domainRank" | "pageRank" | "firstSeen" | "lastSeen",
+    order: "asc" | "desc"
+  ) => {
+    startTransition(async () => {
+      const res = await getFilteredBacklinksAction(domain, {
+        page,
+        pageSize: size,
+        type: type === "all" ? undefined : type,
+        search: search.trim() || undefined,
+        minRank: minRank > 0 ? minRank : undefined,
+        sortBy: sort,
+        sortOrder: order,
+      });
 
-      // 2. Min rank
-      if (b.domainRank < minRankFilter) return false;
-
-      // 3. Search query
-      if (searchQuery.trim()) {
-        const q = searchQuery.trim().toLowerCase();
-        const matchesDomain = b.referringDomain.toLowerCase().includes(q);
-        const matchesUrl = b.referringUrl.toLowerCase().includes(q);
-        const matchesTarget = b.targetUrl.toLowerCase().includes(q);
-        const matchesAnchor = (b.anchor || "").toLowerCase().includes(q);
-        return matchesDomain || matchesUrl || matchesTarget || matchesAnchor;
-      }
-
-      return true;
-    });
-  }, [backlinks, selectedType, minRankFilter, searchQuery]);
-
-  const sortedList = useMemo(() => {
-    return [...filteredList].sort((a, b) => {
-      let valA = 0;
-      let valB = 0;
-
-      if (sortBy === "firstSeen" || sortBy === "lastSeen") {
-        valA = a[sortBy] ? new Date(a[sortBy]!).getTime() : 0;
-        valB = b[sortBy] ? new Date(b[sortBy]!).getTime() : 0;
-      } else {
-        valA = a[sortBy] ?? 0;
-        valB = b[sortBy] ?? 0;
-      }
-
-      if (sortOrder === "asc") {
-        return valA > valB ? 1 : -1;
-      } else {
-        return valA < valB ? 1 : -1;
+      if (res.ok && Array.isArray(res.items)) {
+        setItems(res.items as BacklinkItem[]);
+        setTotalCount(res.totalCount);
       }
     });
-  }, [filteredList, sortBy, sortOrder]);
+  };
 
-  const totalPages = Math.max(1, Math.ceil(sortedList.length / pageSize));
-  const paginatedItems = sortedList.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  // Trigger server fetch on filter change
+  useEffect(() => {
+    // Only perform fetch if filters or page changes from defaults
+    const debounce = setTimeout(() => {
+      fetchPage(currentPage, pageSize, selectedType, searchQuery, minRankFilter, sortBy, sortOrder);
+    }, 250);
+    return () => clearTimeout(debounce);
+  }, [currentPage, pageSize, selectedType, searchQuery, minRankFilter, sortBy, sortOrder]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return "—";
@@ -113,10 +127,13 @@ export function BacklinksTab({ backlinks, domain: _domain, totalBacklinks }: Bac
     return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
+  const fromRow = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const toRow = Math.min(currentPage * pageSize, totalCount);
+
   return (
     <div className="space-y-4">
       {/* 1. Header Toolbar & Filters */}
-      <div className="flex flex-col md:row md:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
         {/* Search Input */}
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
@@ -179,45 +196,81 @@ export function BacklinksTab({ backlinks, domain: _domain, totalBacklinks }: Bac
         </div>
       </div>
 
-      {/* 2. Type Filter Pills */}
-      <div className="flex flex-wrap items-center gap-2">
-        {[
-          { key: "all" as const, label: "All Backlinks", count: backlinks.length },
-          { key: "dofollow" as const, label: "Dofollow", count: backlinks.filter((b) => b.isDofollow).length },
-          { key: "nofollow" as const, label: "Nofollow", count: backlinks.filter((b) => !b.isDofollow).length },
-          { key: "broken" as const, label: "Broken (404)", count: backlinks.filter((b) => b.isBroken).length },
-        ].map((pill) => {
-          const isSelected = selectedType === pill.key;
-          return (
-            <button
-              key={pill.key}
-              type="button"
-              onClick={() => {
-                setSelectedType(pill.key);
-                setCurrentPage(1);
-              }}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold font-sans transition-all cursor-pointer",
-                isSelected
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              )}
-            >
-              <span>{pill.label}</span>
-              <span
+      {/* 2. Type Filter Pills & Count Info */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { key: "all" as const, label: "All Backlinks" },
+            { key: "dofollow" as const, label: "Dofollow" },
+            { key: "nofollow" as const, label: "Nofollow" },
+            { key: "broken" as const, label: "Broken (404)" },
+            { key: "new" as const, label: "New Links" },
+            { key: "lost" as const, label: "Lost Links" },
+          ].map((pill) => {
+            const isSelected = selectedType === pill.key;
+            return (
+              <button
+                key={pill.key}
+                type="button"
+                onClick={() => {
+                  setSelectedType(pill.key);
+                  setCurrentPage(1);
+                }}
                 className={cn(
-                  "rounded-full px-1.5 py-0.2 text-[10px] font-bold",
-                  isSelected ? "bg-slate-700 text-white" : "bg-slate-100 text-slate-600"
+                  "inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold font-sans transition-all cursor-pointer",
+                  isSelected
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
               >
-                {pill.count}
-              </span>
-            </button>
-          );
-        })}
+                <span>{pill.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500 font-sans">
+          {isPending && <RotateCw className="h-3.5 w-3.5 animate-spin text-[#FF4D00]" />}
+          <span>
+            Total: <strong className="text-slate-900 font-bold">{totalCount.toLocaleString()}</strong> backlinks
+          </span>
+        </div>
       </div>
 
-      {/* 3. Backlinks Data Table */}
+      {/* 3. Backlinks Table Notice Banner */}
+      <div
+        className={cn(
+          "flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-xl border text-xs font-sans",
+          isPartial
+            ? "bg-amber-50/70 border-amber-200 text-amber-900"
+            : "bg-slate-50/80 border-slate-200 text-slate-700"
+        )}
+      >
+        <div className="flex items-center gap-2.5">
+          <Info className={cn("h-4 w-4 shrink-0", isPartial ? "text-amber-600" : "text-slate-500")} />
+          <span className="font-medium">
+            {totalCount === 0
+              ? "No backlinks found for this domain."
+              : isPartial
+              ? `Showing ${items.length} of ${totalCount.toLocaleString()} backlinks loaded for ${domain}.`
+              : `Showing all ${totalCount.toLocaleString()} analyzed backlinks for ${domain}.`}
+          </span>
+        </div>
+
+        {isPartial && onResumeFetch && (
+          <button
+            type="button"
+            onClick={onResumeFetch}
+            disabled={isResuming || isPending}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-amber-700 transition-colors shrink-0 disabled:opacity-50 cursor-pointer"
+          >
+            <RotateCw className={cn("h-3 w-3", (isResuming || isPending) && "animate-spin")} />
+            <span>{isResuming ? "Resuming..." : "Resume Fetch"}</span>
+          </button>
+        )}
+      </div>
+
+      {/* 4. Backlinks Data Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs font-sans">
@@ -233,14 +286,14 @@ export function BacklinksTab({ backlinks, domain: _domain, totalBacklinks }: Bac
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {paginatedItems.length === 0 ? (
+              {items.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
                     No backlinks found matching your filters.
                   </td>
                 </tr>
               ) : (
-                paginatedItems.map((item) => (
+                items.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/70 transition-colors group">
                     {/* Referring Page */}
                     <td className="py-3 px-4 max-w-xs">
@@ -373,19 +426,17 @@ export function BacklinksTab({ backlinks, domain: _domain, totalBacklinks }: Bac
             <span>
               Showing{" "}
               <strong className="text-slate-800 font-medium">
-                {sortedList.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}
+                {fromRow}
               </strong>{" "}
               to{" "}
               <strong className="text-slate-800 font-medium">
-                {Math.min(currentPage * pageSize, sortedList.length)}
+                {toRow}
               </strong>{" "}
-              of <strong className="text-slate-800 font-medium">{sortedList.length}</strong> indexed link rows
-              {totalBacklinks && totalBacklinks > sortedList.length ? (
-                <span className="text-slate-400 font-normal">
-                  {" "}(sampled from {totalBacklinks.toLocaleString()} total detected backlinks)
-                </span>
-              ) : null}
+              of <strong className="text-slate-800 font-medium">{totalCount.toLocaleString()}</strong> backlinks
             </span>
+            {isPending && (
+              <RotateCw className="h-3 w-3 animate-spin text-[#FF4D00]" />
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -397,32 +448,53 @@ export function BacklinksTab({ backlinks, domain: _domain, totalBacklinks }: Bac
               }}
               className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none cursor-pointer"
             >
-              <option value={10}>10 / page</option>
-              <option value={15}>15 / page</option>
               <option value={25}>25 / page</option>
               <option value={50}>50 / page</option>
+              <option value={100}>100 / page</option>
             </select>
 
             <button
               type="button"
               disabled={currentPage <= 1}
+              onClick={() => setCurrentPage(1)}
+              title="First Page"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </button>
+
+            <button
+              type="button"
+              disabled={currentPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              title="Previous Page"
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
 
             <span className="text-xs font-bold text-slate-700 px-1">
-              {currentPage} / {totalPages}
+              Page {currentPage} of {totalPages}
             </span>
 
             <button
               type="button"
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              title="Next Page"
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
+            </button>
+
+            <button
+              type="button"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage(totalPages)}
+              title="Last Page"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
+            >
+              <ChevronsRight className="h-4 w-4" />
             </button>
           </div>
         </div>

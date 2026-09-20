@@ -19,6 +19,8 @@ import {
   CheckCircle2,
   SearchCheck,
   Link2,
+  Code2,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { rescanWebsiteAction } from "@/app/dashboard/reports/actions";
@@ -307,6 +309,7 @@ export function DashboardSidebar({
             {/* 1. SEO Dashboard */}
             <Link
               href="/dashboard"
+              prefetch={true}
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide transition-all shadow-xs",
                 pathname === "/dashboard"
@@ -321,6 +324,7 @@ export function DashboardSidebar({
             {/* 2. Page Audit */}
             <Link
               href={selectedProject ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}` : "/dashboard/reports"}
+              prefetch={true}
               onClick={(e) => handleSidebarItemClick(e)}
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide transition-all",
@@ -336,6 +340,7 @@ export function DashboardSidebar({
             {/* 3. Backlinks */}
             <Link
               href={selectedProject ? `/dashboard/backlinks?project=${encodeURIComponent(selectedProject)}` : "/dashboard/backlinks"}
+              prefetch={true}
               onClick={(e) => handleSidebarItemClick(e)}
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide transition-all",
@@ -346,6 +351,22 @@ export function DashboardSidebar({
             >
               <Link2 className="h-4 w-4 shrink-0" />
               <span>BACKLINKS</span>
+            </Link>
+
+            {/* 4. Schema Markup */}
+            <Link
+              href={selectedProject ? `/dashboard/schema?project=${encodeURIComponent(selectedProject)}` : "/dashboard/schema"}
+              prefetch={true}
+              onClick={(e) => handleSidebarItemClick(e)}
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide transition-all",
+                pathname.startsWith("/dashboard/schema")
+                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-xs"
+                  : "bg-orange-50/70 text-[#FF4D00] hover:bg-orange-100/80"
+              )}
+            >
+              <Code2 className="h-4 w-4 shrink-0" />
+              <span>SCHEMA MARKUP</span>
             </Link>
 
             {/* 4. AI Automation Fixes Accordion Header */}
@@ -386,6 +407,7 @@ export function DashboardSidebar({
                         ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}&section=${encodeURIComponent(item.slug)}`
                         : `/dashboard/reports?section=${encodeURIComponent(item.slug)}`
                     }
+                    prefetch={true}
                     onClick={(e) => handleSidebarItemClick(e, item.slug)}
                     className={cn(
                       "flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px] font-semibold font-sans transition-colors cursor-pointer",
@@ -410,21 +432,12 @@ export function DashboardSidebar({
           )}
         </div>
 
-        {/* 3. FIXED BOTTOM: Competitors, Keywords, AI Schema Markup */}
+        {/* 3. FIXED BOTTOM: Keywords & Upgrade */}
         <div className="shrink-0 bg-white border-t border-slate-100 px-3 py-3 space-y-1.5">
-          {/* Competitors */}
-          <Link
-            href={selectedProject ? `/dashboard/websites?project=${encodeURIComponent(selectedProject)}` : "/dashboard/websites"}
-            onClick={(e) => handleSidebarItemClick(e)}
-            className="flex items-center gap-3 rounded-xl bg-orange-50/70 px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide text-[#FF4D00] hover:bg-orange-100/80 transition-all"
-          >
-            <Users className="h-4 w-4 shrink-0" />
-            <span>COMPETITORS</span>
-          </Link>
-
           {/* Keywords */}
           <Link
-            href={selectedProject ? `/dashboard/profile?project=${encodeURIComponent(selectedProject)}` : "/dashboard/profile"}
+            href={selectedProject ? `/dashboard/keywords?project=${encodeURIComponent(selectedProject)}` : "/dashboard/keywords"}
+            prefetch={true}
             onClick={(e) => handleSidebarItemClick(e)}
             className="flex items-center gap-3 rounded-xl bg-orange-50/70 px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide text-[#FF4D00] hover:bg-orange-100/80 transition-all"
           >
@@ -432,14 +445,15 @@ export function DashboardSidebar({
             <span>KEYWORDS</span>
           </Link>
 
-          {/* AI Schema Markup */}
+          {/* Upgrade */}
           <Link
             href={selectedProject ? `/dashboard/billing?project=${encodeURIComponent(selectedProject)}` : "/dashboard/billing"}
+            prefetch={true}
             onClick={(e) => handleSidebarItemClick(e)}
-            className="flex items-center gap-3 rounded-xl bg-orange-50/70 px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide text-[#FF4D00] hover:bg-orange-100/80 transition-all"
+            className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide text-white shadow-xs hover:opacity-95 transition-all"
           >
-            <Layers className="h-4 w-4 shrink-0" />
-            <span>AI SCHEMA MARKUP</span>
+            <Zap className="h-4 w-4 shrink-0 fill-current text-white" />
+            <span>UPGRADE</span>
           </Link>
         </div>
       </aside>

@@ -11,6 +11,8 @@ import {
   ShieldCheck,
   CheckCircle2,
   Database,
+  TrendingUp,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { OverviewTab } from "@/components/backlinks/overview-tab";
@@ -18,25 +20,34 @@ import { BacklinksTab, type BacklinkItem } from "@/components/backlinks/backlink
 import { ReferringDomainsTab, type ReferringDomainRow } from "@/components/backlinks/referring-domains-tab";
 import { AnchorsTab, type AnchorRow } from "@/components/backlinks/anchors-tab";
 import { TopPagesTab, type TopPageRow } from "@/components/backlinks/top-pages-tab";
-import { refreshBacklinkDataAction } from "./actions";
+import { NewLostTab } from "@/components/backlinks/new-lost-tab";
+import { RecommendationsTab, type BacklinkRecommendationItem } from "@/components/backlinks/recommendations-tab";
+import { refreshBacklinkDataAction, resumeBacklinkAuditAction } from "./actions";
 
 export interface BacklinkAuditPayload {
   id: string;
   websiteId: string;
   domain: string;
   totalBacklinks: number;
+  totalIndexedBacklinks?: number;
+  detailedBacklinksAvailable?: number;
+  detailedBacklinksFetched?: number;
   referringDomains: number;
   referringPages: number;
-  dofollowBacklinks: number;
-  nofollowBacklinks: number;
-  newBacklinks: number;
-  lostBacklinks: number;
-  referringIps: number;
-  referringSubnets: number;
-  domainRank: number;
+  dofollowBacklinks: number | null;
+  nofollowBacklinks: number | null;
+  newBacklinks: number | null;
+  lostBacklinks: number | null;
+  referringIps: number | null;
+  referringSubnets: number | null;
+  domainRank: number | null;
   brokenBacklinks: number;
   suspiciousBacklinks: number;
   healthStatus: string;
+  status?: string;
+  fetchedRowsCount?: number;
+  lastFetchedPage?: number;
+  progressMessage?: string | null;
   metricsJson?: unknown;
   fetchedAt: Date | string;
   expiresAt: Date | string;
@@ -44,6 +55,7 @@ export interface BacklinkAuditPayload {
   referringDomainsList?: ReferringDomainRow[];
   anchors?: AnchorRow[];
   topPages?: TopPageRow[];
+  recommendations?: BacklinkRecommendationItem[];
 }
 
 interface BacklinksClientViewProps {
@@ -65,7 +77,7 @@ export function BacklinksClientView({
   const searchParams = useSearchParams();
 
   const [activeTab, setActiveTab] = useState<string>(
-    ["overview", "backlinks", "referring_domains", "anchors", "top_pages"].includes(initialTab)
+    ["overview", "recommendations", "backlinks", "referring_domains", "anchors", "top_pages", "new_lost"].includes(initialTab)
       ? initialTab
       : "overview"
   );
@@ -73,6 +85,7 @@ export function BacklinksClientView({
   const [audit, setAudit] = useState<BacklinkAuditPayload | null>(initialAudit);
   const [domainInput, setDomainInput] = useState<string>("");
   const [isPending, startTransition] = useTransition();
+  const [isResuming, setIsResuming] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const handleTabChange = (tabId: string) => {
@@ -89,12 +102,34 @@ export function BacklinksClientView({
       setFeedback(null);
       const res = await refreshBacklinkDataAction(initialDomain);
       if (res.ok && res.data) {
-        setAudit(res.data);
+        setAudit(res.data as unknown as BacklinkAuditPayload);
         setFeedback({ type: "success", message: "Backlink profile refreshed successfully." });
       } else {
         setFeedback({
           type: "error",
-          message: !res.ok ? res.error : "Failed to fetch backlink data from RankParse.",
+          message: !res.ok ? res.error : "Failed to fetch backlink data.",
+        });
+      }
+    });
+  };
+
+  const handleResumeFetch = () => {
+    if (!initialDomain) return;
+    setIsResuming(true);
+    startTransition(async () => {
+      setFeedback(null);
+      const res = await resumeBacklinkAuditAction(initialDomain);
+      setIsResuming(false);
+      if (res.ok && res.data) {
+        setAudit(res.data as unknown as BacklinkAuditPayload);
+        setFeedback({
+          type: "success",
+          message: `Backlink fetch completed. ${res.data.fetchedRowsCount || res.data.totalBacklinks} backlinks saved.`,
+        });
+      } else {
+        setFeedback({
+          type: "error",
+          message: !res.ok ? res.error : "Failed to resume backlink fetch.",
         });
       }
     });
@@ -114,6 +149,8 @@ export function BacklinksClientView({
     const d = new Date(dateStr);
     return isNaN(d.getTime()) ? "Recently" : d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   };
+
+  const isPartiallyCompleted = audit?.status === "partially_completed";
 
   return (
     <div className="w-full">
@@ -137,6 +174,11 @@ export function BacklinksClientView({
                       <span>72h Cache Active</span>
                     </span>
                   )}
+                  {isPartiallyCompleted && (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 font-sans border border-amber-200">
+                      <span>Partial ({audit.fetchedRowsCount ?? 0} of {audit.totalBacklinks.toLocaleString()})</span>
+                    </span>
+                  )}
                 </div>
                 <p className="text-[11px] text-slate-500 font-sans">
                   {initialDomain && audit
@@ -148,17 +190,29 @@ export function BacklinksClientView({
           </div>
 
           <div className="flex items-center gap-2">
+            {isPartiallyCompleted && (
+              <button
+                type="button"
+                onClick={handleResumeFetch}
+                disabled={isPending || isResuming}
+                className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-display font-bold text-white shadow-xs hover:bg-amber-700 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <RotateCw className={cn("h-3.5 w-3.5", (isPending || isResuming) && "animate-spin")} />
+                <span>{(isPending || isResuming) ? "Resuming..." : "Resume Fetch"}</span>
+              </button>
+            )}
+
             {initialDomain && (
               <button
                 type="button"
                 onClick={handleManualRefresh}
-                disabled={isPending}
+                disabled={isPending || isResuming}
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] px-4 py-2 text-xs font-display font-bold text-white shadow-xs hover:opacity-95 transition-opacity cursor-pointer disabled:opacity-50"
               >
-                <RotateCw className={cn("h-3.5 w-3.5", isPending && "animate-spin")} />
+                <RotateCw className={cn("h-3.5 w-3.5", (isPending && !isResuming) && "animate-spin")} />
                 <span>
-                  {isPending
-                    ? "Analyzing Backlinks..."
+                  {isPending && !isResuming
+                    ? "Fetching Complete Dataset..."
                     : audit
                     ? `Refresh Backlinks for ${initialDomain}`
                     : `Run Backlink Analysis for ${initialDomain}`}
@@ -170,35 +224,53 @@ export function BacklinksClientView({
 
         {/* Bottom Tab Row inside Header */}
         <div className="flex items-center gap-6 overflow-x-auto scrollbar-none pt-1">
-          {[
-            { id: "overview", label: "Overview", icon: ShieldCheck, badgeBg: "bg-blue-600" },
-            { id: "backlinks", label: "Backlinks", icon: Link2, badgeBg: "bg-purple-600" },
-            { id: "referring_domains", label: "Referring Domains", icon: Globe2, badgeBg: "bg-slate-700" },
-            { id: "anchors", label: "Anchor Text", icon: Tag, badgeBg: "bg-rose-600" },
-            { id: "top_pages", label: "Top Pages", icon: FileCode2, badgeBg: "bg-emerald-600" },
-            // Note: "New & Lost" tab is hidden because RankParse does not currently supply historical new/lost backlink tracking data.
-          ].map((tab) => {
-            const isSelected = activeTab === tab.id;
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => handleTabChange(tab.id)}
-                className={cn(
-                  "flex items-center gap-2 pb-2.5 pt-1 text-xs font-sans transition-all whitespace-nowrap cursor-pointer border-b-2 -mb-[1px]",
-                  isSelected
-                    ? "border-slate-900 text-slate-900 font-bold"
-                    : "border-transparent text-slate-500 font-medium hover:text-slate-900 hover:border-slate-300"
-                )}
-              >
-                <div className={cn("flex h-6 w-6 items-center justify-center rounded-[6px] text-white shadow-2xs shrink-0", tab.badgeBg)}>
-                  <Icon className="h-3.5 w-3.5" />
-                </div>
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
+          {(() => {
+            const metricsObj = (audit?.metricsJson && typeof audit?.metricsJson === "object" ? audit.metricsJson : {}) as Record<string, unknown>;
+            const detailedFetchedCount = audit?.fetchedRowsCount ?? (metricsObj.detailedBacklinksFetched as number) ?? audit?.backlinks?.length ?? 0;
+
+            return [
+              { id: "overview", label: "Overview", icon: ShieldCheck, badgeBg: "bg-blue-600", count: undefined },
+              { id: "recommendations", label: "Recommendations", icon: Sparkles, badgeBg: "bg-orange-500", count: audit?.recommendations?.length ? audit.recommendations.length : undefined },
+              { id: "backlinks", label: "Backlinks", icon: Link2, badgeBg: "bg-purple-600", count: detailedFetchedCount > 0 ? detailedFetchedCount : undefined },
+              { id: "referring_domains", label: "Referring Domains", icon: Globe2, badgeBg: "bg-slate-700", count: audit?.referringDomains ? audit.referringDomains : undefined },
+              { id: "anchors", label: "Anchor Text", icon: Tag, badgeBg: "bg-rose-600", count: audit?.anchors?.length ? audit.anchors.length : undefined },
+              { id: "top_pages", label: "Top Pages", icon: FileCode2, badgeBg: "bg-emerald-600", count: audit?.topPages?.length ? audit.topPages.length : undefined },
+              { id: "new_lost", label: "New & Lost", icon: TrendingUp, badgeBg: "bg-amber-600", count: undefined },
+            ].map((tab) => {
+              const isSelected = activeTab === tab.id;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleTabChange(tab.id)}
+                  className={cn(
+                    "flex items-center gap-2 pb-2.5 pt-1 text-xs font-sans transition-all whitespace-nowrap cursor-pointer border-b-2 -mb-[1px]",
+                    isSelected
+                      ? "border-slate-900 text-slate-900 font-bold"
+                      : "border-transparent text-slate-500 font-medium hover:text-slate-900 hover:border-slate-300"
+                  )}
+                >
+                  <div className={cn("flex h-6 w-6 items-center justify-center rounded-[6px] text-white shadow-2xs shrink-0", tab.badgeBg)}>
+                    <Icon className="h-3.5 w-3.5" />
+                  </div>
+                  <span>{tab.label}</span>
+                  {tab.count !== undefined && tab.count !== null && (
+                    <span
+                      className={cn(
+                        "ml-1 rounded-full px-1.5 py-0.2 text-[10px] font-bold font-sans transition-colors",
+                        isSelected
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-600 group-hover:bg-slate-200"
+                      )}
+                    >
+                      {tab.count.toLocaleString()}
+                    </span>
+                  )}
+                </button>
+              );
+            });
+          })()}
         </div>
       </div>
 
@@ -241,7 +313,7 @@ export function BacklinksClientView({
                 <p className="text-sm text-slate-500 leading-relaxed">
                   No backlink audit has been run for{" "}
                   <strong className="text-slate-700">{initialDomain || "this domain"}</strong>
-                  . Click the button above to run real backlink analysis with RankParse.
+                  . Click the button above to run real backlink analysis.
                 </p>
               </div>
               {initialDomain && (
@@ -262,13 +334,34 @@ export function BacklinksClientView({
                 <OverviewTab audit={audit} onNavigateTab={handleTabChange} />
               )}
 
-              {activeTab === "backlinks" && (
-                <BacklinksTab
-                  backlinks={audit.backlinks || []}
+              {activeTab === "recommendations" && (
+                <RecommendationsTab
+                  recommendations={audit.recommendations || []}
                   domain={initialDomain}
-                  totalBacklinks={audit.totalBacklinks}
+                  onNavigateTab={handleTabChange}
                 />
               )}
+
+              {activeTab === "backlinks" && (() => {
+                const metricsObj = (audit.metricsJson && typeof audit.metricsJson === "object" ? audit.metricsJson : {}) as Record<string, unknown>;
+                const detailedFetched = audit.fetchedRowsCount ?? (metricsObj.detailedBacklinksFetched as number) ?? audit.backlinks?.length ?? 0;
+                const detailedAvailable = audit.detailedBacklinksAvailable ?? (metricsObj.detailedBacklinksAvailable as number) ?? (metricsObj.availableRowRecords as number) ?? detailedFetched;
+                const totalIndexed = audit.totalIndexedBacklinks ?? (metricsObj.totalIndexedBacklinks as number) ?? audit.totalBacklinks;
+
+                return (
+                  <BacklinksTab
+                    backlinks={audit.backlinks || []}
+                    domain={initialDomain}
+                    totalIndexedBacklinks={totalIndexed}
+                    detailedBacklinksAvailable={detailedAvailable}
+                    detailedBacklinksFetched={detailedFetched}
+                    totalBacklinks={audit.totalBacklinks}
+                    status={audit.status}
+                    onResumeFetch={handleResumeFetch}
+                    isResuming={isResuming}
+                  />
+                );
+              })()}
 
               {activeTab === "referring_domains" && (
                 <ReferringDomainsTab referringDomains={audit.referringDomainsList || []} />
@@ -280,6 +373,14 @@ export function BacklinksClientView({
 
               {activeTab === "top_pages" && (
                 <TopPagesTab topPages={audit.topPages || []} />
+              )}
+
+              {activeTab === "new_lost" && (
+                <NewLostTab
+                  newBacklinks={(audit.backlinks || []).filter((b) => b.isNew)}
+                  lostBacklinks={(audit.backlinks || []).filter((b) => b.isLost || b.isBroken)}
+                  domain={initialDomain}
+                />
               )}
             </>
           )}

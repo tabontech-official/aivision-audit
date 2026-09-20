@@ -13,28 +13,37 @@ import {
   ShieldCheck,
   Percent,
   ShieldAlert,
+  Layers,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import type { BacklinkRecommendationItem } from "./recommendations-tab";
 
 interface BacklinkAuditData {
   id: string;
   domain: string;
   totalBacklinks: number;
+  totalIndexedBacklinks?: number;
+  detailedBacklinksAvailable?: number;
+  detailedBacklinksFetched?: number;
+  fetchedRowsCount?: number;
   referringDomains: number;
   referringPages: number;
-  dofollowBacklinks: number;
-  nofollowBacklinks: number;
-  newBacklinks: number;
-  lostBacklinks: number;
-  referringIps: number;
-  referringSubnets: number;
-  domainRank: number;
+  dofollowBacklinks: number | null;
+  nofollowBacklinks: number | null;
+  newBacklinks: number | null;
+  lostBacklinks: number | null;
+  referringIps: number | null;
+  referringSubnets: number | null;
+  domainRank: number | null;
   brokenBacklinks: number;
   suspiciousBacklinks: number;
   healthStatus: string;
   metricsJson?: unknown;
   fetchedAt: Date | string;
   expiresAt: Date | string;
+  recommendations?: BacklinkRecommendationItem[];
 }
 
 interface OverviewTabProps {
@@ -46,24 +55,43 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   const total = audit.totalBacklinks || 1;
+  const hasDofollow = audit.dofollowBacklinks !== null && audit.dofollowBacklinks !== undefined;
+  const hasNofollow = audit.nofollowBacklinks !== null && audit.nofollowBacklinks !== undefined;
+
   const dofollowPct =
-    audit.totalBacklinks > 0
-      ? Math.min(100, Math.round((audit.dofollowBacklinks / (audit.dofollowBacklinks + audit.nofollowBacklinks || total)) * 100))
-      : 0;
-  const nofollowPct = audit.totalBacklinks > 0 ? Math.max(0, 100 - dofollowPct) : 0;
+    hasDofollow && audit.totalBacklinks > 0
+      ? Math.min(
+          100,
+          Math.round(
+            ((audit.dofollowBacklinks ?? 0) /
+              ((audit.dofollowBacklinks ?? 0) + (audit.nofollowBacklinks ?? 0) || total)) *
+              100
+          )
+        )
+      : null;
+
+  const nofollowPct =
+    hasNofollow && audit.totalBacklinks > 0 && dofollowPct !== null
+      ? Math.max(0, 100 - dofollowPct)
+      : null;
+
   const brokenPct = ((audit.brokenBacklinks / total) * 100).toFixed(1);
 
   // Status computation for cards
-  const getCardStatus = (type: string, val: number) => {
+  const getCardStatus = (type: string, val: number | null) => {
+    if (val === null || val === undefined) {
+      return { label: "Unavailable", color: "text-slate-500 bg-slate-50 border-slate-200" };
+    }
     if (type === "broken") {
       if (val === 0) return { label: "Good", color: "text-emerald-700 bg-emerald-50 border-emerald-200" };
       if (val / total > 0.08) return { label: "Critical", color: "text-rose-700 bg-rose-50 border-rose-200" };
       return { label: "Needs Attention", color: "text-amber-700 bg-amber-50 border-amber-200" };
     }
     if (type === "dofollow") {
-      if (dofollowPct >= 55) return { label: "Good", color: "text-emerald-700 bg-emerald-50 border-emerald-200" };
-      if (dofollowPct >= 35) return { label: "Needs Attention", color: "text-amber-700 bg-amber-50 border-amber-200" };
-      return { label: "Critical", color: "text-rose-700 bg-rose-50 border-rose-200" };
+      if (dofollowPct !== null && dofollowPct >= 55) return { label: "Good", color: "text-emerald-700 bg-emerald-50 border-emerald-200" };
+      if (dofollowPct !== null && dofollowPct >= 35) return { label: "Needs Attention", color: "text-amber-700 bg-amber-50 border-amber-200" };
+      if (dofollowPct !== null) return { label: "Critical", color: "text-rose-700 bg-rose-50 border-rose-200" };
+      return { label: "Active", color: "text-slate-700 bg-slate-50 border-slate-200" };
     }
     if (type === "rank") {
       if (val >= 60) return { label: "Excellent", color: "text-emerald-700 bg-emerald-50 border-emerald-200" };
@@ -81,7 +109,7 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
       subtext: `${audit.referringDomains.toLocaleString()} referring domains`,
       icon: Link2,
       status: getCardStatus("default", audit.totalBacklinks),
-      tooltip: "Total count of external hyperlinks pointing directly to your audited domain.",
+      tooltip: "Total count of external hyperlinks analyzed and inspectable for this domain.",
       tabAction: "backlinks",
     },
     {
@@ -100,18 +128,23 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
     {
       id: "domain_rank",
       label: "Domain Rank / Authority",
-      value: `${audit.domainRank}/100`,
-      subtext: audit.domainRank > 50 ? "High authority profile" : "Moderate authority profile",
+      value: audit.domainRank !== null ? `${audit.domainRank}/100` : "Unavailable",
+      subtext:
+        audit.domainRank !== null
+          ? audit.domainRank > 50
+            ? "High authority profile"
+            : "Moderate authority profile"
+          : "Metric unavailable from provider",
       icon: Award,
       status: getCardStatus("rank", audit.domainRank),
-      tooltip: "RankParse domain authority score (0-100) evaluating overall web link equity and trustworthiness.",
+      tooltip: "Domain authority score (0-100) evaluating overall web link equity and trustworthiness.",
       tabAction: "overview",
     },
     {
       id: "dofollow_backlinks",
       label: "Dofollow Backlinks",
-      value: audit.dofollowBacklinks.toLocaleString(),
-      subtext: `${dofollowPct}% of link profile`,
+      value: audit.dofollowBacklinks !== null ? audit.dofollowBacklinks.toLocaleString() : "Unavailable",
+      subtext: dofollowPct !== null ? `${dofollowPct}% of link profile` : "Metric unavailable",
       icon: CheckCircle2,
       status: getCardStatus("dofollow", audit.dofollowBacklinks),
       tooltip: "Links that pass SEO ranking equity to your destination pages.",
@@ -120,8 +153,8 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
     {
       id: "nofollow_backlinks",
       label: "Nofollow Backlinks",
-      value: audit.nofollowBacklinks.toLocaleString(),
-      subtext: `${nofollowPct}% of link profile`,
+      value: audit.nofollowBacklinks !== null ? audit.nofollowBacklinks.toLocaleString() : "Unavailable",
+      subtext: nofollowPct !== null ? `${nofollowPct}% of link profile` : "Metric unavailable",
       icon: XCircle,
       status: getCardStatus("default", audit.nofollowBacklinks),
       tooltip: "Links with rel='nofollow' that do not pass direct algorithmic ranking equity.",
@@ -177,8 +210,8 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
             <p className="text-xs text-slate-500 font-sans mt-0.5">
               Audited domain <strong className="text-slate-800 font-medium">{audit.domain}</strong> — Domain Authority{" "}
               <strong className="text-[#FF4D00]">{audit.domainRank}/100</strong> with{" "}
-              <strong className="text-slate-800 font-medium">{audit.totalBacklinks.toLocaleString()}</strong> backlinks from{" "}
-              <strong className="text-slate-800 font-medium">{audit.referringDomains.toLocaleString()}</strong> domains.
+              <strong className="text-slate-800 font-medium">{audit.totalBacklinks.toLocaleString()}</strong> analyzed backlinks from{" "}
+              <strong className="text-slate-800 font-medium">{audit.referringDomains.toLocaleString()}</strong> referring domains.
             </p>
           </div>
         </div>
@@ -287,32 +320,38 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
             </span>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-sans font-bold">
-              <span className="text-emerald-700 flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 inline-block" />
-                Dofollow ({dofollowPct}%)
-              </span>
-              <span className="text-slate-600 flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-slate-400 inline-block" />
-                Nofollow ({nofollowPct}%)
-              </span>
-            </div>
+          {dofollowPct !== null && nofollowPct !== null ? (
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-sans font-bold">
+                <span className="text-emerald-700 flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 inline-block" />
+                  Dofollow ({dofollowPct}%)
+                </span>
+                <span className="text-slate-600 flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-400 inline-block" />
+                  Nofollow ({nofollowPct}%)
+                </span>
+              </div>
 
-            {/* Visual stacked progress bar */}
-            <div className="h-3.5 w-full rounded-full bg-slate-100 overflow-hidden flex shadow-inner">
-              <div
-                style={{ width: `${dofollowPct}%` }}
-                className="bg-emerald-500 transition-all duration-500"
-                title={`Dofollow: ${audit.dofollowBacklinks.toLocaleString()}`}
-              />
-              <div
-                style={{ width: `${nofollowPct}%` }}
-                className="bg-slate-400 transition-all duration-500"
-                title={`Nofollow: ${audit.nofollowBacklinks.toLocaleString()}`}
-              />
+              {/* Visual stacked progress bar */}
+              <div className="h-3.5 w-full rounded-full bg-slate-100 overflow-hidden flex shadow-inner">
+                <div
+                  style={{ width: `${dofollowPct}%` }}
+                  className="bg-emerald-500 transition-all duration-500"
+                  title={`Dofollow: ${audit.dofollowBacklinks?.toLocaleString()}`}
+                />
+                <div
+                  style={{ width: `${nofollowPct}%` }}
+                  className="bg-slate-400 transition-all duration-500"
+                  title={`Nofollow: ${audit.nofollowBacklinks?.toLocaleString()}`}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-center">
+              <span className="text-xs font-medium text-slate-500">Distribution breakdown unavailable from provider</span>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3 pt-2">
             <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
@@ -320,7 +359,7 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
                 Passing Equity (Dofollow)
               </span>
               <span className="font-display text-lg font-bold text-slate-900 mt-0.5 block">
-                {audit.dofollowBacklinks.toLocaleString()}
+                {audit.dofollowBacklinks !== null ? audit.dofollowBacklinks.toLocaleString() : "Unavailable"}
               </span>
             </div>
             <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
@@ -328,7 +367,7 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
                 Non-equity (Nofollow)
               </span>
               <span className="font-display text-lg font-bold text-slate-900 mt-0.5 block">
-                {audit.nofollowBacklinks.toLocaleString()}
+                {audit.nofollowBacklinks !== null ? audit.nofollowBacklinks.toLocaleString() : "Unavailable"}
               </span>
             </div>
           </div>
@@ -388,6 +427,90 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
           </div>
         </div>
       </div>
+
+      {/* 4. Actionable Recommendations Preview Card */}
+      {audit.recommendations && audit.recommendations.length > 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-[#FF4D00]">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="font-display text-sm font-bold text-slate-900">
+                  Priority Backlink Recommendations ({audit.recommendations.length})
+                </h3>
+                <p className="text-[11px] text-slate-500 font-sans">
+                  Actionable insights generated from deterministic analysis of your real backlink dataset
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab("recommendations")}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-1.5 text-xs font-display font-bold shadow-2xs transition-colors shrink-0 cursor-pointer"
+            >
+              <span>View All Recommendations</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {audit.recommendations.slice(0, 4).map((rec) => {
+              const isCrit = rec.severity.toUpperCase() === "CRITICAL" || rec.severity.toUpperCase() === "HIGH";
+              const isOpp = rec.severity.toUpperCase() === "OPPORTUNITY" || rec.severity.toUpperCase() === "GOOD";
+
+              return (
+                <div
+                  key={rec.id || rec.ruleKey}
+                  onClick={() => onNavigateTab("recommendations")}
+                  className={cn(
+                    "flex flex-col justify-between p-3.5 rounded-xl border transition-all cursor-pointer group",
+                    isCrit
+                      ? "border-rose-100 bg-rose-50/20 hover:border-rose-200 hover:bg-rose-50/40"
+                      : isOpp
+                      ? "border-emerald-100 bg-emerald-50/20 hover:border-emerald-200 hover:bg-emerald-50/40"
+                      : "border-slate-200 bg-slate-50/40 hover:border-slate-300 hover:bg-slate-50/80"
+                  )}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={cn(
+                          "rounded-md px-1.5 py-0.5 text-[10px] font-bold font-sans uppercase tracking-wider border",
+                          isCrit
+                            ? "bg-rose-50 text-rose-700 border-rose-200"
+                            : isOpp
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-blue-50 text-blue-700 border-blue-200"
+                        )}
+                      >
+                        {rec.severity}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 font-sans">
+                        Score: {rec.priorityScore}/100
+                      </span>
+                    </div>
+                    <h4 className="font-display text-xs font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors pt-1">
+                      {rec.title}
+                    </h4>
+                    <p className="text-[11px] text-slate-600 font-sans line-clamp-2">
+                      {rec.whatWeFound}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-end">
+                    <span className="text-[10px] font-bold text-[#FF4D00] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                      Review & Fix <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

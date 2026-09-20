@@ -1,10 +1,12 @@
 import { db as prisma } from "@/lib/db/client";
 import {
-  fetchBacklinkDataFromRankParse,
+  fetchBacklinkDataFromMangools,
   sanitizeDomain,
-} from "@/services/rankparse/client";
-import { NormalizedBacklinkDataset } from "@/services/rankparse/types";
+} from "@/services/mangools/client";
+import { NormalizedBacklinkDataset } from "@/services/mangools/types";
 import { AnchorType, Prisma } from "@prisma/client";
+import { generateBacklinkRecommendations } from "./recommendations/engine";
+import { RecommendationContext } from "./recommendations/types";
 
 export { sanitizeDomain };
 
@@ -80,7 +82,7 @@ export function calculateBacklinkHealth(
   referringDomains: number,
   brokenBacklinks: number,
   suspiciousBacklinks: number,
-  dofollow: number
+  dofollow: number | null
 ): { status: "Good" | "Needs Attention" | "Critical"; issues: string[] } {
   const issues: string[] = [];
 
@@ -90,7 +92,7 @@ export function calculateBacklinkHealth(
 
   const brokenRatio = totalBacklinks > 0 ? brokenBacklinks / totalBacklinks : 0;
   const suspiciousRatio = totalBacklinks > 0 ? suspiciousBacklinks / totalBacklinks : 0;
-  const dofollowRatio = totalBacklinks > 0 ? dofollow / totalBacklinks : 0;
+  const dofollowRatio = dofollow !== null && totalBacklinks > 0 ? dofollow / totalBacklinks : null;
   const domainDiversity = totalBacklinks > 0 ? referringDomains / totalBacklinks : 0;
 
   if (brokenRatio > 0.08) {
@@ -102,7 +104,7 @@ export function calculateBacklinkHealth(
   if (domainDiversity < 0.03 && totalBacklinks > 500) {
     issues.push("Low referring domain diversity - potential sitewide link concentration.");
   }
-  if (dofollowRatio > 0 && dofollowRatio < 0.35) {
+  if (dofollowRatio !== null && dofollowRatio > 0 && dofollowRatio < 0.35) {
     issues.push("Unusually low Dofollow backlink share (< 35%).");
   }
 
@@ -154,6 +156,104 @@ export function getMetricCardStatus(
 }
 
 /**
+ * Evaluate and persist deterministic backlink recommendations
+ */
+export async function generateAndPersistRecommendations(auditId: string) {
+  const audit = await prisma.backlinkAudit.findUnique({
+    where: { id: auditId },
+    include: {
+      backlinks: true,
+      referringDomainsList: true,
+      anchors: true,
+      topPages: true,
+    },
+  });
+
+  if (!audit) return [];
+
+  const ctx: RecommendationContext = {
+    domain: audit.domain,
+    totalBacklinks: audit.totalBacklinks,
+    referringDomains: audit.referringDomains,
+    domainRank: audit.domainRank,
+    referringIps: audit.referringIps,
+    referringSubnets: audit.referringSubnets,
+    dofollowCount: audit.dofollowBacklinks ?? audit.backlinks.filter((b) => b.isDofollow).length,
+    nofollowCount: audit.nofollowBacklinks ?? audit.backlinks.filter((b) => !b.isDofollow).length,
+    brokenCount: audit.brokenBacklinks,
+    suspiciousCount: audit.suspiciousBacklinks,
+    newBacklinksCount: audit.backlinks.filter((b) => b.isNew).length,
+    lostBacklinksCount: audit.backlinks.filter((b) => b.isLost || b.isBroken).length,
+    backlinks: audit.backlinks.map((b) => ({
+      id: b.id,
+      sourceDomain: b.referringDomain,
+      sourceUrl: b.referringUrl,
+      targetUrl: b.targetUrl,
+      anchor: b.anchor,
+      isDofollow: b.isDofollow,
+      domainRank: b.domainRank,
+      httpStatus: b.httpStatus ?? 200,
+      linkType: b.httpStatus === 301 ? "redirect" : "text",
+      isNew: b.isNew,
+      isLost: b.isLost,
+      isBroken: b.isBroken,
+      isSuspicious: b.isSuspicious,
+      lossReason: b.lossReason,
+    })),
+    referringDomainsList: audit.referringDomainsList.map((rd) => ({
+      domain: rd.domain,
+      backlinksCount: rd.backlinksCount,
+      dofollowCount: rd.dofollowCount,
+      nofollowCount: rd.nofollowCount,
+      domainRank: rd.domainRank,
+    })),
+    anchors: audit.anchors.map((a) => ({
+      anchor: a.anchor,
+      backlinksCount: a.backlinksCount,
+      referringDomainsCount: a.referringDomainsCount,
+      percentage: a.percentage,
+      classification: a.classification,
+    })),
+    topPages: audit.topPages.map((tp) => ({
+      targetUrl: tp.targetUrl,
+      backlinksCount: tp.backlinksCount,
+      referringDomainsCount: tp.referringDomainsCount,
+      brokenCount: tp.brokenCount,
+    })),
+  };
+
+  const recs = generateBacklinkRecommendations(ctx);
+
+  // Clear existing and persist new recommendations in transaction
+  await prisma.$transaction([
+    prisma.backlinkRecommendation.deleteMany({ where: { auditId } }),
+    prisma.backlinkRecommendation.createMany({
+      data: recs.map((r) => ({
+        auditId,
+        ruleKey: r.ruleKey,
+        title: r.title,
+        severity: r.severity,
+        priorityScore: r.priorityScore,
+        confidence: r.confidence,
+        status: "active",
+        whatWeFound: r.whatWeFound,
+        whyItMatters: r.whyItMatters,
+        howToImprove: r.howToImprove,
+        targetTab: r.targetTab,
+        filterParamsJson: r.filterParams ? (r.filterParams as Prisma.InputJsonValue) : Prisma.JsonNull,
+        evidenceJson: r.evidence as unknown as Prisma.InputJsonValue,
+        actionsJson: r.actions as unknown as Prisma.InputJsonValue,
+      })),
+    }),
+  ]);
+
+  return prisma.backlinkRecommendation.findMany({
+    where: { auditId },
+    orderBy: { priorityScore: "desc" },
+  });
+}
+
+/**
  * Look up an existing backlink audit from the database without auto-fetching
  */
 export async function getExistingBacklinkAudit(rawDomain: string, userId?: string) {
@@ -167,15 +267,16 @@ export async function getExistingBacklinkAudit(rawDomain: string, userId?: strin
     },
   });
 
-  if (!website) return null;
-
-  const audit = await prisma.backlinkAudit.findFirst({
+  let audit = await prisma.backlinkAudit.findFirst({
     where: {
-      websiteId: website.id,
+      OR: [
+        ...(website ? [{ websiteId: website.id }] : []),
+        { domain },
+      ],
     },
     include: {
       backlinks: {
-        take: 100,
+        take: 1000,
         orderBy: { domainRank: "desc" },
       },
       referringDomainsList: {
@@ -190,15 +291,33 @@ export async function getExistingBacklinkAudit(rawDomain: string, userId?: strin
         take: 50,
         orderBy: { backlinksCount: "desc" },
       },
+      recommendations: {
+        orderBy: { priorityScore: "desc" },
+      },
     },
     orderBy: { fetchedAt: "desc" },
   });
+
+  if (!audit) return null;
+
+  if (audit.fetchedRowsCount && audit.fetchedRowsCount > 0 && audit.totalBacklinks !== audit.fetchedRowsCount) {
+    audit.totalBacklinks = audit.fetchedRowsCount;
+  }
+
+  // If recommendations not generated yet for this existing audit, generate on demand
+  if (!audit.recommendations || audit.recommendations.length === 0) {
+    const recs = await generateAndPersistRecommendations(audit.id);
+    audit = {
+      ...audit,
+      recommendations: recs,
+    };
+  }
 
   return audit;
 }
 
 /**
- * Retrieve cached backlink audit or fetch fresh data from RankParse API
+ * Retrieve cached backlink audit or fetch fresh data from Mangools API
  */
 export async function getOrFetchBacklinkAudit(
   rawDomain: string,
@@ -234,14 +353,14 @@ export async function getOrFetchBacklinkAudit(
 
   // 2. Check for fresh cached audit
   if (!forceRefresh) {
-    const cachedAudit = await prisma.backlinkAudit.findFirst({
+    let cachedAudit = await prisma.backlinkAudit.findFirst({
       where: {
         websiteId: website.id,
         expiresAt: { gt: now },
       },
       include: {
         backlinks: {
-          take: 100,
+          take: 1000,
           orderBy: { domainRank: "desc" },
         },
         referringDomainsList: {
@@ -256,11 +375,26 @@ export async function getOrFetchBacklinkAudit(
           take: 50,
           orderBy: { backlinksCount: "desc" },
         },
+        recommendations: {
+          orderBy: { priorityScore: "desc" },
+        },
       },
       orderBy: { fetchedAt: "desc" },
     });
 
     if (cachedAudit) {
+      if (cachedAudit.fetchedRowsCount && cachedAudit.fetchedRowsCount > 0 && cachedAudit.totalBacklinks !== cachedAudit.fetchedRowsCount) {
+        cachedAudit.totalBacklinks = cachedAudit.fetchedRowsCount;
+      }
+
+      if (!cachedAudit.recommendations || cachedAudit.recommendations.length === 0) {
+        const recs = await generateAndPersistRecommendations(cachedAudit.id);
+        cachedAudit = {
+          ...cachedAudit,
+          recommendations: recs,
+        };
+      }
+
       return {
         audit: cachedAudit,
         isCached: true,
@@ -268,8 +402,8 @@ export async function getOrFetchBacklinkAudit(
     }
   }
 
-  // 3. Fetch fresh dataset from RankParse API
-  const dataset: NormalizedBacklinkDataset = await fetchBacklinkDataFromRankParse(domain);
+  // 3. Fetch fresh dataset from Mangools API
+  const dataset: NormalizedBacklinkDataset = await fetchBacklinkDataFromMangools(domain);
 
   const totalBL = dataset.overview.totalBacklinks;
   const health = calculateBacklinkHealth(
@@ -282,29 +416,50 @@ export async function getOrFetchBacklinkAudit(
 
   const expiresAt = new Date(Date.now() + BACKLINK_TTL_HOURS * 60 * 60 * 1000);
 
+  // Helper to preserve null in database for missing metrics
+  const toNullableDbInt = (val: number | null | undefined): number | null => {
+    if (val === null || val === undefined) return null;
+    const num = Number(val);
+    return isNaN(num) ? null : Math.round(num);
+  };
+
   // 4. Save to Database in transaction
-  const newAudit = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    // Create master audit record
+  const newAudit = await prisma.$transaction(
+    async (tx: Prisma.TransactionClient) => {
+      // Create master audit record
     const audit = await tx.backlinkAudit.create({
       data: {
         websiteId: website.id,
         domain,
-        totalBacklinks: dataset.overview.totalBacklinks,
-        referringDomains: dataset.overview.referringDomains,
-        referringPages: dataset.overview.totalBacklinks,
-        dofollowBacklinks: dataset.overview.dofollowCount,
-        nofollowBacklinks: dataset.overview.nofollowCount,
-        newBacklinks: 0, // RankParse does not provide historical new links (never estimate)
-        lostBacklinks: 0, // RankParse does not provide historical lost links (never estimate)
-        referringIps: 0,
-        referringSubnets: 0,
-        domainRank: dataset.overview.domainRank,
-        brokenBacklinks: dataset.overview.brokenBacklinks,
-        suspiciousBacklinks: dataset.overview.suspiciousBacklinks,
+        totalBacklinks: Math.round(Number(dataset.overview.totalBacklinks) || 0),
+        referringDomains: Math.round(Number(dataset.overview.referringDomains) || 0),
+        referringPages: Math.round(Number(dataset.overview.totalBacklinks) || 0),
+        dofollowBacklinks: toNullableDbInt(dataset.overview.dofollowCount),
+        nofollowBacklinks: toNullableDbInt(dataset.overview.nofollowCount),
+        newBacklinks: toNullableDbInt(dataset.overview.newBacklinks),
+        lostBacklinks: toNullableDbInt(dataset.overview.lostBacklinks),
+        referringIps: toNullableDbInt(dataset.overview.referringIps),
+        referringSubnets: toNullableDbInt(dataset.overview.referringSubnets),
+        domainRank: toNullableDbInt(dataset.overview.domainRank),
+        brokenBacklinks: Math.round(Number(dataset.overview.brokenBacklinks) || 0),
+        suspiciousBacklinks: Math.round(Number(dataset.overview.suspiciousBacklinks) || 0),
         healthStatus: health.status,
+        status: dataset.overview.status || "completed",
+        fetchedRowsCount: dataset.backlinks.length,
+        lastFetchedPage: dataset.overview.lastFetchedPage || 0,
+        progressMessage: `Fetched ${dataset.backlinks.length} / ${dataset.overview.availableRowRecords || dataset.overview.totalBacklinks} backlinks`,
         metricsJson: {
-          provider: "rankparse",
-          creditsUsed: dataset.overview.creditsUsed,
+          provider: "mangools",
+          totalIndexedBacklinks: Math.round(Number(dataset.overview.totalIndexedBacklinks || dataset.overview.totalBacklinks) || 0),
+          detailedBacklinksAvailable: dataset.overview.detailedBacklinksAvailable || dataset.overview.availableRowRecords || dataset.backlinks.length,
+          detailedBacklinksFetched: dataset.backlinks.length,
+          creditsUsed: Math.round(Number(dataset.overview.creditsUsed) || 1),
+          costMetrics: dataset.overview.costMetrics || {
+            apiCallsCount: 3,
+            pagesFetched: 1,
+            creditsConsumed: dataset.backlinks.length + 1,
+          },
+          availableRowRecords: dataset.overview.detailedBacklinksAvailable || dataset.overview.availableRowRecords || dataset.backlinks.length,
           healthIssues: health.issues,
         },
         fetchedAt: now,
@@ -312,28 +467,32 @@ export async function getOrFetchBacklinkAudit(
       },
     });
 
-    // Create Backlinks records
+    // Create Backlinks records in chunks of 500
     if (dataset.backlinks.length > 0) {
-      await tx.backlinkRecord.createMany({
-        data: dataset.backlinks.map((bl) => ({
-          auditId: audit.id,
-          referringDomain: bl.sourceDomain,
-          referringUrl: bl.sourceUrl,
-          targetUrl: bl.targetUrl,
-          anchor: bl.anchor,
-          isDofollow: bl.isDofollow,
-          domainRank: bl.domainRank,
-          pageRank: bl.pageRank,
-          httpStatus: bl.httpStatus,
-          isNew: bl.isNew,
-          isLost: bl.isLost,
-          isBroken: bl.isBroken,
-          isSuspicious: bl.isSuspicious,
-          lossReason: bl.lossReason,
-          firstSeen: bl.firstSeen,
-          lastSeen: bl.lastSeen,
-        })),
-      });
+      const CHUNK_SIZE = 500;
+      for (let i = 0; i < dataset.backlinks.length; i += CHUNK_SIZE) {
+        const chunk = dataset.backlinks.slice(i, i + CHUNK_SIZE);
+        await tx.backlinkRecord.createMany({
+          data: chunk.map((bl) => ({
+            auditId: audit.id,
+            referringDomain: bl.sourceDomain,
+            referringUrl: bl.sourceUrl,
+            targetUrl: bl.targetUrl,
+            anchor: bl.anchor,
+            isDofollow: Boolean(bl.isDofollow),
+            domainRank: Math.round(Number(bl.domainRank) || 0),
+            pageRank: Math.round(Number(bl.pageRank) || 0),
+            httpStatus: Math.round(Number(bl.httpStatus) || 200),
+            isNew: Boolean(bl.isNew),
+            isLost: Boolean(bl.isLost),
+            isBroken: Boolean(bl.isBroken),
+            isSuspicious: Boolean(bl.isSuspicious),
+            lossReason: bl.lossReason,
+            firstSeen: bl.firstSeen,
+            lastSeen: bl.lastSeen,
+          })),
+        });
+      }
     }
 
     // Create Referring Domains records
@@ -342,10 +501,10 @@ export async function getOrFetchBacklinkAudit(
         data: dataset.referringDomains.map((rd) => ({
           auditId: audit.id,
           domain: rd.domain,
-          backlinksCount: rd.backlinksCount,
-          dofollowCount: rd.dofollowCount,
-          nofollowCount: rd.nofollowCount,
-          domainRank: rd.domainRank,
+          backlinksCount: Math.round(Number(rd.backlinksCount) || 0),
+          dofollowCount: Math.round(Number(rd.dofollowCount) || 0),
+          nofollowCount: Math.round(Number(rd.nofollowCount) || 0),
+          domainRank: Math.round(Number(rd.domainRank) || 0),
           ip: rd.ip,
           country: rd.country,
           firstSeen: null,
@@ -362,9 +521,9 @@ export async function getOrFetchBacklinkAudit(
           return {
             auditId: audit.id,
             anchor: a.anchor,
-            backlinksCount: a.backlinksCount,
-            referringDomainsCount: a.referringDomainsCount,
-            percentage: a.percentage,
+            backlinksCount: Math.round(Number(a.backlinksCount) || 0),
+            referringDomainsCount: Math.round(Number(a.referringDomainsCount) || 0),
+            percentage: Number(a.percentage) || 0,
             classification,
           };
         }),
@@ -377,25 +536,33 @@ export async function getOrFetchBacklinkAudit(
         data: dataset.topPages.map((tp) => ({
           auditId: audit.id,
           targetUrl: tp.targetUrl,
-          backlinksCount: tp.backlinksCount,
-          referringDomainsCount: tp.referringDomainsCount,
-          dofollowCount: tp.dofollowCount,
-          nofollowCount: tp.nofollowCount,
-          brokenCount: tp.brokenCount,
-          httpStatus: tp.httpStatus,
+          backlinksCount: Math.round(Number(tp.backlinksCount) || 0),
+          referringDomainsCount: Math.round(Number(tp.referringDomainsCount) || 0),
+          dofollowCount: Math.round(Number(tp.dofollowCount) || 0),
+          nofollowCount: Math.round(Number(tp.nofollowCount) || 0),
+          brokenCount: Math.round(Number(tp.brokenCount) || 0),
+          httpStatus: Math.round(Number(tp.httpStatus) || 200),
         })),
       });
     }
 
-    return audit;
-  });
+      return audit;
+    },
+    {
+      maxWait: 15000,
+      timeout: 45000,
+    }
+  );
+
+  // Generate and persist recommendations for fresh audit
+  await generateAndPersistRecommendations(newAudit.id);
 
   // Re-fetch complete saved audit with relations
   const completeAudit = await prisma.backlinkAudit.findUnique({
     where: { id: newAudit.id },
     include: {
       backlinks: {
-        take: 100,
+        take: 1000,
         orderBy: { domainRank: "desc" },
       },
       referringDomainsList: {
@@ -410,11 +577,139 @@ export async function getOrFetchBacklinkAudit(
         take: 50,
         orderBy: { backlinksCount: "desc" },
       },
+      recommendations: {
+        orderBy: { priorityScore: "desc" },
+      },
     },
   });
 
   return {
     audit: completeAudit!,
+    isCached: false,
+  };
+}
+
+/**
+ * Resume an interrupted backlink audit from the last successfully fetched page
+ */
+export async function resumeBacklinkAudit(rawDomain: string, userId?: string) {
+  const domain = sanitizeDomain(rawDomain);
+  if (!domain) throw new Error("Valid domain is required");
+
+  const latestAudit = await prisma.backlinkAudit.findFirst({
+    where: { domain },
+    orderBy: { fetchedAt: "desc" },
+    include: {
+      backlinks: true,
+    },
+  });
+
+  if (!latestAudit) {
+    return getOrFetchBacklinkAudit(domain, userId, true);
+  }
+
+  const startPage = (latestAudit.lastFetchedPage || 0) + 1;
+
+  // Fetch remaining pages from Mangools
+  const dataset = await fetchBacklinkDataFromMangools(domain, undefined, {
+    startPage,
+  });
+
+  // Insert newly retrieved links
+  if (dataset.backlinks.length > 0) {
+    const CHUNK_SIZE = 500;
+    for (let i = 0; i < dataset.backlinks.length; i += CHUNK_SIZE) {
+      const chunk = dataset.backlinks.slice(i, i + CHUNK_SIZE);
+      await prisma.backlinkRecord.createMany({
+        data: chunk.map((bl) => ({
+          auditId: latestAudit.id,
+          referringDomain: bl.sourceDomain,
+          referringUrl: bl.sourceUrl,
+          targetUrl: bl.targetUrl,
+          anchor: bl.anchor,
+          isDofollow: Boolean(bl.isDofollow),
+          domainRank: Math.round(Number(bl.domainRank) || 0),
+          pageRank: Math.round(Number(bl.pageRank) || 0),
+          httpStatus: Math.round(Number(bl.httpStatus) || 200),
+          isNew: Boolean(bl.isNew),
+          isLost: Boolean(bl.isLost),
+          isBroken: Boolean(bl.isBroken),
+          isSuspicious: Boolean(bl.isSuspicious),
+          lossReason: bl.lossReason,
+          firstSeen: bl.firstSeen,
+          lastSeen: bl.lastSeen,
+        })),
+      });
+    }
+  }
+
+  const allAuditBacklinks = await prisma.backlinkRecord.findMany({
+    where: { auditId: latestAudit.id },
+  });
+
+  const updatedCount = allAuditBacklinks.length;
+  const dofollowCount = allAuditBacklinks.filter((b) => b.isDofollow).length;
+  const nofollowCount = allAuditBacklinks.filter((b) => !b.isDofollow).length;
+  const newCount = allAuditBacklinks.filter((b) => b.isNew).length;
+  const lostCount = allAuditBacklinks.filter((b) => b.isLost || b.isBroken).length;
+  const brokenCount = allAuditBacklinks.filter((b) => b.isBroken).length;
+
+  const health = calculateBacklinkHealth(
+    updatedCount,
+    latestAudit.referringDomains,
+    brokenCount,
+    latestAudit.suspiciousBacklinks,
+    dofollowCount
+  );
+
+  await prisma.backlinkAudit.update({
+    where: { id: latestAudit.id },
+    data: {
+      totalBacklinks: updatedCount,
+      referringPages: updatedCount,
+      dofollowBacklinks: dofollowCount,
+      nofollowBacklinks: nofollowCount,
+      newBacklinks: newCount,
+      lostBacklinks: lostCount,
+      brokenBacklinks: brokenCount,
+      healthStatus: health.status,
+      status: dataset.overview.status || "completed",
+      fetchedRowsCount: updatedCount,
+      lastFetchedPage: dataset.overview.lastFetchedPage || startPage,
+      progressMessage: `Fetched ${updatedCount} / ${dataset.overview.availableRowRecords || dataset.overview.totalBacklinks} backlinks`,
+    },
+  });
+
+  // Regenerate recommendations with the expanded dataset
+  const updatedRecs = await generateAndPersistRecommendations(latestAudit.id);
+
+  const updatedAudit = await prisma.backlinkAudit.findUnique({
+    where: { id: latestAudit.id },
+    include: {
+      backlinks: {
+        take: 1000,
+        orderBy: { domainRank: "desc" },
+      },
+      referringDomainsList: {
+        take: 100,
+        orderBy: { backlinksCount: "desc" },
+      },
+      anchors: {
+        take: 50,
+        orderBy: { backlinksCount: "desc" },
+      },
+      topPages: {
+        take: 50,
+        orderBy: { backlinksCount: "desc" },
+      },
+      recommendations: {
+        orderBy: { priorityScore: "desc" },
+      },
+    },
+  });
+
+  return {
+    audit: updatedAudit!,
     isCached: false,
   };
 }

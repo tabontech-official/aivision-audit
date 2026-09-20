@@ -146,3 +146,24 @@ export async function refreshBacklinkDataAction(domain: string) {
     return { ok: false as const, error: err instanceof Error ? err.message : "Failed to refresh backlinks." };
   }
 }
+
+/**
+ * Resume partially completed backlink audit
+ */
+export async function resumeBacklinkAuditAction(domain: string) {
+  try {
+    const session = await auth();
+    const clean = sanitizeDomain(domain);
+    if (!clean) {
+      return { ok: false as const, error: "Invalid domain." };
+    }
+
+    const { resumeBacklinkAudit } = await import("@/services/backlinks/engine");
+    const result = await resumeBacklinkAudit(clean, session?.user?.id);
+    revalidatePath("/dashboard/backlinks");
+    return { ok: true as const, data: result.audit };
+  } catch (err: unknown) {
+    console.error("[resumeBacklinkAuditAction] Error:", err);
+    return { ok: false as const, error: err instanceof Error ? err.message : "Failed to resume backlink audit." };
+  }
+}

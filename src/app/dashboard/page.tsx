@@ -59,9 +59,6 @@ export default async function DashboardPage({
             include: {
               pageSpeedResults: true,
               rawData: true,
-              auditResults: {
-                include: { field: true },
-              },
             },
           },
         },
@@ -85,9 +82,6 @@ export default async function DashboardPage({
             include: {
               pageSpeedResults: true,
               rawData: true,
-              auditResults: {
-                include: { field: true },
-              },
             },
           },
         },

@@ -593,6 +593,9 @@ model Website {
   reports  Report[]
   findings Finding[]
   backlinkAudits BacklinkAudit[]
+  schemaAudits   SchemaAudit[]
+  keywordSearches KeywordSearch[]
+  trackedKeywords TrackedKeyword[]
 
   @@unique([userId, url])
   @@index([userId])
@@ -1193,7 +1196,7 @@ model SystemExecutionLog {
 }
 
 // ----------------------------------------------------------------
-// BACKLINKS MODULE (RankParse Integration)
+// BACKLINKS MODULE (Mangools Integration)
 // ----------------------------------------------------------------
 
 enum AnchorType {
@@ -1212,27 +1215,32 @@ model BacklinkAudit {
   totalBacklinks      Int      @default(0) @map("total_backlinks")
   referringDomains    Int      @default(0) @map("referring_domains")
   referringPages      Int      @default(0) @map("referring_pages")
-  dofollowBacklinks   Int      @default(0) @map("dofollow_backlinks")
-  nofollowBacklinks   Int      @default(0) @map("nofollow_backlinks")
-  newBacklinks        Int      @default(0) @map("new_backlinks")
-  lostBacklinks       Int      @default(0) @map("lost_backlinks")
-  referringIps        Int      @default(0) @map("referring_ips")
-  referringSubnets    Int      @default(0) @map("referring_subnets")
-  domainRank          Int      @default(0) @map("domain_rank")
+  dofollowBacklinks   Int?     @map("dofollow_backlinks")
+  nofollowBacklinks   Int?     @map("nofollow_backlinks")
+  newBacklinks        Int?     @map("new_backlinks")
+  lostBacklinks       Int?     @map("lost_backlinks")
+  referringIps        Int?     @map("referring_ips")
+  referringSubnets    Int?     @map("referring_subnets")
+  domainRank          Int?     @map("domain_rank")
   brokenBacklinks     Int      @default(0) @map("broken_backlinks")
   suspiciousBacklinks Int      @default(0) @map("suspicious_backlinks")
   healthStatus        String   @default("Good") @map("health_status") // Good | Needs Attention | Critical
+  status              String   @default("completed") @map("status") // pending | fetching | completed | partially_completed | failed
+  fetchedRowsCount    Int      @default(0) @map("fetched_rows_count")
+  lastFetchedPage     Int      @default(0) @map("last_fetched_page")
+  progressMessage     String?  @map("progress_message")
   metricsJson         Json?    @map("metrics_json")
   fetchedAt           DateTime @default(now()) @map("fetched_at") @db.Timestamptz
   expiresAt           DateTime @map("expires_at") @db.Timestamptz
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  website              Website               @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  website              Website                  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
   backlinks            BacklinkRecord[]
   referringDomainsList ReferringDomainItem[]
   anchors              AnchorRecord[]
   topPages             TopPageRecord[]
+  recommendations      BacklinkRecommendation[]
 
   @@index([websiteId])
   @@index([domain])
@@ -1329,5 +1337,175 @@ model TopPageRecord {
   @@index([targetUrl])
   @@map("top_page_records")
 }
+
+model BacklinkRecommendation {
+  id               String   @id @default(uuid()) @db.Uuid
+  auditId          String   @map("audit_id") @db.Uuid
+  ruleKey          String   @map("rule_key")
+  title            String
+  severity         String   // Critical | High | Medium | Low | Opportunity | Good
+  priorityScore    Int      @default(50) @map("priority_score") // 0-100
+  confidence       String   @default("Medium") // High | Medium | Low
+  status           String   @default("active") // active | resolved | dismissed
+  whatWeFound      String   @map("what_we_found") @db.Text
+  whyItMatters     String   @map("why_it_matters") @db.Text
+  howToImprove     String   @map("how_to_improve") @db.Text
+  targetTab        String?  @map("target_tab") // backlinks | referring_domains | anchors | top_pages | new_lost
+  filterParamsJson Json?    @map("filter_params_json")
+  evidenceJson     Json?    @map("evidence_json")
+  actionsJson      Json?    @map("actions_json")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  audit BacklinkAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@unique([auditId, ruleKey])
+  @@index([auditId])
+  @@index([severity])
+  @@index([priorityScore])
+  @@map("backlink_recommendations")
+}
+
+// ----------------------------------------------------------------
+// SCHEMA MARKUP & STRUCTURED DATA SUITE
+// ----------------------------------------------------------------
+
+model SchemaAudit {
+  id                String   @id @default(uuid()) @db.Uuid
+  websiteId         String?  @map("website_id") @db.Uuid
+  url               String
+  domain            String
+  overallScore      Int      @default(0) @map("overall_score") // 0-100
+  totalSchemas      Int      @default(0) @map("total_schemas")
+  validCount        Int      @default(0) @map("valid_count")
+  errorCount        Int      @default(0) @map("error_count")
+  warningCount      Int      @default(0) @map("warning_count")
+  opportunityCount  Int      @default(0) @map("opportunity_count")
+  detectedTypes     String[] @map("detected_types")
+  status            String   @default("completed") @map("status") // completed | failed
+  rawExtractionJson Json?    @map("raw_extraction_json")
+  summaryJson       Json?    @map("summary_json")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  website           Website?      @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  items             SchemaItem[]
+  issues            SchemaIssue[]
+
+  @@index([websiteId])
+  @@index([url])
+  @@index([domain])
+  @@index([createdAt])
+  @@map("schema_audits")
+}
+
+model SchemaItem {
+  id          String      @id @default(uuid()) @db.Uuid
+  auditId     String      @map("audit_id") @db.Uuid
+  schemaType  String      @map("schema_type") // e.g. "Product", "FAQPage"
+  format      String      @default("JSON-LD") @map("format") // "JSON-LD" | "Microdata" | "RDFa"
+  isValid     Boolean     @default(true) @map("is_valid")
+  hasErrors   Boolean     @default(false) @map("has_errors")
+  hasWarnings Boolean     @default(false) @map("has_warnings")
+  rawJson     Json        @map("raw_json")
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  audit       SchemaAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  issues      SchemaIssue[]
+
+  @@index([auditId])
+  @@index([schemaType])
+  @@map("schema_items")
+}
+
+model SchemaIssue {
+  id             String      @id @default(uuid()) @db.Uuid
+  auditId        String      @map("audit_id") @db.Uuid
+  schemaItemId   String?     @map("schema_item_id") @db.Uuid
+  schemaType     String      @map("schema_type")
+  field          String?     // e.g. "offers.price", "author.name"
+  issueType      String      @map("issue_type") // MISSING_REQUIRED | MISSING_RECOMMENDED | SYNTAX_ERROR | INVALID_FORMAT | PROTOCOL_HTTP
+  severity       String      @map("severity") // Error | Warning | Opportunity
+  message        String      @db.Text
+  recommendation String      @db.Text
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  audit          SchemaAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  schemaItem     SchemaItem? @relation(fields: [schemaItemId], references: [id], onDelete: Cascade)
+
+  @@index([auditId])
+  @@index([severity])
+  @@map("schema_issues")
+}
+
+// ----------------------------------------------------------------
+// KEYWORD RESEARCH & SERP INTELLIGENCE SUITE
+// ----------------------------------------------------------------
+
+model KeywordSearch {
+  id              String        @id @default(uuid()) @db.Uuid
+  websiteId       String?       @map("website_id") @db.Uuid
+  query           String
+  location        String        @default("United States")
+  language        String        @default("en")
+  totalResults    Int           @default(0) @map("total_results")
+  avgSearchVolume Int           @default(0) @map("avg_search_volume")
+  avgDifficulty   Int           @default(0) @map("avg_difficulty")
+  resultsJson     Json?         @map("results_json")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  website         Website?      @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  ideas           KeywordIdea[]
+
+  @@index([query])
+  @@index([websiteId])
+  @@index([createdAt])
+  @@map("keyword_searches")
+}
+
+model KeywordIdea {
+  id           String        @id @default(uuid()) @db.Uuid
+  searchId     String        @map("search_id") @db.Uuid
+  keyword      String
+  searchVolume Int           @default(0) @map("search_volume")
+  cpc          Float         @default(0)
+  ppc          Int           @default(0)
+  difficulty   Int           @default(0) // KD 0-100
+  intent       String        @default("Informational") // Informational | Commercial | Transactional | Navigational
+  trendJson    Json?         @map("trend_json") // 12-month volume history array
+  category     String        @default("related") // related | question | autocomplete
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  search       KeywordSearch @relation(fields: [searchId], references: [id], onDelete: Cascade)
+
+  @@index([searchId])
+  @@index([keyword])
+  @@index([difficulty])
+  @@index([searchVolume])
+  @@map("keyword_ideas")
+}
+
+model TrackedKeyword {
+  id               String   @id @default(uuid()) @db.Uuid
+  websiteId        String   @map("website_id") @db.Uuid
+  keyword          String
+  targetUrl        String?  @map("target_url")
+  searchVolume     Int      @default(0) @map("search_volume")
+  cpc              Float    @default(0)
+  difficulty       Int      @default(0)
+  currentPosition  Int?     @map("current_position") // 1-100
+  previousPosition Int?     @map("previous_position")
+  bestPosition     Int?     @map("best_position")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  website          Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, keyword])
+  @@index([websiteId])
+  @@map("tracked_keywords")
+}
+
+
 
 
