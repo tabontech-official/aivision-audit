@@ -32,7 +32,7 @@ interface BacklinkAuditData {
   brokenBacklinks: number;
   suspiciousBacklinks: number;
   healthStatus: string;
-  metricsJson?: any;
+  metricsJson?: unknown;
   fetchedAt: Date | string;
   expiresAt: Date | string;
 }

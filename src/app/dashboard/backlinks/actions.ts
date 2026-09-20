@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db/client";
 import { auth } from "@/lib/auth/auth";
 import { getOrFetchBacklinkAudit, sanitizeDomain } from "@/services/backlinks/engine";
@@ -31,9 +32,9 @@ export async function getBacklinkDataAction(domain: string, forceRefresh: boolea
 
     const result = await getOrFetchBacklinkAudit(clean, userId, forceRefresh);
     return { ok: true as const, data: result.audit, isCached: result.isCached };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[getBacklinkDataAction] Error:", err);
-    return { ok: false as const, error: err.message || "Failed to load backlink data." };
+    return { ok: false as const, error: err instanceof Error ? err.message : "Failed to load backlink data." };
   }
 }
 
@@ -62,7 +63,7 @@ export async function getFilteredBacklinksAction(domain: string, params: Backlin
       return { ok: false as const, error: "No backlink audit found for this domain. Please run an audit first." };
     }
 
-    const whereClause: any = {
+    const whereClause: Prisma.BacklinkRecordWhereInput = {
       auditId: latestAudit.id,
     };
 
@@ -120,9 +121,9 @@ export async function getFilteredBacklinksAction(domain: string, params: Backlin
       pageSize,
       totalPages: Math.ceil(totalCount / pageSize),
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[getFilteredBacklinksAction] Error:", err);
-    return { ok: false as const, error: err.message || "Failed to query backlinks." };
+    return { ok: false as const, error: err instanceof Error ? err.message : "Failed to query backlinks." };
   }
 }
 
@@ -140,8 +141,8 @@ export async function refreshBacklinkDataAction(domain: string) {
     const result = await getOrFetchBacklinkAudit(clean, session?.user?.id, true);
     revalidatePath("/dashboard/backlinks");
     return { ok: true as const, data: result.audit };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[refreshBacklinkDataAction] Error:", err);
-    return { ok: false as const, error: err.message || "Failed to refresh backlinks." };
+    return { ok: false as const, error: err instanceof Error ? err.message : "Failed to refresh backlinks." };
   }
 }

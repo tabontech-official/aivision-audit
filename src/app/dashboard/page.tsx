@@ -136,10 +136,12 @@ export default async function DashboardPage({
     : 0;
 
   // Extracted Data
-  const rawExtracted = (activeReport?.rawData?.extracted as Record<string, any>) || {};
-  const linksData = rawExtracted.links || {};
-  const pageData = rawExtracted.page || {};
-  const sitemapData = rawExtracted.sitemap || {};
+  const rawExtracted = (activeReport?.rawData?.extracted as Record<string, unknown>) || {};
+  const linksData = (rawExtracted.links as Record<string, unknown>) || {};
+  const sitemapData = (rawExtracted.sitemap as Record<string, unknown>) || {};
+  const trustData = (rawExtracted.trust as Record<string, unknown>) || {};
+  const trafficData = (rawExtracted.traffic as Record<string, unknown>) || {};
+  const contentData = (rawExtracted.content as Record<string, unknown>) || {};
 
   // Safely extract numeric link counts (linksData.external / internal can be array of objects)
   const externalLinkCount = Array.isArray(linksData.external)
@@ -154,33 +156,29 @@ export default async function DashboardPage({
     ? linksData.internal
     : 0;
 
-  const totalLinksCount = typeof linksData.total === "number"
-    ? linksData.total
-    : externalLinkCount + internalLinkCount;
-
   // Key Metrics Overview (Extracted directly from real audit report data, zero calculations)
   const domainAuthority = typeof rawExtracted.domainAuthority === "number"
     ? rawExtracted.domainAuthority
-    : typeof rawExtracted.trust?.domainAuthority === "number"
-    ? rawExtracted.trust.domainAuthority
+    : typeof trustData.domainAuthority === "number"
+    ? trustData.domainAuthority
     : 0;
 
   const organicTraffic = typeof rawExtracted.organicTraffic === "number"
     ? rawExtracted.organicTraffic
-    : typeof rawExtracted.traffic?.organic === "number"
-    ? rawExtracted.traffic.organic
+    : typeof trafficData.organic === "number"
+    ? trafficData.organic
     : 0;
 
   const organicCost = typeof rawExtracted.organicCost === "number"
     ? rawExtracted.organicCost
-    : typeof rawExtracted.traffic?.cost === "number"
-    ? rawExtracted.traffic.cost
+    : typeof trafficData.cost === "number"
+    ? trafficData.cost
     : 0;
 
   const organicKeywords = typeof rawExtracted.organicKeywords === "number"
     ? rawExtracted.organicKeywords
-    : typeof rawExtracted.content?.keywordsCount === "number"
-    ? rawExtracted.content.keywordsCount
+    : typeof contentData.keywordsCount === "number"
+    ? contentData.keywordsCount
     : 0;
 
   // Backlinks Overview (Extracted directly from real audit report links data, zero calculations)
@@ -202,16 +200,24 @@ export default async function DashboardPage({
     : 0;
 
   // Top Keywords (Extracted directly from real audit report keywords data, zero calculations)
-  const rawKeywordsList = Array.isArray(rawExtracted.keywords)
+  const rawKeywordsList: unknown[] = Array.isArray(rawExtracted.keywords)
     ? rawExtracted.keywords
-    : Array.isArray(rawExtracted.content?.keywords)
-    ? rawExtracted.content.keywords
+    : Array.isArray(contentData.keywords)
+    ? (contentData.keywords as unknown[])
     : [];
 
-  const keywordsList = rawKeywordsList.map((item: any) => ({
-    label: typeof item === "string" ? item : (item.keyword || item.label || item.text || ""),
-    position: typeof item === "object" && typeof item.position === "number" ? item.position : 0,
-  })).filter((k: any) => k.label.length > 0);
+  const keywordsList = rawKeywordsList.map((item: unknown) => {
+    if (typeof item === "string") {
+      return { label: item, position: 0 };
+    }
+    if (typeof item === "object" && item !== null) {
+      const obj = item as Record<string, unknown>;
+      const label = typeof obj.keyword === "string" ? obj.keyword : typeof obj.label === "string" ? obj.label : typeof obj.text === "string" ? obj.text : "";
+      const position = typeof obj.position === "number" ? obj.position : 0;
+      return { label, position };
+    }
+    return { label: "", position: 0 };
+  }).filter((k) => k.label.length > 0);
 
   // Pages Scanned Overview (Exact 1-to-1 match with Report DB audit results)
   const totalPagesCount = hasReport

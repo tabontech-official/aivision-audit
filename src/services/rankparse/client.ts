@@ -80,7 +80,7 @@ export async function callRankParseEndpoint<T>(
     clearTimeout(timeoutId);
 
     const text = await response.text();
-    let body: any = null;
+    let body: unknown = null;
     try {
       body = JSON.parse(text);
     } catch {
@@ -94,9 +94,10 @@ export async function callRankParseEndpoint<T>(
         return callRankParseEndpoint<T>(endpoint, params, retries - 1, timeoutMs);
       }
 
+      const bodyObj = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : null;
       const errorMsg =
-        body?.error ||
-        body?.message ||
+        (typeof bodyObj?.error === "string" ? bodyObj.error : null) ||
+        (typeof bodyObj?.message === "string" ? bodyObj.message : null) ||
         `HTTP ${response.status} ${response.statusText}`;
 
       if (response.status === 401 || response.status === 403) {
@@ -137,7 +138,8 @@ export async function callRankParseEndpoint<T>(
       if (err.name === "AbortError") {
         throw new Error(`RankParse request timed out for /${endpoint}`);
       }
-      if (err.message?.includes("fetch failed") || (err as any).cause?.code === "UND_ERR_CONNECT_TIMEOUT") {
+      const errWithCause = err as Error & { cause?: { code?: string } };
+      if (err.message?.includes("fetch failed") || errWithCause.cause?.code === "UND_ERR_CONNECT_TIMEOUT") {
         throw new Error(
           `Connection to RankParse server timed out while establishing network handshake. Please try again.`
         );

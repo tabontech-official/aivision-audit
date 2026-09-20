@@ -85,12 +85,15 @@ export function BacklinksTab({ backlinks, domain: _domain, totalBacklinks }: Bac
 
   const sortedList = useMemo(() => {
     return [...filteredList].sort((a, b) => {
-      let valA: any = a[sortBy];
-      let valB: any = b[sortBy];
+      let valA = 0;
+      let valB = 0;
 
       if (sortBy === "firstSeen" || sortBy === "lastSeen") {
-        valA = valA ? new Date(valA).getTime() : 0;
-        valB = valB ? new Date(valB).getTime() : 0;
+        valA = a[sortBy] ? new Date(a[sortBy]!).getTime() : 0;
+        valB = b[sortBy] ? new Date(b[sortBy]!).getTime() : 0;
+      } else {
+        valA = a[sortBy] ?? 0;
+        valB = b[sortBy] ?? 0;
       }
 
       if (sortOrder === "asc") {
@@ -113,7 +116,7 @@ export function BacklinksTab({ backlinks, domain: _domain, totalBacklinks }: Bac
   return (
     <div className="space-y-4">
       {/* 1. Header Toolbar & Filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col md:row md:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
         {/* Search Input */}
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
@@ -157,8 +160,12 @@ export function BacklinksTab({ backlinks, domain: _domain, totalBacklinks }: Bac
               value={`${sortBy}_${sortOrder}`}
               onChange={(e) => {
                 const [sb, so] = e.target.value.split("_");
-                setSortBy(sb as any);
-                setSortOrder(so as any);
+                if (sb === "domainRank" || sb === "pageRank" || sb === "firstSeen" || sb === "lastSeen") {
+                  setSortBy(sb);
+                }
+                if (so === "asc" || so === "desc") {
+                  setSortOrder(so);
+                }
                 setCurrentPage(1);
               }}
               className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer text-xs"
@@ -175,10 +182,10 @@ export function BacklinksTab({ backlinks, domain: _domain, totalBacklinks }: Bac
       {/* 2. Type Filter Pills */}
       <div className="flex flex-wrap items-center gap-2">
         {[
-          { key: "all", label: "All Backlinks", count: backlinks.length },
-          { key: "dofollow", label: "Dofollow", count: backlinks.filter((b) => b.isDofollow).length },
-          { key: "nofollow", label: "Nofollow", count: backlinks.filter((b) => !b.isDofollow).length },
-          { key: "broken", label: "Broken (404)", count: backlinks.filter((b) => b.isBroken).length },
+          { key: "all" as const, label: "All Backlinks", count: backlinks.length },
+          { key: "dofollow" as const, label: "Dofollow", count: backlinks.filter((b) => b.isDofollow).length },
+          { key: "nofollow" as const, label: "Nofollow", count: backlinks.filter((b) => !b.isDofollow).length },
+          { key: "broken" as const, label: "Broken (404)", count: backlinks.filter((b) => b.isBroken).length },
         ].map((pill) => {
           const isSelected = selectedType === pill.key;
           return (
@@ -186,7 +193,7 @@ export function BacklinksTab({ backlinks, domain: _domain, totalBacklinks }: Bac
               key={pill.key}
               type="button"
               onClick={() => {
-                setSelectedType(pill.key as any);
+                setSelectedType(pill.key);
                 setCurrentPage(1);
               }}
               className={cn(

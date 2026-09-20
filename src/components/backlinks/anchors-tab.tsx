@@ -209,8 +209,12 @@ export function AnchorsTab({ anchors, totalBacklinks }: AnchorsTabProps) {
               value={`${sortBy}_${sortOrder}`}
               onChange={(e) => {
                 const [sb, so] = e.target.value.split("_");
-                setSortBy(sb as any);
-                setSortOrder(so as any);
+                if (sb === "backlinksCount" || sb === "referringDomainsCount" || sb === "percentage") {
+                  setSortBy(sb);
+                }
+                if (so === "asc" || so === "desc") {
+                  setSortOrder(so);
+                }
                 setCurrentPage(1);
               }}
               className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer text-xs"
