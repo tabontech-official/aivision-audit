@@ -155,32 +155,32 @@ export function BacklinksClientView({
   return (
     <div className="w-full">
       {/* 1. FIXED TOP BAR: Attached Edge-to-Edge, Zero Roundness, Sticky beneath Dashboard TopBar */}
-      <div className="sticky top-[52px] z-20 -mx-4 -mt-6 sm:-mx-8 border-b border-slate-200 bg-white/95 backdrop-blur-md px-4 sm:px-8 pt-3.5 pb-0 shadow-2xs space-y-3">
+      <div className="sticky top-[52px] z-20 -mx-4 -mt-6 sm:-mx-8 border-b border-slate-200 bg-white/95 backdrop-blur-md px-4 sm:px-8 pt-2 pb-0 shadow-2xs space-y-1.5">
         {/* Top Header Row: Domain Info & Action Button */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div className="space-y-0.5">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-[#FF4D00]">
-                <Link2 className="h-4.5 w-4.5" />
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50 text-[#FF4D00] shrink-0">
+                <Link2 className="h-4 w-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="font-display text-lg font-bold tracking-tight text-slate-900">
+                  <h1 className="font-display text-base font-bold tracking-tight text-slate-900 leading-tight">
                     {initialDomain ? initialDomain : "Backlinks Profile"}
                   </h1>
                   {initialDomain && audit && (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 font-sans border border-slate-200">
-                      <Database className="h-3 w-3 text-slate-400" />
+                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 font-sans border border-slate-200">
+                      <Database className="h-2.5 w-2.5 text-slate-400" />
                       <span>72h Cache Active</span>
                     </span>
                   )}
                   {isPartiallyCompleted && (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 font-sans border border-amber-200">
+                    <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 font-sans border border-amber-200">
                       <span>Partial ({audit.fetchedRowsCount ?? 0} of {audit.totalBacklinks.toLocaleString()})</span>
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-slate-500 font-sans">
+                <p className="text-[10px] text-slate-500 font-sans leading-tight">
                   {initialDomain && audit
                     ? `Last verified: ${formatFetchedAt(audit?.fetchedAt)} • Backlink Intelligence Engine`
                     : "Audit backlink equity, referring domains, authority metrics, and anchor distributions"}
@@ -195,9 +195,9 @@ export function BacklinksClientView({
                 type="button"
                 onClick={handleResumeFetch}
                 disabled={isPending || isResuming}
-                className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-display font-bold text-white shadow-xs hover:bg-amber-700 transition-colors cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-display font-bold text-white shadow-xs hover:bg-amber-700 transition-colors cursor-pointer disabled:opacity-50"
               >
-                <RotateCw className={cn("h-3.5 w-3.5", (isPending || isResuming) && "animate-spin")} />
+                <RotateCw className={cn("h-3 w-3", (isPending || isResuming) && "animate-spin")} />
                 <span>{(isPending || isResuming) ? "Resuming..." : "Resume Fetch"}</span>
               </button>
             )}
@@ -207,12 +207,12 @@ export function BacklinksClientView({
                 type="button"
                 onClick={handleManualRefresh}
                 disabled={isPending || isResuming}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] px-4 py-2 text-xs font-display font-bold text-white shadow-xs hover:opacity-95 transition-opacity cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] px-3.5 py-1.5 text-xs font-display font-bold text-white shadow-xs hover:opacity-95 transition-opacity cursor-pointer disabled:opacity-50"
               >
-                <RotateCw className={cn("h-3.5 w-3.5", (isPending && !isResuming) && "animate-spin")} />
+                <RotateCw className={cn("h-3 w-3", (isPending && !isResuming) && "animate-spin")} />
                 <span>
                   {isPending && !isResuming
-                    ? "Fetching Complete Dataset..."
+                    ? "Fetching..."
                     : audit
                     ? `Refresh Backlinks for ${initialDomain}`
                     : `Run Backlink Analysis for ${initialDomain}`}
@@ -223,7 +223,7 @@ export function BacklinksClientView({
         </div>
 
         {/* Bottom Tab Row inside Header */}
-        <div className="flex items-center gap-6 overflow-x-auto scrollbar-none pt-1">
+        <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto scrollbar-none pt-0.5">
           {(() => {
             const metricsObj = (audit?.metricsJson && typeof audit?.metricsJson === "object" ? audit.metricsJson : {}) as Record<string, unknown>;
             const detailedFetchedCount = audit?.fetchedRowsCount ?? (metricsObj.detailedBacklinksFetched as number) ?? audit?.backlinks?.length ?? 0;
@@ -245,14 +245,14 @@ export function BacklinksClientView({
                   type="button"
                   onClick={() => handleTabChange(tab.id)}
                   className={cn(
-                    "flex items-center gap-2 pb-2.5 pt-1 text-xs font-sans transition-all whitespace-nowrap cursor-pointer border-b-2 -mb-[1px]",
+                    "flex items-center gap-1.5 pb-1.5 pt-0.5 text-xs font-sans transition-all whitespace-nowrap cursor-pointer border-b-2 -mb-[1px]",
                     isSelected
                       ? "border-slate-900 text-slate-900 font-bold"
                       : "border-transparent text-slate-500 font-medium hover:text-slate-900 hover:border-slate-300"
                   )}
                 >
-                  <div className={cn("flex h-6 w-6 items-center justify-center rounded-[6px] text-white shadow-2xs shrink-0", tab.badgeBg)}>
-                    <Icon className="h-3.5 w-3.5" />
+                  <div className={cn("flex h-5 w-5 items-center justify-center rounded-[5px] text-white shadow-2xs shrink-0", tab.badgeBg)}>
+                    <Icon className="h-3 w-3" />
                   </div>
                   <span>{tab.label}</span>
                   {tab.count !== undefined && tab.count !== null && (

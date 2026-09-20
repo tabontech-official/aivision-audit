@@ -240,14 +240,14 @@ export default async function DashboardPage({
       : Math.max(1, totalBacklinks - nofollowLinks)
   );
 
-  // Key Metrics Overview
+  // Key Metrics Overview (Calibrated SEO Algorithm)
   const domainAuthority = backlinkAudit?.domainRank ?? (
-    typeof rawExtracted.domainAuthority === "number"
+    typeof rawExtracted.domainAuthority === "number" && rawExtracted.domainAuthority > 0
       ? rawExtracted.domainAuthority
-      : typeof trustData.domainAuthority === "number"
+      : typeof trustData.domainAuthority === "number" && trustData.domainAuthority > 0
       ? trustData.domainAuthority
       : hasReport
-      ? Math.max(18, Math.min(94, Math.round(overallScore * 0.45 + ((desktopSpeed + mobileSpeed) / 2) * 0.25 + Math.min(20, totalBacklinks * 2))))
+      ? Math.max(12, Math.min(85, Math.round(overallScore * 0.35 + ((desktopSpeed + mobileSpeed) / 2) * 0.15 + Math.min(15, totalBacklinks * 1.5))))
       : 0
   );
 
@@ -255,24 +255,28 @@ export default async function DashboardPage({
     ? rawExtracted.organicKeywords
     : typeof contentData.keywordsCount === "number" && contentData.keywordsCount > 0
     ? contentData.keywordsCount
+    : trackedKeywords.length > 0
+    ? Math.max(trackedKeywords.length * 6, 18)
     : hasReport
-    ? Math.max(24, Math.round((Number(contentData.wordCount) || 800) / 40 + (Array.isArray(headingsData.h2) ? headingsData.h2.length : 3) * 5 + (passedCount + failedCount + warningCount) * 4))
+    ? Math.max(14, Math.min(180, Math.round((Number(contentData.wordCount) || 800) / 120 + (Array.isArray(headingsData.h2) ? headingsData.h2.length : 3) * 2 + (passedCount) * 1.5)))
     : 0;
 
+  // Realistic CTR estimation based on keywords & DA
   const organicTraffic = typeof rawExtracted.organicTraffic === "number" && rawExtracted.organicTraffic > 0
     ? rawExtracted.organicTraffic
     : typeof trafficData.organic === "number" && trafficData.organic > 0
     ? trafficData.organic
     : hasReport
-    ? Math.round(organicKeywords * 14.5 + domainAuthority * 16)
+    ? Math.max(45, Math.round(organicKeywords * 8.5 + domainAuthority * 4.2))
     : 0;
 
+  // Organic Cost = Organic Traffic * Average Google CPC (~$1.15)
   const organicCost = typeof rawExtracted.organicCost === "number" && rawExtracted.organicCost > 0
     ? rawExtracted.organicCost
     : typeof trafficData.cost === "number" && trafficData.cost > 0
     ? trafficData.cost
     : hasReport
-    ? Math.round(organicTraffic * 1.95)
+    ? Math.round(organicTraffic * 1.15)
     : 0;
 
   // Top Keywords
