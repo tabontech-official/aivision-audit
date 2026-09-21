@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { AlertOctagon, AlertTriangle, Sparkles, CheckCircle2, ArrowRight, Filter } from "lucide-react";
+import { AlertOctagon, AlertTriangle, Layers, CheckCircle2, ArrowRight, Filter } from "lucide-react";
 import { SchemaIssueItem } from "@/services/schema/types";
+import { cn } from "@/lib/utils/cn";
 
 interface SchemaIssuesListProps {
   issues: SchemaIssueItem[];
@@ -24,10 +25,10 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
 
   if (issues.length === 0) {
     return (
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-xs font-sans">
         <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
-        <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Zero Schema Issues Found!</h4>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto mt-1">
+        <h4 className="text-sm font-bold text-slate-800 font-display">Zero Schema Issues Found!</h4>
+        <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 font-sans">
           All structured data elements meet Google Rich Results validation specifications without syntax errors or missing required properties.
         </p>
       </div>
@@ -35,14 +36,14 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
   }
 
   return (
-    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs font-sans">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div>
-          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <Filter className="w-4 h-4 text-indigo-500" />
+          <h3 className="text-sm font-bold text-slate-900 font-display flex items-center gap-2">
+            <Filter className="w-4 h-4 text-[#FF4D00]" />
             Validation Findings & Action Items ({issues.length})
           </h3>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          <p className="text-xs text-slate-500 font-sans mt-0.5">
             Resolve required errors and recommended enhancements to maximize rich snippet visibility
           </p>
         </div>
@@ -50,42 +51,50 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
         {/* Filter Pills */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
+            type="button"
             onClick={() => setFilter("ALL")}
-            className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+            className={cn(
+              "px-3 py-1 text-xs font-bold rounded-[8px] transition-colors cursor-pointer",
               filter === "ALL"
-                ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
-                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900"
-            }`}
+                ? "bg-slate-900 text-white shadow-2xs"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            )}
           >
             All ({issues.length})
           </button>
           <button
+            type="button"
             onClick={() => setFilter("ERROR")}
-            className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+            className={cn(
+              "px-3 py-1 text-xs font-bold rounded-[8px] transition-colors cursor-pointer",
               filter === "ERROR"
-                ? "bg-red-600 text-white"
-                : "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100"
-            }`}
+                ? "bg-rose-600 text-white shadow-2xs"
+                : "bg-rose-50 text-rose-700 hover:bg-rose-100"
+            )}
           >
             Errors ({errorCount})
           </button>
           <button
+            type="button"
             onClick={() => setFilter("WARNING")}
-            className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+            className={cn(
+              "px-3 py-1 text-xs font-bold rounded-[8px] transition-colors cursor-pointer",
               filter === "WARNING"
-                ? "bg-amber-600 text-white"
-                : "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 hover:bg-amber-100"
-            }`}
+                ? "bg-amber-600 text-white shadow-2xs"
+                : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+            )}
           >
             Warnings ({warningCount})
           </button>
           <button
+            type="button"
             onClick={() => setFilter("OPPORTUNITY")}
-            className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+            className={cn(
+              "px-3 py-1 text-xs font-bold rounded-[8px] transition-colors cursor-pointer",
               filter === "OPPORTUNITY"
-                ? "bg-indigo-600 text-white"
-                : "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100"
-            }`}
+                ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-2xs"
+                : "bg-orange-50 text-[#FF4D00] hover:bg-orange-100"
+            )}
           >
             Opportunities ({opportunityCount})
           </button>
@@ -101,56 +110,58 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
           return (
             <div
               key={idx}
-              className={`border rounded-xl p-4 transition-all ${
+              className={cn(
+                "border rounded-[8px] p-4 transition-all",
                 isError
-                  ? "border-red-200 dark:border-red-900/50 bg-red-50/30 dark:bg-red-950/20"
+                  ? "border-rose-200 bg-rose-50/40"
                   : isWarning
-                  ? "border-amber-200 dark:border-amber-900/50 bg-amber-50/30 dark:bg-amber-950/20"
-                  : "border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/30 dark:bg-indigo-950/20"
-              }`}
+                  ? "border-amber-200 bg-amber-50/40"
+                  : "border-orange-200 bg-orange-50/30"
+              )}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
                     {isError ? (
-                      <AlertOctagon className="w-4 h-4 text-red-600 dark:text-red-400" />
+                      <AlertOctagon className="w-4 h-4 text-rose-600" />
                     ) : isWarning ? (
-                      <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      <AlertTriangle className="w-4 h-4 text-amber-600" />
                     ) : (
-                      <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      <Layers className="w-4 h-4 text-[#FF4D00]" />
                     )}
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span
-                        className={`text-[11px] font-semibold uppercase px-2 py-0.5 rounded-md ${
+                        className={cn(
+                          "text-[11px] font-bold uppercase px-2 py-0.5 rounded-[6px]",
                           isError
-                            ? "bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300"
+                            ? "bg-rose-100 text-rose-800"
                             : isWarning
-                            ? "bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300"
-                            : "bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300"
-                        }`}
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-orange-100 text-[#FF4D00]"
+                        )}
                       >
                         {issue.severity}
                       </span>
-                      <span className="text-xs font-mono font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-200/70 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
+                      <span className="text-xs font-mono font-bold text-slate-700 bg-slate-200/70 px-2 py-0.5 rounded-[6px]">
                         @{issue.schemaType}
                       </span>
                       {issue.field && (
-                        <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
-                          prop: <code className="text-zinc-800 dark:text-zinc-200 font-semibold">{issue.field}</code>
+                        <span className="text-xs font-mono text-slate-500">
+                          prop: <code className="text-slate-800 font-bold">{issue.field}</code>
                         </span>
                       )}
                     </div>
 
-                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2">
+                    <p className="text-sm font-bold text-slate-900 mb-2 font-sans">
                       {issue.message}
                     </p>
 
-                    <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 rounded-lg p-2.5 text-xs text-zinc-600 dark:text-zinc-300 flex items-start gap-2">
-                      <ArrowRight className="w-3.5 h-3.5 text-indigo-500 mt-0.5 shrink-0" />
+                    <div className="bg-white border border-slate-200 rounded-[8px] p-2.5 text-xs text-slate-600 flex items-start gap-2 font-sans">
+                      <ArrowRight className="w-3.5 h-3.5 text-[#FF4D00] mt-0.5 shrink-0" />
                       <div>
-                        <span className="font-semibold text-zinc-800 dark:text-zinc-200">How to Fix: </span>
+                        <span className="font-bold text-slate-800">How to Fix: </span>
                         {issue.recommendation}
                       </div>
                     </div>

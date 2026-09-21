@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckCircle2, AlertOctagon, Code, Play, RefreshCw } from "lucide-react";
+import { CheckCircle2, AlertOctagon, Code2, Play, RefreshCw, AlertTriangle, Copy, Check, FileCode, RotateCcw } from "lucide-react";
 import { SchemaValidationResult } from "@/services/schema/types";
+import { cn } from "@/lib/utils/cn";
 
-export function SchemaValidatorTool() {
-  const [inputCode, setInputCode] = useState<string>(`{
+const DEFAULT_SAMPLE_JSON = `{
   "@context": "https://schema.org",
   "@type": "Product",
   "name": "Super Fast Running Shoes",
@@ -21,11 +21,14 @@ export function SchemaValidatorTool() {
     "ratingValue": "4.7",
     "reviewCount": "89"
   }
-}`);
+}`;
 
+export function SchemaValidatorTool() {
+  const [inputCode, setInputCode] = useState<string>(DEFAULT_SAMPLE_JSON);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SchemaValidationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleValidate = async () => {
     setLoading(true);
@@ -58,96 +61,183 @@ export function SchemaValidatorTool() {
     }
   };
 
+  const handleFormat = () => {
+    try {
+      let cleanInput = inputCode.trim();
+      if (cleanInput.startsWith("<script") && cleanInput.endsWith("</script>")) {
+        cleanInput = cleanInput.replace(/<script[^>]*>/i, "").replace(/<\/script>/i, "").trim();
+      }
+      const parsed = JSON.parse(cleanInput);
+      setInputCode(JSON.stringify(parsed, null, 2));
+    } catch {
+      // ignore syntax error
+    }
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(inputCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs font-sans">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
         <div>
-          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <Code className="w-4 h-4 text-indigo-500" />
+          <h3 className="text-sm font-bold text-slate-900 font-display flex items-center gap-2">
+            <Code2 className="w-4 h-4 text-[#FF4D00]" />
             Direct Schema Code Validator
           </h3>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          <p className="text-xs text-slate-500 font-sans mt-0.5">
             Paste raw JSON-LD code to test syntax and Google Rich Results eligibility
           </p>
         </div>
 
         <button
+          type="button"
           onClick={handleValidate}
           disabled={loading || !inputCode.trim()}
-          className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white transition-colors shadow-xs"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-display font-bold rounded-[8px] bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] hover:opacity-95 disabled:opacity-50 text-white transition-opacity shadow-2xs cursor-pointer shrink-0"
         >
-          {loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-          {loading ? "Testing..." : "Validate Code"}
+          {loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+          <span>{loading ? "Testing..." : "Validate Code"}</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Editor column */}
-        <div className="lg:col-span-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        {/* Left Column: Sleek Code Editor Window */}
+        <div className="lg:col-span-6 flex flex-col bg-slate-950 rounded-[8px] border border-slate-800 text-slate-100 h-[400px] overflow-hidden shadow-2xs">
+          {/* Code Window Header */}
+          <div className="flex items-center justify-between px-3.5 py-2.5 bg-slate-900/90 border-b border-slate-800 text-xs text-slate-400">
+            <div className="flex items-center gap-2 font-mono text-[11px]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+              <span className="font-semibold text-slate-200">JSON-LD Snippet</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleFormat}
+                className="px-2 py-0.5 text-[11px] font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-[4px] transition-colors cursor-pointer"
+                title="Format / Prettify JSON"
+              >
+                Format
+              </button>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="px-2 py-0.5 text-[11px] font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-[4px] transition-colors cursor-pointer flex items-center gap-1"
+                title="Copy code"
+              >
+                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                <span>{copied ? "Copied" : "Copy"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setInputCode(DEFAULT_SAMPLE_JSON)}
+                className="px-2 py-0.5 text-[11px] font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-[4px] transition-colors cursor-pointer"
+                title="Reset to sample JSON"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          {/* Textarea Editor with sleek dark scrollbar */}
           <textarea
             value={inputCode}
             onChange={(e) => setInputCode(e.target.value)}
-            rows={12}
-            className="w-full text-xs font-mono p-3.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-950 text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+            className="w-full flex-1 p-3.5 font-mono text-xs text-emerald-300 bg-transparent border-0 focus:outline-hidden resize-none dark-scrollbar leading-relaxed"
             placeholder="Paste your JSON-LD code here..."
+            spellCheck={false}
           />
         </div>
 
-        {/* Results column */}
-        <div className="lg:col-span-6 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 bg-zinc-50 dark:bg-zinc-950/50 flex flex-col justify-between">
+        {/* Right Column: Validation Results */}
+        <div className="lg:col-span-6 border border-slate-200 rounded-[8px] p-4 bg-slate-50/70 flex flex-col justify-between h-[400px] shadow-2xs overflow-hidden">
           {error && (
-            <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-600 dark:text-red-400">
-              {error}
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-[8px] text-xs text-rose-700 font-medium flex items-center gap-2 mb-2 shrink-0">
+              <AlertOctagon className="w-4 h-4 shrink-0 text-rose-600" />
+              <span>{error}</span>
             </div>
           )}
 
           {result ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+            <div className="flex flex-col h-full overflow-hidden">
+              {/* Score Header Bar */}
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 shrink-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Score:</span>
-                  <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                  <span className="text-xs font-bold text-slate-600 font-sans">Score:</span>
+                  <span
+                    className={cn(
+                      "text-sm font-extrabold font-display px-2 py-0.5 rounded-[6px] border",
+                      result.overallScore >= 80
+                        ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                        : result.overallScore >= 50
+                        ? "text-amber-700 bg-amber-50 border-amber-200"
+                        : "text-rose-700 bg-rose-50 border-rose-200"
+                    )}
+                  >
                     {result.overallScore}/100
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-red-500 font-semibold">{result.errorCount} Errors</span>
-                  <span className="text-xs text-amber-500 font-semibold">{result.warningCount} Warnings</span>
+                <div className="flex items-center gap-2 text-xs font-bold">
+                  <span className="text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-[6px]">
+                    {result.errorCount} Errors
+                  </span>
+                  <span className="text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-[6px]">
+                    {result.warningCount} Warnings
+                  </span>
                 </div>
               </div>
 
+              {/* Issues List with custom-scrollbar */}
               {result.issues.length === 0 ? (
-                <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl text-center">
+                <div className="flex-1 flex flex-col items-center justify-center p-4 bg-emerald-50/70 border border-emerald-200 rounded-[8px] text-center">
                   <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                  <div className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                  <div className="text-xs font-bold text-emerald-800 font-display">
                     100% Valid Schema Markup
                   </div>
-                  <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5">
+                  <div className="text-[11px] text-emerald-700 font-sans mt-0.5">
                     Ready for Google Rich Results search appearance!
                   </div>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="space-y-2.5 overflow-y-auto custom-scrollbar flex-1 pr-1.5">
                   {result.issues.map((iss, i) => (
                     <div
                       key={i}
-                      className={`p-2.5 rounded-lg border text-xs ${
+                      className={cn(
+                        "p-3 rounded-[8px] border text-xs font-sans shadow-2xs",
                         iss.severity === "Error"
-                          ? "bg-red-50 dark:bg-red-950/40 border-red-200 text-red-700 dark:text-red-300"
-                          : "bg-amber-50 dark:bg-amber-950/40 border-amber-200 text-amber-700 dark:text-amber-300"
-                      }`}
+                          ? "bg-rose-50/80 border-rose-200 text-rose-900"
+                          : "bg-amber-50/80 border-amber-200 text-amber-900"
+                      )}
                     >
-                      <div className="font-semibold">{iss.message}</div>
-                      <div className="text-[11px] opacity-80 mt-0.5">{iss.recommendation}</div>
+                      <div className="font-bold flex items-center gap-1.5 mb-1">
+                        {iss.severity === "Error" ? (
+                          <AlertOctagon className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                        ) : (
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        )}
+                        <span>{iss.message}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-600 pl-5">
+                        {iss.recommendation}
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
           ) : !error ? (
-            <div className="flex flex-col items-center justify-center h-full py-8 text-center text-zinc-400">
-              <Code className="w-8 h-8 mb-2 opacity-50" />
-              <div className="text-xs">Click "Validate Code" to inspect the JSON-LD snippet</div>
+            <div className="flex flex-col items-center justify-center h-full py-8 text-center text-slate-400 font-sans">
+              <Code2 className="w-10 h-10 mb-2 opacity-35 text-slate-400" />
+              <div className="text-xs font-bold text-slate-600">Ready to Validate</div>
+              <p className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
+                Click "Validate Code" to test schema syntax and check Google Rich Results eligibility.
+              </p>
             </div>
           ) : null}
         </div>

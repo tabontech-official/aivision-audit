@@ -29,10 +29,10 @@ export function SchemaDetectedTree({ items }: SchemaDetectedTreeProps) {
 
   if (items.length === 0) {
     return (
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center">
-        <Code2 className="w-10 h-10 text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
-        <h4 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">No Structured Data Detected</h4>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto mt-1">
+      <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center font-sans">
+        <Code2 className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+        <h4 className="text-sm font-bold text-slate-800 font-display">No Structured Data Detected</h4>
+        <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 font-sans">
           No JSON-LD or Microdata blocks were found on this webpage. Use the Schema Generator tool below to create and embed structured data.
         </p>
       </div>
@@ -40,29 +40,31 @@ export function SchemaDetectedTree({ items }: SchemaDetectedTreeProps) {
   }
 
   return (
-    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs font-sans">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <Code2 className="w-4 h-4 text-indigo-500" />
+          <h3 className="text-sm font-bold text-slate-900 font-display flex items-center gap-2">
+            <Code2 className="w-4 h-4 text-[#FF4D00]" />
             Detected Schema Items ({items.length})
           </h3>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          <p className="text-xs text-slate-500 font-sans mt-0.5">
             Individual structured data blocks discovered on this URL
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => setExpandedIds(new Set(items.map((i) => i.id)))}
-            className="text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            className="text-xs font-bold text-slate-600 hover:text-[#FF4D00] transition-colors cursor-pointer"
           >
             Expand All
           </button>
-          <span className="text-zinc-300 dark:text-zinc-700">|</span>
+          <span className="text-slate-300">|</span>
           <button
+            type="button"
             onClick={() => setExpandedIds(new Set())}
-            className="text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            className="text-xs font-bold text-slate-600 hover:text-[#FF4D00] transition-colors cursor-pointer"
           >
             Collapse All
           </button>
@@ -77,49 +79,50 @@ export function SchemaDetectedTree({ items }: SchemaDetectedTreeProps) {
           return (
             <div
               key={item.id}
-              className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50/50 dark:bg-zinc-950/40"
+              className="border border-slate-200 rounded-[8px] overflow-hidden bg-slate-50/50"
             >
               {/* Header bar */}
               <div
                 onClick={() => toggleExpand(item.id)}
-                className="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40 transition-colors"
+                className="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-100/60 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <button className="text-zinc-400">
+                  <button className="text-slate-400 cursor-pointer">
                     {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   </button>
-                  <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 font-mono">
+                  <span className="font-bold text-sm text-slate-900 font-mono">
                     @{item.schemaType}
                   </span>
-                  <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-zinc-200/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                  <span className="px-2 py-0.5 text-[11px] font-bold rounded-[6px] bg-slate-200/80 text-slate-700">
                     {item.format}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3">
                   {item.hasErrors ? (
-                    <span className="flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 px-2.5 py-0.5 rounded-full">
+                    <span className="flex items-center gap-1 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full">
                       <AlertOctagon className="w-3.5 h-3.5" />
                       Errors Detected
                     </span>
                   ) : item.hasWarnings ? (
-                    <span className="flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-2.5 py-0.5 rounded-full">
+                    <span className="flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
                       <AlertTriangle className="w-3.5 h-3.5" />
                       Warnings
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full">
+                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       Valid Schema
                     </span>
                   )}
 
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleCopy(item.id, item.rawJson);
                     }}
-                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-2xs hover:bg-zinc-50"
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white border border-slate-200 rounded-[8px] shadow-2xs hover:bg-slate-50 cursor-pointer transition-colors"
                   >
                     {isCopied ? (
                       <>
@@ -128,7 +131,7 @@ export function SchemaDetectedTree({ items }: SchemaDetectedTreeProps) {
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3 h-3" />
+                        <Copy className="w-3 h-3 text-slate-400" />
                         <span>Copy JSON</span>
                       </>
                     )}
@@ -138,7 +141,7 @@ export function SchemaDetectedTree({ items }: SchemaDetectedTreeProps) {
 
               {/* JSON Code Viewer */}
               {isExpanded && (
-                <div className="border-t border-zinc-200 dark:border-zinc-800 p-4 bg-zinc-950 text-zinc-100 font-mono text-xs overflow-x-auto max-h-96">
+                <div className="border-t border-slate-200 p-4 bg-slate-950 text-slate-100 font-mono text-xs overflow-x-auto max-h-96 dark-scrollbar">
                   <pre>{JSON.stringify(item.rawJson, null, 2)}</pre>
                 </div>
               )}
