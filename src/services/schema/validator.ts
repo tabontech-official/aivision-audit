@@ -233,7 +233,7 @@ function validateSpecialStructures(
   // 2. BreadcrumbList validation: check itemListElement structure
   if (schemaType === "BreadcrumbList" && Array.isArray(data.itemListElement)) {
     let invalidItems = 0;
-    data.itemListElement.forEach((item, index) => {
+    data.itemListElement.forEach((item) => {
       if (!item || typeof item !== "object" || (!item.name && !item.item?.name)) {
         invalidItems++;
       }

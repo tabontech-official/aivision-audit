@@ -681,7 +681,7 @@ export async function resumeBacklinkAudit(rawDomain: string, userId?: string) {
   });
 
   // Regenerate recommendations with the expanded dataset
-  const updatedRecs = await generateAndPersistRecommendations(latestAudit.id);
+  await generateAndPersistRecommendations(latestAudit.id);
 
   const updatedAudit = await prisma.backlinkAudit.findUnique({
     where: { id: latestAudit.id },

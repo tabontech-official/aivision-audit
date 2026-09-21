@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckCircle2, AlertOctagon, Code2, Play, RefreshCw, AlertTriangle, Copy, Check, FileCode, RotateCcw } from "lucide-react";
+import { CheckCircle2, AlertOctagon, Code2, Play, RefreshCw, AlertTriangle, Copy, Check } from "lucide-react";
 import { SchemaValidationResult } from "@/services/schema/types";
 import { cn } from "@/lib/utils/cn";
 
@@ -236,7 +236,7 @@ export function SchemaValidatorTool() {
               <Code2 className="w-10 h-10 mb-2 opacity-35 text-slate-400" />
               <div className="text-xs font-bold text-slate-600">Ready to Validate</div>
               <p className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
-                Click "Validate Code" to test schema syntax and check Google Rich Results eligibility.
+                Click &quot;Validate Code&quot; to test schema syntax and check Google Rich Results eligibility.
               </p>
             </div>
           ) : null}

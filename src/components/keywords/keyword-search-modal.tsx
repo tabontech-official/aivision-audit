@@ -242,8 +242,8 @@ export function KeywordSearchModal({
       return k.keyword.toLowerCase().includes(tableFilter.toLowerCase());
     })
     .sort((a, b) => {
-      let valA = a[sortField] ?? 0;
-      let valB = b[sortField] ?? 0;
+      const valA = a[sortField] ?? 0;
+      const valB = b[sortField] ?? 0;
       if (typeof valA === "string") {
         return sortDirection === "asc"
           ? (valA as string).localeCompare(valB as string)

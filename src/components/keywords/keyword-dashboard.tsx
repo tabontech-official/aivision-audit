@@ -287,8 +287,8 @@ export function KeywordDashboard({
         return true;
       })
       .sort((a, b) => {
-        let valA = a[sortField] ?? 0;
-        let valB = b[sortField] ?? 0;
+        const valA = a[sortField] ?? 0;
+        const valB = b[sortField] ?? 0;
         if (typeof valA === "string") {
           return sortDirection === "asc"
             ? (valA as string).localeCompare(valB as string)
@@ -636,7 +636,7 @@ export function KeywordDashboard({
                     <Search className="w-8 h-8 mx-auto mb-2 opacity-30 text-slate-400" />
                     <div className="font-bold text-slate-700 text-sm">No keywords in this view</div>
                     <p className="text-xs text-slate-500 mt-1">
-                      Click the "Find New Keywords" button above to research and track terms for your project.
+                      Click the &quot;Find New Keywords&quot; button above to research and track terms for your project.
                     </p>
                     <button
                       onClick={() => setIsSearchModalOpen(true)}

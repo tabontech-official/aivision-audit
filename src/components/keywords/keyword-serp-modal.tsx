@@ -51,7 +51,7 @@ export function KeywordSerpModal({ keyword, onClose }: KeywordSerpModalProps) {
                 Top 10 Google SERP Competitors
               </h3>
               <p className="text-xs text-slate-500 mt-0.5 font-sans">
-                Live ranking results for query: <span className="font-semibold text-slate-800 font-mono">"{keyword}"</span>
+                Live ranking results for query: <span className="font-semibold text-slate-800 font-mono">&quot;{keyword}&quot;</span>
               </p>
             </div>
           </div>

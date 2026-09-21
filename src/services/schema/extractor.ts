@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio";
-import { ExtractedSchemaItem, SchemaFormat } from "./types";
+import { ExtractedSchemaItem } from "./types";
 import { nanoid } from "nanoid";
 
 export interface ExtractionResult {
@@ -82,7 +82,7 @@ export function extractSchemaFromHtml(html: string): ExtractionResult {
         const propName = $(propElem).attr("itemprop");
         if (!propName) return;
 
-        let propVal: string | undefined =
+        const propVal: string | undefined =
           $(propElem).attr("content") ||
           $(propElem).attr("href") ||
           $(propElem).attr("src") ||

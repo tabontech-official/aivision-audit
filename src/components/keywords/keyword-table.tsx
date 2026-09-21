@@ -151,8 +151,8 @@ export function KeywordTable({ keywords, websiteId, onTrackToggle }: KeywordTabl
         return true;
       })
       .sort((a, b) => {
-        let valA = a[sortField] ?? 0;
-        let valB = b[sortField] ?? 0;
+        const valA = a[sortField] ?? 0;
+        const valB = b[sortField] ?? 0;
 
         if (typeof valA === "string") {
           return sortDirection === "asc"

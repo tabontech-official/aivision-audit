@@ -201,7 +201,7 @@ function toNullableInt(val: unknown): number | null {
   return null;
 }
 
-function toFloat(val: unknown, fallback: number = 0): number {
+function _toFloat(val: unknown, fallback: number = 0): number {
   if (val === null || val === undefined) return fallback;
   if (typeof val === "number") return isNaN(val) ? fallback : val;
   if (typeof val === "string") {

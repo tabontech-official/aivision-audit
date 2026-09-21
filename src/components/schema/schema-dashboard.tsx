@@ -6,13 +6,10 @@ import {
   RefreshCw,
   Search,
   Code2,
-  CheckCircle2,
   AlertOctagon,
-  Layers,
   FileCode,
   FileText,
   ShieldCheck,
-  Zap,
 } from "lucide-react";
 import { SchemaScoreCard } from "./schema-score-card";
 import { SchemaSerpPreview } from "./schema-serp-preview";
@@ -220,7 +217,7 @@ export function SchemaDashboard({ initialUrl, initialDomain }: SchemaDashboardPr
                 Ready to Audit Structured Data
               </h3>
               <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4 font-sans">
-                Enter any webpage URL above and click "Scan Webpage" to inspect its embedded Schema.org markup and Google Rich Results eligibility.
+                Enter any webpage URL above and click &quot;Scan Webpage&quot; to inspect its embedded Schema.org markup and Google Rich Results eligibility.
               </p>
               <button
                 type="button"

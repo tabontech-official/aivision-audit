@@ -10,11 +10,9 @@ import {
   Trash2,
   CheckCircle2,
   HelpCircle,
-  Code2,
 } from "lucide-react";
 import { generateSchemaJsonLd } from "@/services/schema/generator";
 import { SchemaGeneratorInput } from "@/services/schema/types";
-import { cn } from "@/lib/utils/cn";
 
 export function SchemaGenerator() {
   const [selectedType, setSelectedType] = useState<SchemaGeneratorInput["type"]>("FAQPage");
