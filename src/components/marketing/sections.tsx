@@ -70,12 +70,15 @@ export function Hero() {
 /* Second Section: AI & Search Opportunities Feature Cards            */
 /* ------------------------------------------------------------------ */
 
+/* Second Section: AI & Search Opportunities Feature Cards            */
+/* ------------------------------------------------------------------ */
+
 export function CredibilityStrip() {
   return (
     <section className="bg-[#dff2ed] pt-0 pb-10 sm:pb-14 lg:pb-16">
       <div className="w-full px-4 sm:px-8 lg:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-          {/* Left Card - Purple Feature Card (col-span-8) with rounded-sm and compact padding */}
+          {/* Left Card - Feature Card (col-span-8) with rounded-sm and compact padding */}
           <div className="lg:col-span-8 relative overflow-hidden rounded-sm bg-[#b482fc] p-5 sm:p-6 lg:p-7 flex flex-col justify-between shadow-xs">
             {/* Diagonal Striped Accent Pattern Top-Right */}
             <div className="absolute top-0 right-0 w-36 h-36 pointer-events-none opacity-35 overflow-hidden">
@@ -99,22 +102,27 @@ export function CredibilityStrip() {
               {/* Left Column: Heading (2 lines), Description & CTA */}
               <div className="md:col-span-5 flex flex-col justify-between h-full">
                 <div>
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-black/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-900 mb-3">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span>Live Audit Engine</span>
+                  </div>
+
                   <h2 className="font-display font-bold text-2xl sm:text-3xl lg:text-[34px] xl:text-[36px] leading-[1.1] tracking-tight text-[#161e2e]">
-                    <span className="block whitespace-nowrap">Get found in search</span>
-                    <span className="block whitespace-nowrap">and AI answers.</span>
+                    <span className="block">Complete Website</span>
+                    <span className="block">SEO & Speed Audit</span>
                   </h2>
 
                   <p className="mt-4 text-xs sm:text-sm font-medium text-slate-900/90 leading-relaxed max-w-xs">
-                    Powered by trusted SEO and competitive data, Semrush One helps your brand show up where customers search, ask, and decide.
+                    Inspect 70+ technical SEO factors, Google Core Web Vitals, mobile UX, security headers, and on-page crawlability with prioritized fixes.
                   </p>
                 </div>
 
-                <div className="mt-5">
+                <div className="mt-5 flex items-center gap-3">
                   <Link
                     href="/signup"
                     className="inline-flex items-center justify-center rounded-full bg-[#181818] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black cursor-pointer shadow-xs font-lazzer"
                   >
-                    Try for free
+                    Run Free Audit
                   </Link>
                 </div>
               </div>
@@ -124,61 +132,59 @@ export function CredibilityStrip() {
                 <div className="bg-white rounded-sm p-4 sm:p-5 shadow-sm border border-white/80">
                   {/* Top Opportunities Header */}
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm sm:text-base font-bold text-slate-900 font-display">
-                      Top Opportunities
-                    </h3>
-                    <div className="flex items-center rounded-sm border border-slate-200/90 p-0.5 bg-slate-50 text-[11px] font-semibold">
-                      <span className="px-2.5 py-0.5 rounded-sm bg-[#eef4ff] text-[#2563eb] border border-[#bfdbfe]">
-                        Missing
-                      </span>
-                      <span className="px-2.5 py-0.5 text-slate-600">Weak</span>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 font-display">
+                        Audit Health Breakdown
+                      </h3>
+                      <p className="text-[11px] text-slate-500 font-medium">Real-time technical &amp; performance checks</p>
+                    </div>
+                    <div className="flex items-center rounded-sm border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+                      Score: 94/100
                     </div>
                   </div>
 
                   {/* 2-Column Metrics */}
                   <div className="mt-3.5 grid grid-cols-2 gap-x-5 gap-y-2 border-b border-slate-100 pb-3.5 text-xs">
                     <div className="flex items-center justify-between border-b border-slate-100/60 pb-1.5">
-                      <span className="text-slate-600 font-medium">prebiotic soda</span>
-                      <span className="font-bold text-slate-900 font-display text-xs sm:text-sm">160K</span>
+                      <span className="text-slate-600 font-medium">Technical SEO</span>
+                      <span className="font-bold text-emerald-600 font-display text-xs sm:text-sm">96% Passed</span>
                     </div>
                     <div className="flex items-center justify-between border-b border-slate-100/60 pb-1.5">
-                      <span className="text-slate-600 font-medium">low sugar soda</span>
-                      <span className="font-bold text-slate-900 font-display text-xs sm:text-sm">72K</span>
+                      <span className="text-slate-600 font-medium">Core Web Vitals</span>
+                      <span className="font-bold text-emerald-600 font-display text-xs sm:text-sm">Good (1.2s)</span>
                     </div>
                     <div className="flex items-center justify-between pt-0.5">
-                      <span className="text-slate-600 font-medium">sparkling drink</span>
-                      <span className="font-bold text-slate-900 font-display text-xs sm:text-sm">85K</span>
+                      <span className="text-slate-600 font-medium">Mobile Usability</span>
+                      <span className="font-bold text-slate-900 font-display text-xs sm:text-sm">100% Ready</span>
                     </div>
                     <div className="flex items-center justify-between pt-0.5">
-                      <span className="text-slate-600 font-medium">probiotic drink</span>
-                      <span className="font-bold text-slate-900 font-display text-xs sm:text-sm">53K</span>
+                      <span className="text-slate-600 font-medium">Security &amp; SSL</span>
+                      <span className="font-bold text-emerald-600 font-display text-xs sm:text-sm">A+ Grade</span>
                     </div>
                   </div>
 
-                  {/* Keyword Overlap Venn Diagram Section */}
+                  {/* Audit Diagnostic Summary */}
                   <div className="mt-3.5 flex items-center justify-between">
                     <div className="flex flex-col">
-                      <h4 className="text-sm font-bold text-slate-900 font-display leading-tight">
-                        Keyword
-                        <br />
-                        Overlap
+                      <h4 className="text-xs font-bold text-slate-900 font-display uppercase tracking-wider">
+                        Quick Fix Roadmap
                       </h4>
-                      <div className="mt-3 flex flex-col gap-1 text-[11px] font-medium text-slate-600">
+                      <div className="mt-2 flex flex-col gap-1.5 text-[11px] font-medium text-slate-600">
                         <div className="flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full bg-[#c084fc]" />
-                          <span>culturepop.com</span>
+                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                          <span>Canonical &amp; Robots.txt valid</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full bg-[#6ee7b7]" />
-                          <span>health-ale.com</span>
+                          <span className="h-2 w-2 rounded-full bg-blue-500" />
+                          <span>Page speed optimized (LCP 1.2s)</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Venn Diagram Visual */}
-                    <div className="relative w-32 h-24 flex items-center justify-center">
-                      <div className="absolute top-0 left-2 w-16 h-16 rounded-full bg-[#c084fc]/50 mix-blend-multiply" />
-                      <div className="absolute bottom-0 right-2 w-16 h-16 rounded-full bg-[#6ee7b7]/60 mix-blend-multiply" />
+                    <div className="text-right">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-sm border border-purple-200">
+                        70+ Checks Run
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -186,7 +192,7 @@ export function CredibilityStrip() {
             </div>
           </div>
 
-          {/* Right Card - Off-White Feature Card (col-span-4) with rounded-sm and compact padding */}
+          {/* Right Card - Schema Markup Suite Card (col-span-4) with rounded-sm and compact padding */}
           <div className="lg:col-span-4 relative overflow-hidden rounded-sm bg-[#F7F9F8] p-5 sm:p-6 lg:p-7 flex flex-col justify-between shadow-xs border border-slate-200/50">
             {/* Diagonal Striped Accent Pattern Top-Right */}
             <div className="absolute top-0 right-0 w-36 h-36 pointer-events-none opacity-30 overflow-hidden">
@@ -208,23 +214,43 @@ export function CredibilityStrip() {
 
             <div className="z-10 flex flex-col justify-between h-full">
               <div>
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1 text-[11px] font-bold uppercase tracking-wider mb-3">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                  <span>Available Now</span>
+                </div>
+
                 <h2 className="font-display font-bold text-2xl sm:text-3xl lg:text-[34px] xl:text-[36px] leading-[1.1] tracking-tight text-[#161e2e]">
-                  Ask AI. Get
+                  Schema Markup
                   <br />
-                  Semrush data.
+                  &amp; Rich Snippets
                 </h2>
 
                 <p className="mt-4 text-xs sm:text-sm font-normal text-slate-700 leading-relaxed">
-                  Bring your live SEO, market, and brand visibility data directly into the chat. Ask anything to get actionable workflows and strategies backed by real Semrush data.
+                  Generate, validate, and preview Google-compliant JSON-LD structured data. Win rich search snippets for Organizations, FAQs, Products, Articles, and Local Businesses.
                 </p>
+
+                <div className="mt-4 space-y-1.5 text-xs text-slate-600 font-medium">
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                    <span>Instant JSON-LD generator</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                    <span>Live syntax &amp; schema validator</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                    <span>SERP rich snippet visualizer</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="mt-5">
+              <div className="mt-6">
                 <Link
-                  href="/signup"
-                  className="inline-flex items-center justify-center rounded-full border border-slate-700/60 bg-transparent px-6 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-900/5 cursor-pointer font-lazzer"
+                  href="/dashboard/schema"
+                  className="inline-flex items-center justify-center rounded-full border border-slate-700/60 bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-900/5 cursor-pointer font-lazzer shadow-2xs"
                 >
-                  Connect your data
+                  Explore Schema Suite
                 </Link>
               </div>
             </div>
@@ -241,34 +267,34 @@ export function CredibilityStrip() {
 
 const FEATURES = [
   {
-    icon: Gauge,
-    title: "Page Speed & Core Web Vitals",
-    body: "Real Google PageSpeed data for mobile and desktop — LCP, CLS, TBT, and the fixes that move them.",
+    icon: Search,
+    title: "Deep SEO & Technical Analysis",
+    body: "Titles, descriptions, headings, canonicals, robots, sitemaps — every technical factor search engines read.",
   },
   {
-    icon: Search,
-    title: "SEO Analysis",
-    body: "Titles, descriptions, headings, canonicals, robots, sitemaps — every on-page signal search engines read.",
+    icon: Zap,
+    title: "Schema Markup & Rich Snippets",
+    body: "Generate, test, and validate JSON-LD structured data for Google Rich Results and AI answer engine comprehension.",
+  },
+  {
+    icon: Gauge,
+    title: "Page Speed & Core Web Vitals",
+    body: "Real Google PageSpeed data for mobile and desktop — LCP, CLS, TBT, and the prioritized fixes that move them.",
   },
   {
     icon: TrendingUp,
-    title: "Conversion Optimization",
-    body: "CTAs, forms, trust signals, and contact visibility — the elements that turn visitors into customers.",
-  },
-  {
-    icon: Accessibility,
-    title: "Accessibility Review",
-    body: "Alt text, contrast, labels, and language declarations so every visitor can use your site.",
+    title: "Conversion & Mobile UX",
+    body: "CTAs, responsive layouts, viewport rules, tap targets, and trust signals that convert visitors.",
   },
   {
     icon: ShieldCheck,
-    title: "Security Checks",
-    body: "HTTPS, HSTS, and security headers that protect your visitors and your reputation.",
+    title: "Security & Trust Signals",
+    body: "HTTPS, SSL certificates, HSTS, and security headers that protect your domain authority.",
   },
   {
-    icon: Smartphone,
-    title: "Mobile Usability",
-    body: "Viewport configuration and mobile experience signals for the majority of your traffic.",
+    icon: Accessibility,
+    title: "Accessibility & Compliance",
+    body: "Alt text, contrast ratios, ARIA labels, and language declarations so every visitor can use your site.",
   },
 ];
 
@@ -281,47 +307,51 @@ export function Features() {
           {/* Eyebrow Tag */}
           <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer justify-center">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
-            <span>FIND &amp; FIX SEO ISSUES IN MINUTES, NOT WEEKS</span>
+            <span>FIND &amp; FIX SEO &amp; SCHEMA ISSUES IN SECONDS</span>
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
           </div>
 
           {/* Main Headline */}
           <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-[#111827] tracking-tight font-lazzer">
-            The Rank Writers’ Features
+            The Rank Writers’ Core Capabilities
           </h2>
 
           {/* Description */}
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed font-normal">
-            Complete SEO intelligence without the chaos. Track traditional rankings, monitor AI visibility across 6 engines, audit 70+ technical factors, and get white-label reports, all automatically organized by page type.
+            Precision SEO intelligence and structured data automation. Run deep technical audits across 70+ factors, generate Google-compliant JSON-LD schema markup, and optimize your Core Web Vitals.
           </p>
         </div>
 
         {/* Feature Blocks Stack */}
         <div className="mt-14 sm:mt-16 space-y-16 lg:space-y-24">
-          {/* Feature 1: Deep Domain Analysis */}
+          {/* Feature 1: Deep Technical SEO Audits */}
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
             {/* Left Content */}
             <div className="flex flex-col items-start text-left lg:col-span-5">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1 text-[11px] font-bold uppercase tracking-wider mb-3">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                <span>Available Now</span>
+              </div>
               <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight font-lazzer">
-                Deep Domain Analysis
+                Deep Technical SEO Audits
               </h3>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
-                Stop Drowning in URL Lists. Start Making Strategic Decisions. Every other SEO tool treats your site as a flat list of URLs. We understand it’s a structured organization of page types, and optimize accordingly.
+                Stop guessing what holds your website back. We crawl and inspect 70+ technical SEO factors, metadata, indexability, canonicals, robots.txt, and link health with instant actionable fixes.
               </p>
 
               {/* Bullet Checklist */}
               <ul className="mt-6 space-y-3">
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Scan entire website for technical issues</span>
+                  <span>70+ on-page and technical crawl checks</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Get domain authority score and improvements</span>
+                  <span>Prioritized fix roadmap with code snippets</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Get top-performing pages and opportunities</span>
+                  <span>Crawlability, sitemaps, and indexing diagnostics</span>
                 </li>
               </ul>
 
@@ -331,10 +361,10 @@ export function Features() {
                   href="/signup"
                   className="inline-flex items-center justify-center rounded-full bg-[#181818] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black cursor-pointer shadow-xs font-lazzer"
                 >
-                  Run your Deep Analysis
+                  Run Free Audit
                 </Link>
                 <Link
-                  href="#deep-analysis"
+                  href="/tools/seo-health-check"
                   className="inline-flex items-center justify-center rounded-full border border-slate-700/60 bg-transparent px-6 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-900/5 cursor-pointer font-lazzer"
                 >
                   Learn more
@@ -355,14 +385,14 @@ export function Features() {
             </div>
           </div>
 
-          {/* Feature 2: LLM Visibility Checker */}
+          {/* Feature 2: Schema Markup & Structured Data Suite */}
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
             {/* Left Image */}
             <div className="order-2 lg:order-1 lg:col-span-7">
               <div className="relative rounded-sm border border-slate-200/90 bg-white p-1.5 shadow-sm overflow-hidden">
                 <img
                   src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/72e5d272-688e-4864-862c-c3a325a11c97.webp"
-                  alt="LLM Visibility Checker Dashboard Preview"
+                  alt="Schema Markup Suite Preview"
                   className="w-full h-auto object-cover rounded-xs block"
                   loading="lazy"
                 />
@@ -371,84 +401,92 @@ export function Features() {
 
             {/* Right Content */}
             <div className="order-1 lg:order-2 flex flex-col items-start text-left lg:col-span-5">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1 text-[11px] font-bold uppercase tracking-wider mb-3">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                <span>Available Now</span>
+              </div>
               <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight font-lazzer">
-                LLM Visibility Checker
+                Schema Markup &amp; Structured Data
               </h3>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
-                Monitor brand mentions, citation frequency, sentiment analysis, and share of voice vs. competitors. Identify which content gets cited most often and optimize for AI recommendations before your competitors do.
+                Help search engines and AI models accurately understand your entities, products, FAQs, and brand. Generate clean JSON-LD markup and validate syntax with zero errors.
               </p>
 
               {/* Bullet Checklist */}
               <ul className="mt-6 space-y-3">
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Monitor brand mentions across AI platforms</span>
+                  <span>Generate Organization, Product, FAQ, Article &amp; Local schema</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Compare against competitors in AI search</span>
+                  <span>Live Schema syntax validation &amp; issue detection</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>See how you perform against prompts</span>
+                  <span>Google Rich Snippets visual preview</span>
                 </li>
               </ul>
 
               {/* Action Buttons */}
               <div className="mt-8 flex flex-wrap items-center gap-3.5">
                 <Link
-                  href="/signup"
+                  href="/dashboard/schema"
                   className="inline-flex items-center justify-center rounded-full bg-[#181818] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black cursor-pointer shadow-xs font-lazzer"
                 >
-                  Check your LLM Visibility
+                  Open Schema Suite
                 </Link>
                 <Link
-                  href="#llm-visibility"
+                  href="/signup"
                   className="inline-flex items-center justify-center rounded-full border border-slate-700/60 bg-transparent px-6 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-900/5 cursor-pointer font-lazzer"
                 >
-                  Learn more
+                  Get Started Free
                 </Link>
               </div>
             </div>
           </div>
 
-          {/* Feature 3: AI Content Analysis */}
+          {/* Feature 3: Page Speed & Core Web Vitals */}
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
             {/* Left Content */}
             <div className="flex flex-col items-start text-left lg:col-span-5">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1 text-[11px] font-bold uppercase tracking-wider mb-3">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                <span>Available Now</span>
+              </div>
               <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight font-lazzer">
-                AI Content Analysis
+                Page Speed &amp; Core Web Vitals
               </h3>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
-                Understand how LLMs perceive your domain’s content and trust. See exactly how ChatGPT, Gemini, Perplexity, Claude, Copilot, and AI Overviews interpret your brand authority, cite your content, and recommend your products.
+                Direct integration with Google PageSpeed Insights. Measure mobile and desktop performance, Largest Contentful Paint (LCP), Cumulative Layout Shift (CLS), and Total Blocking Time (TBT).
               </p>
 
               {/* Bullet Checklist */}
               <ul className="mt-6 space-y-3">
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Discover content gaps preventing AI citations</span>
+                  <span>Real Google PageSpeed data for Mobile &amp; Desktop</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Optimize existing pages for LLM comprehension</span>
+                  <span>LCP, CLS, FCP, and TBT metric breakdowns</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Track trust signals that influence AI</span>
+                  <span>Asset optimization &amp; script reduction advice</span>
                 </li>
               </ul>
 
               {/* Action Buttons */}
               <div className="mt-8 flex flex-wrap items-center gap-3.5">
                 <Link
-                  href="/signup"
+                  href="/tools/speed-core-vitals"
                   className="inline-flex items-center justify-center rounded-full bg-[#181818] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black cursor-pointer shadow-xs font-lazzer"
                 >
-                  Check your Content
+                  Test Site Speed
                 </Link>
                 <Link
-                  href="#ai-content"
+                  href="/signup"
                   className="inline-flex items-center justify-center rounded-full border border-slate-700/60 bg-transparent px-6 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-900/5 cursor-pointer font-lazzer"
                 >
                   Learn more
@@ -461,7 +499,7 @@ export function Features() {
               <div className="relative rounded-sm border border-slate-200/90 bg-white p-1.5 shadow-sm overflow-hidden">
                 <img
                   src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/72e5d272-688e-4864-862c-c3a325a11c97.webp"
-                  alt="AI Content Analysis Dashboard Preview"
+                  alt="Page Speed Dashboard Preview"
                   className="w-full h-auto object-cover rounded-xs block"
                   loading="lazy"
                 />
@@ -469,14 +507,14 @@ export function Features() {
             </div>
           </div>
 
-          {/* Feature 4: Technical SEO Audits */}
+          {/* Feature 4: AI & Answer Engine Readiness */}
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
             {/* Left Image */}
             <div className="order-2 lg:order-1 lg:col-span-7">
               <div className="relative rounded-sm border border-slate-200/90 bg-white p-1.5 shadow-sm overflow-hidden">
                 <img
                   src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/859bd674-2772-4e3b-aa58-38735ce25c78.webp"
-                  alt="Technical SEO Audits Dashboard Preview"
+                  alt="AI Search Readiness Preview"
                   className="w-full h-auto object-cover rounded-xs block"
                   loading="lazy"
                 />
@@ -485,26 +523,30 @@ export function Features() {
 
             {/* Right Content */}
             <div className="order-1 lg:order-2 flex flex-col items-start text-left lg:col-span-5">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1 text-[11px] font-bold uppercase tracking-wider mb-3">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                <span>Available Now</span>
+              </div>
               <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight font-lazzer">
-                Technical SEO Audits
+                AI &amp; Answer Engine Readiness
               </h3>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
-                Analyze every page across your site for critical issues: page speed, mobile optimization, meta tags, schema markup, SSL security, crawlability, internal linking, image optimization, and more. Get detailed explanations of each issue.
+                Search is shifting towards AI answers in ChatGPT, Claude, Gemini, and Perplexity. Audit your content clarity, entity citations, and schema depth so AI bots can reference your brand.
               </p>
 
               {/* Bullet Checklist */}
               <ul className="mt-6 space-y-3">
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>70+ checks per page</span>
+                  <span>Entity clarity &amp; semantic content evaluation</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Prioritized fix list</span>
+                  <span>Structured data readiness for LLM web crawlers</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>How-to-fix guides</span>
+                  <span>Trust signals &amp; brand authority validation</span>
                 </li>
               </ul>
 
@@ -514,13 +556,13 @@ export function Features() {
                   href="/signup"
                   className="inline-flex items-center justify-center rounded-full bg-[#181818] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black cursor-pointer shadow-xs font-lazzer"
                 >
-                  Check your SEO
+                  Audit AI Readiness
                 </Link>
                 <Link
-                  href="#technical-seo"
+                  href="#how-it-works"
                   className="inline-flex items-center justify-center rounded-full border border-slate-700/60 bg-transparent px-6 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-900/5 cursor-pointer font-lazzer"
                 >
-                  Learn more
+                  See How it Works
                 </Link>
               </div>
             </div>
@@ -538,75 +580,87 @@ export function Features() {
 const OTHER_FEATURES = [
   {
     icon: Zap,
-    title: "Site Speed & Outage",
-    body: "Monitor uptime and page load speed across all key pages.",
+    title: "Site Speed & Core Vitals",
+    badge: "Available Now",
+    isLive: true,
+    body: "Monitor page load speed, LCP, and Core Web Vitals across mobile and desktop.",
     checklist: [
-      "Real-time uptime monitoring",
-      "Page speed tracking",
-      "Instant alerts",
+      "Google PageSpeed metrics",
+      "Mobile & Desktop breakdown",
+      "Prioritized speed fixes",
     ],
-    linkText: "More on Site Speed & Outage",
-    linkHref: "#site-speed",
+    linkText: "Test Site Speed",
+    linkHref: "/tools/speed-core-vitals",
   },
   {
     icon: Link2,
-    title: "Backlinks Checker",
-    body: "Track referring domains, authority, and new link growth.",
+    title: "Schema Markup Suite",
+    badge: "Available Now",
+    isLive: true,
+    body: "Generate, validate, and preview structured data for Google Rich Results.",
     checklist: [
-      "Monitor backlink profile",
-      "Analyze link quality",
-      "Spot toxic links",
+      "10+ Schema JSON-LD generators",
+      "Live syntax & error validator",
+      "SERP snippet visualizer",
     ],
-    linkText: "More on Backlinks Checker",
-    linkHref: "#backlinks",
+    linkText: "Explore Schema Suite",
+    linkHref: "/dashboard/schema",
   },
   {
-    icon: Award,
-    title: "Top Keywords",
-    body: "Identify your highest-performing keywords and traffic drivers.",
+    icon: Briefcase,
+    title: "White-Label Audit Reports",
+    badge: "Available Now",
+    isLive: true,
+    body: "Generate client-ready PDF and interactive SEO audit reports with your branding.",
     checklist: [
-      "Discover which keywords drive traffic",
-      "Track performance trends",
-      "Find quick-win opportunities",
+      "Custom branding & logos",
+      "Executive summaries & roadmaps",
+      "Export PDF and share links",
     ],
-    linkText: "More on Top Keywords",
-    linkHref: "#top-keywords",
+    linkText: "View Sample Report",
+    linkHref: "/signup",
+  },
+  {
+    icon: Link2,
+    title: "Backlinks Explorer",
+    badge: "Coming Soon",
+    isLive: false,
+    body: "Track referring domains, domain authority, anchor texts, and new link growth.",
+    checklist: [
+      "Monitor backlink profile",
+      "Analyze link authority",
+      "Spot toxic backlinks",
+    ],
+    linkText: "Coming Soon",
+    linkHref: "#",
   },
   {
     icon: Flag,
     title: "Keyword Position Tracker",
-    body: "Monitor keyword rankings across pages, countries, and SERPs.",
+    badge: "Coming Soon",
+    isLive: false,
+    body: "Monitor keyword rankings daily across search engines, locations, and devices.",
     checklist: [
       "Daily rank tracking",
-      "Multi-location monitoring",
-      "Competitor comparison",
+      "Multi-location SERP monitoring",
+      "Competitor rank comparisons",
     ],
-    linkText: "More on Keyword Position Tracker",
-    linkHref: "#rank-tracker",
+    linkText: "Coming Soon",
+    linkHref: "#",
   },
   {
     icon: BookOpen,
-    title: "Keyword Research",
-    body: "Find high-intent keyword ideas to grow your organic reach.",
+    title: "Keyword Research & Studio",
+    badge: "Coming Soon",
+    isLive: false,
+    body: "Discover high-intent keyword ideas, search volumes, and difficulty scores.",
     checklist: [
-      "Discover untapped keywords",
-      "Analyze keyword difficulty",
-      "Get content ideas",
+      "Untapped keyword ideas",
+      "Search volume & intent data",
+      "Content optimization suggestions",
     ],
-    linkText: "More on Keyword Research",
-    linkHref: "#keyword-research",
-  },
-  {
-    icon: Briefcase,
-    title: "White Label Reports",
-    body: "Generate branded SEO reports ready for clients or teams.",
-    checklist: [
-      "Customize layout and branding",
-      "Export and share reports instantly",
-      "Customize what metrics you show",
-    ],
-    linkText: "More on White Label Reports",
-    linkHref: "#white-label",
+    linkText: "Coming Soon",
+    linkHref: "#",
   },
 ];
 
@@ -615,9 +669,18 @@ export function OtherFeatures() {
     <section className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer">
       <div className="w-full px-4 sm:px-8 lg:px-12">
         {/* Title */}
-        <h2 className="font-display text-3xl sm:text-4xl font-bold text-[#111827] tracking-tight mb-8 sm:mb-10 text-left font-lazzer">
-          Other Features
-        </h2>
+        <div className="flex flex-col items-start text-left mb-8 sm:mb-10">
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer mb-2">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
+            <span>MODULES &amp; ROADMAP</span>
+          </div>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-[#111827] tracking-tight font-lazzer">
+            Platform Capabilities &amp; Roadmap
+          </h2>
+          <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl font-normal">
+            Website Audits and Schema Markup are live today. Backlinks, Rank Tracking, and Keyword Research are actively coming soon!
+          </p>
+        </div>
 
         {/* 6 Cards Grid (3 cols x 2 rows) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
@@ -626,17 +689,33 @@ export function OtherFeatures() {
             return (
               <div
                 key={item.title}
-                className="flex flex-col justify-between rounded-sm border border-slate-200/80 bg-white p-6 sm:p-7 shadow-xs hover:shadow-sm transition-all duration-200"
+                className={`flex flex-col justify-between rounded-sm border p-6 sm:p-7 shadow-xs hover:shadow-sm transition-all duration-200 ${
+                  item.isLive
+                    ? "border-slate-200/90 bg-white"
+                    : "border-slate-200/60 bg-white/70"
+                }`}
               >
                 <div>
-                  {/* Icon & Title */}
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-[#dff2ed] text-slate-900 shrink-0">
-                      <Icon className="h-4.5 w-4.5 text-slate-900" />
+                  {/* Icon, Title & Badge */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-[#dff2ed] text-slate-900 shrink-0">
+                        <Icon className="h-4.5 w-4.5 text-slate-900" />
+                      </div>
+                      <h3 className="text-base sm:text-lg font-bold text-[#111827] font-lazzer">
+                        {item.title}
+                      </h3>
                     </div>
-                    <h3 className="text-base sm:text-lg font-bold text-[#111827] font-lazzer">
-                      {item.title}
-                    </h3>
+
+                    <span
+                      className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${
+                        item.isLive
+                          ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                          : "bg-amber-100 text-amber-800 border border-amber-300"
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
                   </div>
 
                   {/* Body Subtitle */}
@@ -654,7 +733,11 @@ export function OtherFeatures() {
                         key={point}
                         className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-700"
                       >
-                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                        <CheckCircle2
+                          className={`h-4 w-4 shrink-0 ${
+                            item.isLive ? "text-emerald-600" : "text-slate-400"
+                          }`}
+                        />
                         <span>{point}</span>
                       </li>
                     ))}
@@ -663,13 +746,19 @@ export function OtherFeatures() {
 
                 {/* Bottom Link */}
                 <div className="mt-6 pt-2">
-                  <Link
-                    href={item.linkHref}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-slate-900 hover:text-black transition-all font-lazzer"
-                  >
-                    <span>{item.linkText}</span>
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
+                  {item.isLive ? (
+                    <Link
+                      href={item.linkHref}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-slate-900 hover:text-black transition-all font-lazzer"
+                    >
+                      <span>{item.linkText}</span>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Link>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 font-lazzer">
+                      <span>In active development</span>
+                    </span>
+                  )}
                 </div>
               </div>
             );
@@ -1350,27 +1439,31 @@ export function Pricing() {
 const FAQS = [
   {
     q: "Do I need to install anything on my website?",
-    a: "No. AuditFlow analyzes your live public website from the outside — the same way search engines and visitors see it. No scripts, plugins, or code changes are required.",
+    a: "No. The Rank Writers analyzes your live public website from the outside — the same way search engines, Googlebot, and visitors see it. No scripts, plugins, or code changes are required.",
   },
   {
     q: "Is the free audit really free?",
-    a: "Yes. You can run an audit and see your core results without a credit card. Creating a free account unlocks your full free-tier report and saves your history.",
+    a: "Yes. You can run an audit and inspect your core SEO, speed, and schema results without entering a credit card.",
   },
   {
-    q: "How long does an audit take?",
-    a: "Most audits complete in one to three minutes, depending on your website's size and response speed.",
+    q: "What schema markup types are supported?",
+    a: "Our Schema Markup Suite supports Organization, LocalBusiness, FAQPage, Article, Product, BreadcrumbList, WebSite, and more with instant JSON-LD generation and live syntax validation.",
   },
   {
-    q: "What's the difference between Free and Premium?",
-    a: "Free covers the essential checks and top recommendations. Premium unlocks every audit section, full evidence for each check, a prioritized roadmap, PDF exports, and historical comparisons.",
+    q: "How long does a website audit take?",
+    a: "Most audits complete in under a minute, delivering full technical SEO, Core Web Vitals, and structured data diagnostics.",
+  },
+  {
+    q: "What features are live vs coming soon?",
+    a: "Our core Website SEO Audits, Page Speed & Core Web Vitals, and Schema Markup & Structured Data Suite are fully live and active. Backlinks Explorer, Keyword Rank Tracker, and Keyword Research Studio are in active development and coming soon.",
   },
   {
     q: "Can I audit any website?",
-    a: "You can audit any publicly reachable website over HTTP or HTTPS. Private, internal, or password-protected pages can't be analyzed.",
+    a: "You can audit any publicly reachable website over HTTP or HTTPS.",
   },
   {
-    q: "Can I cancel Premium anytime?",
-    a: "Yes. Premium is a monthly subscription you can cancel at any time — you keep access until the end of your billing period.",
+    q: "Can I cancel my subscription anytime?",
+    a: "Yes. You can cancel your subscription at any time directly from your billing dashboard with zero hassle.",
   },
 ];
 
@@ -1685,12 +1778,11 @@ export function MarketingFooter() {
                 PRODUCT
               </h4>
               <ul className="space-y-2.5 text-xs sm:text-sm font-medium">
-                <li className="whitespace-nowrap"><Link href="#features" className="hover:text-black transition-colors">Deep Domain Analysis</Link></li>
-                <li className="whitespace-nowrap"><Link href="#llm" className="hover:text-black transition-colors">LLM Visibility Checker</Link></li>
-                <li className="whitespace-nowrap"><Link href="#content" className="hover:text-black transition-colors">AI Content Analysis</Link></li>
-                <li className="whitespace-nowrap"><Link href="#technical" className="hover:text-black transition-colors">Technical SEO Audits</Link></li>
-                <li className="whitespace-nowrap"><Link href="#pricing" className="hover:text-black transition-colors">Pricing</Link></li>
-                <li className="whitespace-nowrap"><Link href="/api" className="hover:text-black transition-colors">API Access</Link></li>
+                <li className="whitespace-nowrap"><Link href="#features" className="hover:text-black transition-colors">Technical SEO Audit</Link></li>
+                <li className="whitespace-nowrap"><Link href="/dashboard/schema" className="hover:text-black transition-colors">Schema Markup Suite</Link></li>
+                <li className="whitespace-nowrap"><Link href="/tools/speed-core-vitals" className="hover:text-black transition-colors">Page Speed &amp; Vitals</Link></li>
+                <li className="whitespace-nowrap"><Link href="/tools/seo-health-check" className="hover:text-black transition-colors">SEO Health Check</Link></li>
+                <li className="whitespace-nowrap"><Link href="/pricing" className="hover:text-black transition-colors">Pricing</Link></li>
               </ul>
             </div>
 
@@ -1701,11 +1793,10 @@ export function MarketingFooter() {
               </h4>
               <ul className="space-y-2.5 text-xs sm:text-sm font-medium">
                 <li className="whitespace-nowrap"><Link href="/about" className="hover:text-black transition-colors">About Us</Link></li>
-                <li className="whitespace-nowrap"><Link href="/blog" className="hover:text-black transition-colors">Blog</Link></li>
-                <li className="whitespace-nowrap"><Link href="/careers" className="hover:text-black transition-colors">Careers</Link></li>
-                <li className="whitespace-nowrap"><Link href="/press" className="hover:text-black transition-colors">Press</Link></li>
-                <li className="whitespace-nowrap"><Link href="/contact" className="hover:text-black transition-colors">Contact Us</Link></li>
-                <li className="whitespace-nowrap"><Link href="/partners" className="hover:text-black transition-colors">Partners</Link></li>
+                <li className="whitespace-nowrap"><Link href="/blog" className="hover:text-black transition-colors">Blog &amp; Guides</Link></li>
+                <li className="whitespace-nowrap"><Link href="/contact" className="hover:text-black transition-colors">Contact Support</Link></li>
+                <li className="whitespace-nowrap"><Link href="/privacy" className="hover:text-black transition-colors">Privacy Policy</Link></li>
+                <li className="whitespace-nowrap"><Link href="/terms" className="hover:text-black transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
 
@@ -1715,12 +1806,12 @@ export function MarketingFooter() {
                 FEATURES
               </h4>
               <ul className="space-y-2.5 text-xs sm:text-sm font-medium">
-                <li className="whitespace-nowrap"><Link href="#speed" className="hover:text-black transition-colors">Site Speed &amp; Outage</Link></li>
-                <li className="whitespace-nowrap"><Link href="#backlinks" className="hover:text-black transition-colors">Backlinks Checker</Link></li>
-                <li className="whitespace-nowrap"><Link href="#keywords" className="hover:text-black transition-colors">Top Keywords</Link></li>
-                <li className="whitespace-nowrap"><Link href="#tracker" className="hover:text-black transition-colors">Position Tracker</Link></li>
-                <li className="whitespace-nowrap"><Link href="#research" className="hover:text-black transition-colors">Keyword Research</Link></li>
-                <li className="whitespace-nowrap"><Link href="#whitelabel" className="hover:text-black transition-colors">White Label Reports</Link></li>
+                <li className="whitespace-nowrap"><Link href="#features" className="hover:text-black transition-colors">SEO Health Check <span className="text-[10px] text-emerald-600 font-bold">(Live)</span></Link></li>
+                <li className="whitespace-nowrap"><Link href="/dashboard/schema" className="hover:text-black transition-colors">Schema Generator <span className="text-[10px] text-emerald-600 font-bold">(Live)</span></Link></li>
+                <li className="whitespace-nowrap"><Link href="/tools/speed-core-vitals" className="hover:text-black transition-colors">Core Web Vitals <span className="text-[10px] text-emerald-600 font-bold">(Live)</span></Link></li>
+                <li className="whitespace-nowrap"><span className="text-slate-400">Backlinks <span className="text-[10px] text-amber-600 font-bold">(Soon)</span></span></li>
+                <li className="whitespace-nowrap"><span className="text-slate-400">Rank Tracker <span className="text-[10px] text-amber-600 font-bold">(Soon)</span></span></li>
+                <li className="whitespace-nowrap"><span className="text-slate-400">Keyword Studio <span className="text-[10px] text-amber-600 font-bold">(Soon)</span></span></li>
               </ul>
             </div>
 
@@ -1734,21 +1825,21 @@ export function MarketingFooter() {
                 <li className="whitespace-nowrap"><Link href="#content-led" className="hover:text-black transition-colors">Content Companies</Link></li>
                 <li className="whitespace-nowrap"><Link href="#agencies" className="hover:text-black transition-colors">Growth Agencies</Link></li>
                 <li className="whitespace-nowrap"><Link href="#ecommerce" className="hover:text-black transition-colors">E-commerce Brands</Link></li>
-                <li className="whitespace-nowrap"><Link href="#enterprise" className="hover:text-black transition-colors">Enterprise</Link></li>
+                <li className="whitespace-nowrap"><Link href="#enterprise" className="hover:text-black transition-colors">Enterprises</Link></li>
               </ul>
             </div>
 
-            {/* Column 5: COMPARISONS */}
+            {/* Column 5: FREE TOOLS */}
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4 whitespace-nowrap font-lazzer">
-                COMPARISONS
+                FREE TOOLS
               </h4>
               <ul className="space-y-2.5 text-xs sm:text-sm font-medium">
-                <li className="whitespace-nowrap"><Link href="/vs/semrush" className="hover:text-black transition-colors">vs Semrush</Link></li>
-                <li className="whitespace-nowrap"><Link href="/vs/ahrefs" className="hover:text-black transition-colors">vs Ahrefs</Link></li>
-                <li className="whitespace-nowrap"><Link href="/vs/moz" className="hover:text-black transition-colors">vs Moz</Link></li>
-                <li className="whitespace-nowrap"><Link href="/vs/screaming-frog" className="hover:text-black transition-colors">vs Screaming Frog</Link></li>
-                <li className="whitespace-nowrap"><Link href="/vs/gsc" className="hover:text-black transition-colors">vs Search Console</Link></li>
+                <li className="whitespace-nowrap"><Link href="/tools/seo-health-check" className="hover:text-black transition-colors">SEO Health Check</Link></li>
+                <li className="whitespace-nowrap"><Link href="/dashboard/schema" className="hover:text-black transition-colors">Schema Validator</Link></li>
+                <li className="whitespace-nowrap"><Link href="/tools/speed-core-vitals" className="hover:text-black transition-colors">Speed &amp; Core Vitals</Link></li>
+                <li className="whitespace-nowrap"><Link href="/tools/mobile-ux-review" className="hover:text-black transition-colors">Mobile UX Review</Link></li>
+                <li className="whitespace-nowrap"><Link href="/tools/security-trust" className="hover:text-black transition-colors">Security &amp; SSL Check</Link></li>
               </ul>
             </div>
           </div>

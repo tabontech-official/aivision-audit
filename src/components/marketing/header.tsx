@@ -122,7 +122,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
 
             {activeDropdown === "features" && (
               <div className="absolute top-full left-0 pt-2 z-50">
-                <div className="w-[620px] rounded-2xl border border-slate-200/90 bg-white p-6 shadow-2xl">
+                <div className="w-[640px] rounded-2xl border border-slate-200/90 bg-white p-6 shadow-2xl">
                   <div className="grid grid-cols-2 gap-x-7 gap-y-6">
                     <Link
                       href="/tools/seo-health-check"
@@ -133,11 +133,39 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                         <Search className="h-5 w-5" strokeWidth={2} />
                       </div>
                       <div>
-                        <div className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
-                          SEO Health Check
+                        <div className="flex items-center gap-2">
+                          <span className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
+                            SEO Health Check
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-sm border border-emerald-200">
+                            Live
+                          </span>
                         </div>
                         <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
                           Meta tags, headings, canonicals, robots.txt, and sitemap health.
+                        </p>
+                      </div>
+                    </Link>
+
+                    <Link
+                      href="/dashboard/schema"
+                      onClick={() => setActiveDropdown(null)}
+                      className="group flex items-start gap-3 rounded-lg p-1 transition"
+                    >
+                      <div className="mt-0.5 shrink-0 text-[#FF4D00]">
+                        <Layers className="h-5 w-5" strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
+                            Schema Markup Suite
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-sm border border-emerald-200">
+                            Live
+                          </span>
+                        </div>
+                        <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
+                          JSON-LD generator, syntax validation, and Google rich results preview.
                         </p>
                       </div>
                     </Link>
@@ -151,29 +179,16 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                         <Gauge className="h-5 w-5" strokeWidth={2} />
                       </div>
                       <div>
-                        <div className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
-                          Speed &amp; Core Vitals
+                        <div className="flex items-center gap-2">
+                          <span className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
+                            Speed &amp; Core Vitals
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-sm border border-emerald-200">
+                            Live
+                          </span>
                         </div>
                         <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
                           Google PageSpeed metrics, LCP, CLS, FCP, and performance scoring.
-                        </p>
-                      </div>
-                    </Link>
-
-                    <Link
-                      href="/tools/mobile-ux-review"
-                      onClick={() => setActiveDropdown(null)}
-                      className="group flex items-start gap-3 rounded-lg p-1 transition"
-                    >
-                      <div className="mt-0.5 shrink-0 text-[#FF4D00]">
-                        <Smartphone className="h-5 w-5" strokeWidth={2} />
-                      </div>
-                      <div>
-                        <div className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
-                          Mobile &amp; UX Review
-                        </div>
-                        <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
-                          Mobile responsiveness, tap targets, contrast, and layout audits.
                         </p>
                       </div>
                     </Link>
@@ -187,14 +202,57 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                         <ShieldCheck className="h-5 w-5" strokeWidth={2} />
                       </div>
                       <div>
-                        <div className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
-                          Security &amp; Trust
+                        <div className="flex items-center gap-2">
+                          <span className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
+                            Security &amp; SSL Trust
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-sm border border-emerald-200">
+                            Live
+                          </span>
                         </div>
                         <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
-                          SSL status, broken link checks, headers, and trust signal validation.
+                          SSL status, broken link checks, security headers, and trust signals.
                         </p>
                       </div>
                     </Link>
+
+                    <div className="flex items-start gap-3 rounded-lg p-1 opacity-75">
+                      <div className="mt-0.5 shrink-0 text-slate-400">
+                        <BarChart2 className="h-5 w-5" strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[15px] font-semibold text-slate-700">
+                            Backlinks Explorer
+                          </span>
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-sm border border-amber-200">
+                            Soon
+                          </span>
+                        </div>
+                        <p className="mt-1 text-[13px] leading-relaxed text-slate-400">
+                          Referring domains, domain rating, anchor texts, and toxic link detection.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 rounded-lg p-1 opacity-75">
+                      <div className="mt-0.5 shrink-0 text-slate-400">
+                        <Globe className="h-5 w-5" strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[15px] font-semibold text-slate-700">
+                            Keyword Rank Tracker
+                          </span>
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-sm border border-amber-200">
+                            Soon
+                          </span>
+                        </div>
+                        <p className="mt-1 text-[13px] leading-relaxed text-slate-400">
+                          Daily position tracking across Google &amp; AI answer engines.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
