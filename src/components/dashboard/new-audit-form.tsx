@@ -18,10 +18,14 @@ export function NewAuditForm({ disabled = false }: { disabled?: boolean }) {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const trimmed = url.trim();
+    let trimmed = url.trim();
     if (!trimmed) {
       setError("Enter a website URL.");
       return;
+    }
+    if (!/^https?:\/\//i.test(trimmed)) {
+      trimmed = `https://${trimmed}`;
+      setUrl(trimmed);
     }
     startTransition(async () => {
       try {

@@ -7,13 +7,12 @@ import {
   BarChart3,
   FileText,
   Sparkles,
-  Users,
   Key,
-  Layers,
   ChevronDown,
   ChevronsUpDown,
   Search,
   Plus,
+  Minus,
   Check,
   Globe,
   CheckCircle2,
@@ -27,6 +26,7 @@ import { rescanWebsiteAction } from "@/app/dashboard/reports/actions";
 import { scoreColor } from "@/components/report/score-ring";
 
 const DEFAULT_REPORT_SECTIONS = [
+  { name: "Page Speed & Core Web Vitals", slug: "page-speed", count: 10 },
   { name: "Technical SEO Core", slug: "technical-seo-core", count: 10 },
   { name: "SEO Fundamentals", slug: "seo-fundamentals", count: 16 },
   { name: "Crawlability", slug: "crawlability", count: 10 },
@@ -78,6 +78,10 @@ export function DashboardSidebar({
   const currentProjectParam = searchParams.get("project");
   const currentSectionParam = searchParams.get("section");
 
+  // Section collapse state
+  const [overviewOpen, setOverviewOpen] = useState(true);
+  const [optimizationOpen, setOptimizationOpen] = useState(true);
+  const [growthOpen, setGrowthOpen] = useState(true);
   const [aiFixesOpen, setAiFixesOpen] = useState(true);
 
   const [projects, setProjects] = useState<string[]>(initialProjects);
@@ -175,15 +179,19 @@ export function DashboardSidebar({
   // Handle Project Analysis Submit (Real Audit Engine)
   const handleAnalyzeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUrlInput.trim()) return;
+    let raw = newUrlInput.trim();
+    if (!raw) return;
+    if (!/^https?:\/\//i.test(raw)) {
+      raw = `https://${raw}`;
+    }
 
     setIsAnalyzing(true);
     setModalFeedback(null);
 
-    const res = await rescanWebsiteAction(newUrlInput.trim());
+    const res = await rescanWebsiteAction(raw);
 
     if (res.ok && res.redirectTo) {
-      const extractedDomain = extractDomain(newUrlInput);
+      const extractedDomain = extractDomain(raw);
       setProjects((prev) => (prev.includes(extractedDomain) ? prev : [extractedDomain, ...prev]));
       setSelectedProject(extractedDomain);
       setIsModalOpen(false);
@@ -199,276 +207,365 @@ export function DashboardSidebar({
     }
   };
 
+  const isDashboardActive = pathname === "/dashboard";
+  const isReportsActive = pathname.startsWith("/dashboard/reports") && !currentSectionParam;
+  const isSchemaActive = pathname.startsWith("/dashboard/schema");
+  const isBillingActive = pathname.startsWith("/dashboard/billing");
+
   return (
     <>
-      <aside className="sticky top-0 h-screen w-64 border-r border-slate-200 bg-white flex flex-col shrink-0 overflow-hidden font-sans select-none">
-        {/* 1. FIXED TOP: Brand Logo Header + Project Selector + Main Navigation Buttons */}
-        <div className="shrink-0 bg-white z-10">
-          {/* Top Compact Brand Header */}
-          <div className="flex h-[52px] items-center gap-2.5 px-4 border-b border-slate-200 shrink-0 bg-white">
-            <img
-              src="/images/rank_writers_logo.png"
-              alt="The Rank Writers logo"
-              className="h-6 w-6 object-contain shrink-0"
-            />
-            <span className="font-display text-sm font-bold tracking-tight text-slate-900 whitespace-nowrap">
-              The Rank Writers
-            </span>
-          </div>
-
-          {/* Project Selector Section - Searchable Combobox */}
-          <div className="px-3 pt-3 pb-2 border-b border-slate-100 relative" ref={dropdownRef}>
-            <div className="px-2 mb-1 text-[11px] font-display font-bold uppercase tracking-wider text-slate-400">
-              PROJECT
-            </div>
-
-            {/* Trigger Button */}
-            <button
-              type="button"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full flex items-center justify-between rounded-lg border border-slate-200 bg-white py-1.5 pl-3 pr-2.5 text-xs font-semibold text-slate-800 shadow-2xs hover:border-slate-300 focus:border-[#FF4D00] focus:outline-none focus:ring-2 focus:ring-[#FF4D00]/20 transition-all text-left"
-            >
-              <span className="truncate pr-2 font-bold font-sans text-slate-900">
-                {selectedProject || "Select or Add Project"}
-              </span>
-              <ChevronsUpDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-            </button>
-
-            {/* Floating Dropdown Popover */}
-            {isDropdownOpen && (
-              <div className="absolute left-3 right-3 top-full mt-1 z-50 rounded-xl border border-slate-200 bg-white p-2 shadow-xl space-y-2 animate-in fade-in duration-150">
-                {/* Search Input inside Dropdown */}
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search projects..."
-                    className="w-full rounded-md border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#FF4D00] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#FF4D00]"
-                    autoFocus
-                  />
-                </div>
-
-                {/* Projects List */}
-                <div className="max-h-[175px] overflow-y-auto space-y-0.5 divide-y divide-slate-50 pr-0.5">
-                  {filteredProjects.length === 0 ? (
-                    <div className="px-3 py-2.5 text-center text-xs text-slate-400 font-sans">
-                      {projects.length === 0
-                        ? "No projects created yet."
-                        : "No matching project."}
-                    </div>
-                  ) : (
-                    filteredProjects.map((proj) => {
-                      const isSelected = proj === selectedProject;
-                      return (
-                        <button
-                          key={proj}
-                          type="button"
-                          onClick={() => handleSelectProject(proj)}
-                          className={cn(
-                            "w-full flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-left font-medium transition-colors font-sans",
-                            isSelected
-                              ? "bg-orange-50 text-[#FF4D00] font-bold"
-                              : "text-slate-700 hover:bg-slate-100"
-                          )}
-                        >
-                          <span className="truncate pr-2">{proj}</span>
-                          {isSelected && <Check className="h-3.5 w-3.5 text-[#FF4D00] shrink-0" />}
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-
-                {/* New Project Button */}
-                <div className="pt-1.5 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      setIsModalOpen(true);
-                      setSearchQuery("");
-                    }}
-                    className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] px-3 py-2 text-xs font-display font-bold text-white shadow-2xs hover:opacity-95 transition-opacity"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    <span>New Project</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Navigation Buttons Header */}
-          <div className="px-3 pt-3 pb-1 space-y-1.5">
-            <div className="px-2 text-[11px] font-display font-bold uppercase tracking-wider text-slate-400">
-              NAVIGATION
-            </div>
-
-            {/* 1. SEO Dashboard */}
-            <Link
-              href="/dashboard"
-              prefetch={true}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide transition-all shadow-xs",
-                pathname === "/dashboard"
-                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white"
-                  : "bg-orange-50/70 text-[#FF4D00] hover:bg-orange-100/80"
-              )}
-            >
-              <BarChart3 className="h-4 w-4 shrink-0" />
-              <span>SEO DASHBOARD</span>
-            </Link>
-
-            {/* 2. Page Audit */}
-            <Link
-              href={selectedProject ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}` : "/dashboard/reports"}
-              prefetch={true}
-              onClick={(e) => handleSidebarItemClick(e)}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide transition-all",
-                pathname.startsWith("/dashboard/reports")
-                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-xs"
-                  : "bg-orange-50/70 text-[#FF4D00] hover:bg-orange-100/80"
-              )}
-            >
-              <FileText className="h-4 w-4 shrink-0" />
-              <span>PAGE AUDIT</span>
-            </Link>
-
-            {/* 3. Backlinks */}
-            <Link
-              href={selectedProject ? `/dashboard/backlinks?project=${encodeURIComponent(selectedProject)}` : "/dashboard/backlinks"}
-              prefetch={true}
-              onClick={(e) => handleSidebarItemClick(e)}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide transition-all",
-                pathname.startsWith("/dashboard/backlinks")
-                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-xs"
-                  : "bg-orange-50/70 text-[#FF4D00] hover:bg-orange-100/80"
-              )}
-            >
-              <Link2 className="h-4 w-4 shrink-0" />
-              <span>BACKLINKS</span>
-            </Link>
-
-            {/* 4. Schema Markup */}
-            <Link
-              href={selectedProject ? `/dashboard/schema?project=${encodeURIComponent(selectedProject)}` : "/dashboard/schema"}
-              prefetch={true}
-              onClick={(e) => handleSidebarItemClick(e)}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide transition-all",
-                pathname.startsWith("/dashboard/schema")
-                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-xs"
-                  : "bg-orange-50/70 text-[#FF4D00] hover:bg-orange-100/80"
-              )}
-            >
-              <Code2 className="h-4 w-4 shrink-0" />
-              <span>SCHEMA MARKUP</span>
-            </Link>
-
-            {/* 4. AI Automation Fixes Accordion Header */}
-            <button
-              type="button"
-              onClick={() => setAiFixesOpen(!aiFixesOpen)}
-              className="flex w-full items-center justify-between rounded-xl bg-orange-50/70 px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide text-[#FF4D00] hover:bg-orange-100/80 transition-all"
-            >
-              <div className="flex items-center gap-3">
-                <Sparkles className="h-4 w-4 shrink-0" />
-                <span>AI AUTOMATION FIXES</span>
-              </div>
-              <ChevronDown
-                className={cn(
-                  "h-4 w-4 transition-transform duration-200",
-                  aiFixesOpen && "rotate-180"
-                )}
-              />
-            </button>
-          </div>
+      <aside className="sticky top-0 h-screen w-64 border-r border-slate-200/80 bg-white flex flex-col shrink-0 overflow-hidden font-lazzer select-none">
+        {/* 1. TOP: Brand Logo Header */}
+        <div className="flex h-[56px] items-center gap-2.5 px-4 border-b border-slate-100 shrink-0 bg-white">
+          <img
+            src="/images/logo.png"
+            alt="The Rank Writers Logo"
+            className="h-7 w-7 object-contain shrink-0"
+          />
+          <span className="font-lazzer text-sm sm:text-base font-bold tracking-tight text-slate-900 whitespace-nowrap">
+            The Rank Writers
+          </span>
         </div>
 
-        {/* 2. MIDDLE SCROLLABLE: Dynamic Sub-items from Master Admin Report Builder */}
-        <div className="flex-1 overflow-y-auto px-3 py-1 space-y-1">
-          {aiFixesOpen && (
-            <div className="space-y-0.5 pl-3 border-l-2 border-slate-100 my-1 font-sans">
-              {activeSections.map((item, idx) => {
-                const isSelected = currentSectionParam === item.slug;
-                const rawScore = selectedProject ? projectSectionScores[selectedProject]?.[item.slug] : null;
-                const displayValue = rawScore !== null && rawScore !== undefined ? Math.round(rawScore) : null;
-                const colorHex = displayValue !== null ? scoreColor(displayValue) : "#94a3b8";
+        {/* Project Selector - Clean Dropdown */}
+        <div className="px-3 pt-3 pb-2 shrink-0 relative" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="w-full flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50/60 py-1.5 pl-3 pr-2.5 text-xs font-semibold text-slate-800 shadow-2xs hover:bg-slate-100/70 hover:border-slate-300 focus:outline-none transition-all text-left"
+          >
+            <span className="truncate pr-2 font-medium text-slate-900">
+              {selectedProject || "Select or Add Project"}
+            </span>
+            <ChevronsUpDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+          </button>
 
-                return (
-                  <Link
-                    key={idx}
-                    href={
-                      selectedProject
-                        ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}&section=${encodeURIComponent(item.slug)}`
-                        : `/dashboard/reports?section=${encodeURIComponent(item.slug)}`
-                    }
-                    prefetch={true}
-                    onClick={(e) => handleSidebarItemClick(e, item.slug)}
-                    className={cn(
-                      "flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px] font-semibold font-sans transition-colors cursor-pointer",
-                      isSelected
-                        ? "bg-orange-50/80 text-[#FF4D00]"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                    )}
-                  >
-                    <span className="truncate pr-2" title={item.name}>{item.name}</span>
-                    {Boolean(selectedProject) && (
-                      <span
-                        className="shrink-0 font-semibold tabular-nums text-[11px]"
-                        style={{ color: colorHex }}
+          {/* Floating Dropdown Popover */}
+          {isDropdownOpen && (
+            <div className="absolute left-3 right-3 top-full mt-1 z-50 rounded-xl border border-slate-200 bg-white p-2 shadow-xl space-y-2 animate-in fade-in duration-150">
+              {/* Search Input */}
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search projects..."
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-slate-500 focus:bg-white focus:outline-none"
+                  autoFocus
+                />
+              </div>
+
+              {/* Projects List */}
+              <div className="max-h-[175px] overflow-y-auto space-y-0.5 divide-y divide-slate-50 pr-0.5">
+                {filteredProjects.length === 0 ? (
+                  <div className="px-3 py-2 text-center text-xs text-slate-400">
+                    {projects.length === 0
+                      ? "No projects created yet."
+                      : "No matching project."}
+                  </div>
+                ) : (
+                  filteredProjects.map((proj) => {
+                    const isSelected = proj === selectedProject;
+                    return (
+                      <button
+                        key={proj}
+                        type="button"
+                        onClick={() => handleSelectProject(proj)}
+                        className={cn(
+                          "w-full flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-left font-medium transition-colors",
+                          isSelected
+                            ? "bg-slate-100 text-slate-950 font-bold"
+                            : "text-slate-700 hover:bg-slate-100"
+                        )}
                       >
-                        {displayValue !== null ? displayValue : item.count}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
+                        <span className="truncate pr-2">{proj}</span>
+                        {isSelected && <Check className="h-3.5 w-3.5 text-slate-900 shrink-0" />}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* New Project Button */}
+              <div className="pt-1.5 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    setIsModalOpen(true);
+                    setSearchQuery("");
+                  }}
+                  className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors cursor-pointer"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>New Project</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
 
-        {/* 3. FIXED BOTTOM: Keywords & Upgrade */}
-        <div className="shrink-0 bg-white border-t border-slate-100 px-3 py-3 space-y-1.5">
-          {/* Keywords */}
-          <Link
-            href={selectedProject ? `/dashboard/keywords?project=${encodeURIComponent(selectedProject)}` : "/dashboard/keywords"}
-            prefetch={true}
-            onClick={(e) => handleSidebarItemClick(e)}
-            className="flex items-center gap-3 rounded-xl bg-orange-50/70 px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide text-[#FF4D00] hover:bg-orange-100/80 transition-all"
-          >
-            <Key className="h-4 w-4 shrink-0" />
-            <span>KEYWORDS</span>
-          </Link>
+        {/* 2. SCROLLABLE NAVIGATION LIST */}
+        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1 custom-scrollbar">
+          {/* SECTION 1: Overview */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setOverviewOpen(!overviewOpen)}
+              className="flex w-full items-center justify-between py-1.5 px-2 text-[13px] font-semibold text-slate-800 hover:text-slate-950 transition-colors cursor-pointer"
+            >
+              <span>Overview</span>
+              <span className="flex h-4 w-4 items-center justify-center rounded border border-slate-300 text-slate-400">
+                {overviewOpen ? (
+                  <Minus className="h-2.5 w-2.5 stroke-[2.5]" />
+                ) : (
+                  <Plus className="h-2.5 w-2.5 stroke-[2.5]" />
+                )}
+              </span>
+            </button>
 
-          {/* Upgrade */}
+            {overviewOpen && (
+              <div className="space-y-0.5 mt-1">
+                {/* Performance / SEO Dashboard */}
+                <Link
+                  href="/dashboard"
+                  prefetch={true}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
+                    isDashboardActive
+                      ? "bg-slate-100/90 text-slate-950 font-semibold"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  )}
+                >
+                  {isDashboardActive ? (
+                    <div className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-white shrink-0">
+                      <BarChart3 className="h-3 w-3" />
+                    </div>
+                  ) : (
+                    <BarChart3 className="h-4 w-4 text-slate-500 shrink-0" />
+                  )}
+                  <span className="truncate">Performance</span>
+                </Link>
+
+                {/* Page Audit */}
+                <Link
+                  href={selectedProject ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}` : "/dashboard/reports"}
+                  prefetch={true}
+                  onClick={(e) => handleSidebarItemClick(e)}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
+                    isReportsActive
+                      ? "bg-slate-100/90 text-slate-950 font-semibold"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  )}
+                >
+                  {isReportsActive ? (
+                    <div className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-white shrink-0">
+                      <FileText className="h-3 w-3" />
+                    </div>
+                  ) : (
+                    <FileText className="h-4 w-4 text-slate-500 shrink-0" />
+                  )}
+                  <span className="truncate">Page Audit</span>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <div className="my-2 border-t border-slate-100" />
+
+          {/* SECTION 2: Optimization / Tools */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setOptimizationOpen(!optimizationOpen)}
+              className="flex w-full items-center justify-between py-1.5 px-2 text-[13px] font-semibold text-slate-800 hover:text-slate-950 transition-colors cursor-pointer"
+            >
+              <span>Optimization</span>
+              <span className="flex h-4 w-4 items-center justify-center rounded border border-slate-300 text-slate-400">
+                {optimizationOpen ? (
+                  <Minus className="h-2.5 w-2.5 stroke-[2.5]" />
+                ) : (
+                  <Plus className="h-2.5 w-2.5 stroke-[2.5]" />
+                )}
+              </span>
+            </button>
+
+            {optimizationOpen && (
+              <div className="space-y-0.5 mt-1">
+                {/* Schema Markup */}
+                <Link
+                  href={selectedProject ? `/dashboard/schema?project=${encodeURIComponent(selectedProject)}` : "/dashboard/schema"}
+                  prefetch={true}
+                  onClick={(e) => handleSidebarItemClick(e)}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
+                    isSchemaActive
+                      ? "bg-slate-100/90 text-slate-950 font-semibold"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  )}
+                >
+                  {isSchemaActive ? (
+                    <div className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-white shrink-0">
+                      <Code2 className="h-3 w-3" />
+                    </div>
+                  ) : (
+                    <Code2 className="h-4 w-4 text-slate-500 shrink-0" />
+                  )}
+                  <span className="truncate">Schema Markup</span>
+                </Link>
+
+                {/* AI Automation Fixes Accordion Header */}
+                <button
+                  type="button"
+                  onClick={() => setAiFixesOpen(!aiFixesOpen)}
+                  className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5 truncate">
+                    <Sparkles className="h-4 w-4 text-slate-500 shrink-0" />
+                    <span className="truncate">AI Automation Fixes</span>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-3.5 w-3.5 transition-transform duration-200 text-slate-400 shrink-0",
+                      aiFixesOpen && "rotate-180"
+                    )}
+                  />
+                </button>
+
+                {aiFixesOpen && (
+                  <div className="space-y-0.5 pl-4 border-l border-slate-200 my-1 ml-2.5">
+                    {activeSections.map((item, idx) => {
+                      const isSelected = currentSectionParam === item.slug;
+                      const rawScore = selectedProject ? projectSectionScores[selectedProject]?.[item.slug] : null;
+                      const displayValue = rawScore !== null && rawScore !== undefined ? Math.round(rawScore) : null;
+                      const colorHex = displayValue !== null ? scoreColor(displayValue) : "#94a3b8";
+
+                      return (
+                        <Link
+                          key={idx}
+                          href={
+                            selectedProject
+                              ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}&section=${encodeURIComponent(item.slug)}`
+                              : `/dashboard/reports?section=${encodeURIComponent(item.slug)}`
+                          }
+                          prefetch={true}
+                          onClick={(e) => handleSidebarItemClick(e, item.slug)}
+                          className={cn(
+                            "flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium transition-colors cursor-pointer",
+                            isSelected
+                              ? "bg-slate-100 text-slate-950 font-semibold"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          )}
+                        >
+                          <span className="truncate pr-2" title={item.name}>{item.name}</span>
+                          {Boolean(selectedProject) && (
+                            <span
+                              className="shrink-0 font-bold tabular-nums text-[11px]"
+                              style={{ color: colorHex }}
+                            >
+                              {displayValue !== null ? displayValue : item.count}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="my-2 border-t border-slate-100" />
+
+          {/* SECTION 3: Growth & Intelligence (Coming Soon Modules) */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setGrowthOpen(!growthOpen)}
+              className="flex w-full items-center justify-between py-1.5 px-2 text-[13px] font-semibold text-slate-800 hover:text-slate-950 transition-colors cursor-pointer"
+            >
+              <span>Growth</span>
+              <span className="flex h-4 w-4 items-center justify-center rounded border border-slate-300 text-slate-400">
+                {growthOpen ? (
+                  <Minus className="h-2.5 w-2.5 stroke-[2.5]" />
+                ) : (
+                  <Plus className="h-2.5 w-2.5 stroke-[2.5]" />
+                )}
+              </span>
+            </button>
+
+            {growthOpen && (
+              <div className="space-y-0.5 mt-1">
+                {/* Backlinks */}
+                <div
+                  className="flex items-center justify-between rounded-lg px-2.5 py-2 text-[13px] font-medium text-slate-500 hover:bg-slate-50/60 select-none cursor-default"
+                  title="Backlinks — Coming in next update"
+                >
+                  <div className="flex items-center gap-2.5 truncate">
+                    <Link2 className="h-4 w-4 text-slate-400 shrink-0" />
+                    <span className="truncate">Backlinks</span>
+                  </div>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500 border border-slate-200 shrink-0">
+                    Coming Soon
+                  </span>
+                </div>
+
+                {/* Keywords */}
+                <div
+                  className="flex items-center justify-between rounded-lg px-2.5 py-2 text-[13px] font-medium text-slate-500 hover:bg-slate-50/60 select-none cursor-default"
+                  title="Keywords — Coming in next update"
+                >
+                  <div className="flex items-center gap-2.5 truncate">
+                    <Key className="h-4 w-4 text-slate-400 shrink-0" />
+                    <span className="truncate">Keywords</span>
+                  </div>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500 border border-slate-200 shrink-0">
+                    Coming Soon
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 3. FOOTER: Upgrade Link */}
+        <div className="shrink-0 bg-white border-t border-slate-100 px-3 py-2.5">
           <Link
             href={selectedProject ? `/dashboard/billing?project=${encodeURIComponent(selectedProject)}` : "/dashboard/billing"}
             prefetch={true}
             onClick={(e) => handleSidebarItemClick(e)}
-            className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] px-3.5 py-2.5 text-xs font-display font-bold uppercase tracking-wide text-white shadow-xs hover:opacity-95 transition-all"
+            className={cn(
+              "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
+              isBillingActive
+                ? "bg-slate-100/90 text-slate-950 font-semibold"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            )}
           >
-            <Zap className="h-4 w-4 shrink-0 fill-current text-white" />
-            <span>UPGRADE</span>
+            {isBillingActive ? (
+              <div className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-white shrink-0">
+                <Zap className="h-3 w-3" />
+              </div>
+            ) : (
+              <Zap className="h-4 w-4 text-slate-500 shrink-0" />
+            )}
+            <span className="truncate">Upgrade Plan</span>
           </Link>
         </div>
       </aside>
 
       {/* PROJECT SELECTION / NEW AUDIT MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200 font-sans">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200 font-lazzer">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-5 border border-slate-100 relative">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-[#FF4D00]">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-900">
                   <Globe className="h-4.5 w-4.5" />
                 </div>
-                <h3 className="font-display text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-slate-900">
                   {projects.length > 0 ? "Select Project or Get Audit" : "Get Your Site Audit"}
                 </h3>
               </div>
@@ -488,7 +585,7 @@ export function DashboardSidebar({
             {/* If user has existing projects: Show Two Options */}
             {projects.length > 0 ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl text-xs font-bold font-sans">
+                <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl text-xs font-bold">
                   <button
                     type="button"
                     onClick={() => setModalMode("existing")}
@@ -518,13 +615,13 @@ export function DashboardSidebar({
                 {modalMode === "existing" ? (
                   <form onSubmit={handleSelectExistingSubmit} className="space-y-4 pt-1">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 font-sans">
+                      <label className="text-xs font-bold text-slate-700">
                         Select an Existing Project
                       </label>
                       <select
                         value={selectedExistingProj}
                         onChange={(e) => setSelectedExistingProj(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:border-[#FF4D00] focus:outline-none focus:ring-2 focus:ring-[#FF4D00]/20 font-sans bg-white cursor-pointer"
+                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/40 bg-white cursor-pointer"
                       >
                         {projects.map((proj) => (
                           <option key={proj} value={proj}>
@@ -538,13 +635,13 @@ export function DashboardSidebar({
                       <button
                         type="button"
                         onClick={() => setIsModalOpen(false)}
-                        className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors font-sans cursor-pointer"
+                        className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] px-5 py-2 text-xs font-display font-bold text-white shadow-md hover:opacity-95 transition-all cursor-pointer"
+                        className="inline-flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 px-5 py-2 text-xs font-bold text-white shadow-md transition-all cursor-pointer"
                       >
                         <span>Open Project</span>
                       </button>
@@ -553,7 +650,7 @@ export function DashboardSidebar({
                 ) : (
                   <form onSubmit={handleAnalyzeSubmit} className="space-y-4 pt-1">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 font-sans">
+                      <label className="text-xs font-bold text-slate-700">
                         Website URL or Domain
                       </label>
                       <input
@@ -563,7 +660,7 @@ export function DashboardSidebar({
                         placeholder="e.g. example.com"
                         required
                         autoFocus
-                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#FF4D00] focus:outline-none focus:ring-2 focus:ring-[#FF4D00]/20 font-sans"
+                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/40"
                       />
                     </div>
 
@@ -578,14 +675,14 @@ export function DashboardSidebar({
                       <button
                         type="button"
                         onClick={() => setIsModalOpen(false)}
-                        className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors font-sans cursor-pointer"
+                        className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={isAnalyzing}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] px-5 py-2 text-xs font-display font-bold text-white shadow-md hover:opacity-95 disabled:opacity-50 transition-all cursor-pointer"
+                        className="inline-flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 px-5 py-2 text-xs font-bold text-white shadow-md disabled:opacity-50 transition-all cursor-pointer"
                       >
                         {isAnalyzing ? (
                           <span>Analyzing...</span>
@@ -604,10 +701,10 @@ export function DashboardSidebar({
               /* If user has NO projects: Only show "Get Your Site Audit" option */
               <form onSubmit={handleAnalyzeSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 font-sans">
+                  <label className="text-xs font-bold text-slate-700">
                     Get Your Site Audit
                   </label>
-                  <p className="text-xs text-slate-500 font-sans">
+                  <p className="text-xs text-slate-500">
                     Enter your website domain below to start your health & performance audit.
                   </p>
                   <input
@@ -617,7 +714,7 @@ export function DashboardSidebar({
                     placeholder="Enter website domain (e.g. example.com)"
                     required
                     autoFocus
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#FF4D00] focus:outline-none focus:ring-2 focus:ring-[#FF4D00]/20 font-sans"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300/40"
                   />
                 </div>
 
@@ -632,14 +729,14 @@ export function DashboardSidebar({
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors font-sans cursor-pointer"
+                    className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isAnalyzing}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] px-5 py-2 text-xs font-display font-bold text-white shadow-md hover:opacity-95 disabled:opacity-50 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 px-5 py-2 text-xs font-bold text-white shadow-md disabled:opacity-50 transition-all cursor-pointer"
                   >
                     {isAnalyzing ? (
                       <span>Analyzing...</span>

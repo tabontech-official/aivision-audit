@@ -3,17 +3,6 @@ import { db } from "@/lib/db/client";
 import type Stripe from "stripe";
 import type { SubscriptionStatus, UserPlan } from "@prisma/client";
 
-/**
- * Subscription/plan synchronization. Called only from the verified webhook
- * handler. Idempotent: safe to run repeatedly for the same Stripe object.
- *
- * The user's plan lives in the DB (source of truth) and is mirrored onto the
- * JWT claim. On a plan change we DON'T force-logout — instead the billing
- * success page calls the Auth.js `update()` hook client-side, which re-reads
- * the plan (via getFreshPlan) and refreshes the token. This keeps the user
- * signed in through checkout. A notification records the change.
- */
-
 const STATUS_MAP: Record<string, SubscriptionStatus> = {
   active: "ACTIVE",
   trialing: "TRIALING",
@@ -25,7 +14,6 @@ const STATUS_MAP: Record<string, SubscriptionStatus> = {
   paused: "PAUSED",
 };
 
-/** Statuses that grant Premium access. */
 const PREMIUM_STATUSES: SubscriptionStatus[] = ["ACTIVE", "TRIALING"];
 
 function tsToDate(ts: number | null | undefined): Date | null {
@@ -36,7 +24,6 @@ async function resolveUserId(
   subscription: Stripe.Subscription,
   customerId: string,
 ): Promise<string | null> {
-  // Prefer subscription metadata, then existing rows, then customer metadata
   const metaUserId = subscription.metadata?.userId;
   if (metaUserId) return metaUserId;
 
@@ -47,9 +34,54 @@ async function resolveUserId(
   return existing?.userId ?? null;
 }
 
-async function setUserPlan(userId: string, plan: UserPlan): Promise<void> {
+async function resolvePlan(subscription: Stripe.Subscription) {
+  // 1. Check subscription metadata for planId or planKey
+  if (subscription.metadata?.planId) {
+    const plan = await db.plan.findUnique({ where: { id: subscription.metadata.planId } });
+    if (plan) return plan;
+  }
+
+  if (subscription.metadata?.planKey) {
+    const plan = await db.plan.findUnique({ where: { key: subscription.metadata.planKey } });
+    if (plan) return plan;
+  }
+
+  // 2. Check price ID from subscription items
+  const priceId = subscription.items?.data?.[0]?.price?.id;
+  if (priceId) {
+    const planByPrice = await db.plan.findFirst({
+      where: {
+        OR: [
+          { stripePriceMonthlyId: priceId },
+          { stripePriceYearlyId: priceId },
+          { prices: { some: { stripePriceId: priceId } } },
+        ],
+      },
+    });
+    if (planByPrice) return planByPrice;
+  }
+
+  // 3. Check product ID from subscription items
+  const productId = subscription.items?.data?.[0]?.price?.product;
+  if (productId && typeof productId === "string") {
+    const planByProduct = await db.plan.findFirst({
+      where: { stripeProductId: productId },
+    });
+    if (planByProduct) return planByProduct;
+  }
+
+  // 4. Fallback to PREMIUM plan or first non-free plan
+  const fallbackPlan =
+    (await db.plan.findUnique({ where: { key: "PREMIUM" } })) ||
+    (await db.plan.findFirst({ where: { key: { not: "FREE" } } })) ||
+    (await db.plan.findFirst());
+
+  return fallbackPlan;
+}
+
+async function setUserPlan(userId: string, plan: UserPlan, planName: string): Promise<void> {
   const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
-  if (!user || user.plan === plan) return; // no change
+  if (!user || user.plan === plan) return;
 
   await db.$transaction([
     db.user.update({ where: { id: userId }, data: { plan } }),
@@ -57,10 +89,10 @@ async function setUserPlan(userId: string, plan: UserPlan): Promise<void> {
       data: {
         userId,
         type: plan === "PREMIUM" ? "PLAN_UPGRADED" : "PLAN_DOWNGRADED",
-        title: plan === "PREMIUM" ? "Welcome to Premium" : "Your plan changed",
+        title: plan === "PREMIUM" ? `Welcome to ${planName}` : "Your plan changed",
         body:
           plan === "PREMIUM"
-            ? "Your Premium subscription is active. Every section and full evidence are unlocked."
+            ? `Your subscription to ${planName} is active. All plan features and audit limits are unlocked.`
             : "Your plan has been changed to Free.",
         linkUrl: "/dashboard/billing",
       },
@@ -82,10 +114,8 @@ export async function syncSubscription(subscription: Stripe.Subscription): Promi
   }
 
   const status = STATUS_MAP[subscription.status] ?? "INCOMPLETE";
-  const premiumPlan = await db.plan.findUnique({ where: { key: "PREMIUM" } });
+  const matchedPlan = await resolvePlan(subscription);
 
-  // Period fields live on the subscription item in recent API versions;
-  // fall back to the subscription for older shapes.
   const item = subscription.items?.data?.[0];
   const periodStart = tsToDate(
     (item as unknown as { current_period_start?: number })?.current_period_start ??
@@ -98,7 +128,7 @@ export async function syncSubscription(subscription: Stripe.Subscription): Promi
 
   const data = {
     userId,
-    planId: premiumPlan?.id,
+    planId: matchedPlan?.id,
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscription.id,
     status,
@@ -116,11 +146,11 @@ export async function syncSubscription(subscription: Stripe.Subscription): Promi
       currentPeriodEnd: data.currentPeriodEnd,
       cancelAtPeriodEnd: data.cancelAtPeriodEnd,
       canceledAt: data.canceledAt,
-      ...(premiumPlan ? { planId: premiumPlan.id } : {}),
+      ...(matchedPlan ? { planId: matchedPlan.id } : {}),
     },
     create: {
       userId: data.userId,
-      planId: premiumPlan!.id,
+      planId: matchedPlan!.id,
       stripeCustomerId: data.stripeCustomerId,
       stripeSubscriptionId: data.stripeSubscriptionId,
       status: data.status,
@@ -131,9 +161,7 @@ export async function syncSubscription(subscription: Stripe.Subscription): Promi
     },
   });
 
-  // Effective plan: Premium while the sub is active/trialing; otherwise Free.
-  // But if the user has ANY other active premium sub, keep them Premium.
-  const hasActivePremium =
+  const hasActivePaidPlan =
     PREMIUM_STATUSES.includes(status) ||
     (await db.subscription.count({
       where: {
@@ -143,7 +171,8 @@ export async function syncSubscription(subscription: Stripe.Subscription): Promi
       },
     })) > 0;
 
-  await setUserPlan(userId, hasActivePremium ? "PREMIUM" : "FREE");
+  const userPlanEnum: UserPlan = hasActivePaidPlan ? "PREMIUM" : "FREE";
+  await setUserPlan(userId, userPlanEnum, matchedPlan?.name ?? "Premium");
 }
 
 /** Record a successful/failed invoice as a Payment + Invoice row. */
@@ -210,14 +239,13 @@ export async function syncInvoice(invoice: Stripe.Invoice): Promise<void> {
     });
   }
 
-  // Notify on payment failure
   if (!paid && invoice.status === "open") {
     await db.notification.create({
       data: {
         userId: sub.userId,
         type: "PAYMENT_FAILED",
         title: "Payment failed",
-        body: "We couldn't process your latest payment. Update your payment method to keep Premium.",
+        body: "We couldn't process your latest payment. Update your payment method to keep your subscription active.",
         linkUrl: "/dashboard/billing",
       },
     });

@@ -4,8 +4,13 @@ import { useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, Gauge, Smartphone, ShieldCheck } from "lucide-react";
+import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils/cn";
-import { AuthGateModal } from "@/components/marketing/auth-gate-modal";
+
+const AuthGateModal = dynamic(
+  () => import("@/components/marketing/auth-gate-modal").then((m) => m.AuthGateModal),
+  { ssr: false },
+);
 
 /**
  * The primary conversion element: one URL field, one button — and an account
@@ -68,6 +73,15 @@ export function AuditUrlForm({
     return false;
   };
 
+  const normalizeUrl = (val: string) => {
+    let trimmed = val.trim();
+    if (!trimmed) return "";
+    if (!/^https?:\/\//i.test(trimmed)) {
+      trimmed = `https://${trimmed}`;
+    }
+    return trimmed;
+  };
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -79,14 +93,17 @@ export function AuditUrlForm({
       return;
     }
 
+    const normalized = normalizeUrl(trimmed);
+    setUrl(normalized);
+
     startTransition(async () => {
-      if (await requestAudit(trimmed)) setGateUrl(trimmed);
+      if (await requestAudit(normalized)) setGateUrl(normalized);
     });
   };
 
   /** Signed in inside the modal — replay the audit they already asked for. */
   const onAuthenticated = () => {
-    const target = gateUrl;
+    const target = gateUrl ? normalizeUrl(gateUrl) : "";
     setGateUrl(null);
     if (!target) return;
     setError(null);
@@ -106,7 +123,7 @@ export function AuditUrlForm({
         className={cn(
           "flex w-full items-center gap-2 rounded-xl border bg-white p-1.5 shadow-sm transition-all",
           isFocused
-            ? "border-[#FF4D00] ring-2 ring-[#FF4D00]/25 shadow-md"
+            ? "border-[#388bfd] ring-2 ring-[#388bfd]/25 shadow-md"
             : error
             ? "border-red-500"
             : "border-slate-200 hover:border-slate-300",
@@ -176,12 +193,14 @@ export function AuditUrlForm({
         </p>
       )}
 
-      <AuthGateModal
-        open={gateUrl !== null}
-        onClose={() => setGateUrl(null)}
-        targetUrl={gateUrl ?? ""}
-        onAuthenticated={onAuthenticated}
-      />
+      {gateUrl !== null && (
+        <AuthGateModal
+          open={gateUrl !== null}
+          onClose={() => setGateUrl(null)}
+          targetUrl={gateUrl ?? ""}
+          onAuthenticated={onAuthenticated}
+        />
+      )}
     </div>
   );
 }

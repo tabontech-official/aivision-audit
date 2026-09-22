@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { requireStripe, isStripeConfigured } from "@/lib/stripe/client";
+import { getDynamicStripeClient, getActiveStripeWebhookSecret } from "@/services/billing/stripe-admin";
 import { db } from "@/lib/db/client";
 import { syncSubscription, syncInvoice } from "@/services/billing/sync";
 
@@ -9,21 +9,22 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/stripe/webhook — Stripe event receiver.
+ * POST /api/stripe/webhook — Dynamic Stripe event receiver.
  *
  * Security:
- *  - Verifies the Stripe signature against STRIPE_WEBHOOK_SECRET (rejects
- *    forged/unsigned requests with 400).
+ *  - Verifies the Stripe signature against active decrypted webhook secret.
  *  - Idempotency ledger (stripe_webhook_events): an event id already marked
  *    processed is acknowledged and skipped, so Stripe retries are safe.
  */
 export async function POST(req: Request) {
-  if (!isStripeConfigured()) {
+  const stripe = await getDynamicStripeClient();
+  if (!stripe) {
     return NextResponse.json({ error: "Billing not configured." }, { status: 503 });
   }
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  const webhookSecret = (await getActiveStripeWebhookSecret()) || process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    return NextResponse.json({ error: "Webhook not configured." }, { status: 503 });
+    return NextResponse.json({ error: "Webhook secret not configured in Master Admin or environment." }, { status: 503 });
   }
 
   const signature = req.headers.get("stripe-signature");
@@ -32,7 +33,6 @@ export async function POST(req: Request) {
   }
 
   const rawBody = await req.text();
-  const stripe = requireStripe();
 
   let event: Stripe.Event;
   try {
@@ -42,8 +42,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 
-  // Idempotency: record-or-skip. A unique constraint on stripeEventId makes a
-  // concurrent duplicate insert fail; we treat that as "already handled".
+  // Idempotency: record-or-skip
   try {
     await db.stripeWebhookEvent.create({
       data: { stripeEventId: event.id, type: event.type },
@@ -75,16 +74,17 @@ async function handleEvent(event: Stripe.Event, stripe: Stripe): Promise<void> {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      // Pull the full subscription and sync it (session may not embed it).
       if (session.subscription) {
         const subId =
           typeof session.subscription === "string"
             ? session.subscription
             : session.subscription.id;
         const subscription = await stripe.subscriptions.retrieve(subId);
-        // Carry the userId from the checkout session onto the subscription
         if (session.metadata?.userId && !subscription.metadata?.userId) {
           subscription.metadata = { ...subscription.metadata, userId: session.metadata.userId };
+        }
+        if (session.metadata?.planId && !subscription.metadata?.planId) {
+          subscription.metadata = { ...subscription.metadata, planId: session.metadata.planId };
         }
         await syncSubscription(subscription);
       }
@@ -108,7 +108,6 @@ async function handleEvent(event: Stripe.Event, stripe: Stripe): Promise<void> {
     }
 
     default:
-      // Unhandled event types are acknowledged (recorded as processed).
       break;
   }
 }

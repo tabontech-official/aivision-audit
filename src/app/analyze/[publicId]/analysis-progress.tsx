@@ -17,13 +17,16 @@ import {
   CheckCircle2,
   Loader2,
   AlertCircle,
+  XCircle,
 } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 import { cn } from "@/lib/utils/cn";
+import { cancelAuditAction } from "@/app/dashboard/reports/actions";
 
 /**
- * Animated audit progress screen.
- * Polls /api/reports/[publicId]/status every 1.5s; the visual stage list is
- * driven by the server's real currentStage, with smooth per-stage animation.
+ * Animated audit progress screen built with the brand theme layout,
+ * colors (#dff2ed backdrop, font-lazzer typography, brand icon logo,
+ * rounded pill buttons & sleek progress indicators).
  */
 
 const STAGES = [
@@ -49,13 +52,6 @@ type StatusPayload = {
   error: string | null;
 };
 
-/**
- * Purely a progress screen. The email ask that used to appear here was
- * removed: it produced a Lead but not an account, and everything of value
- * downstream — the Fix Loop, scheduled re-audits, comparisons — needs an
- * account. The ask now happens at the teaser, the highest-intent moment,
- * where the visitor has just seen their score and wants the rest.
- */
 export function AnalysisProgress({
   publicId,
   domain,
@@ -70,7 +66,19 @@ export function AnalysisProgress({
   const [progress, setProgress] = useState(initialProgress);
   const [failed, setFailed] = useState<string | null>(null);
   const [finishing, setFinishing] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const pollFailures = useRef(0);
+
+  const handleStopAudit = async () => {
+    if (cancelling) return;
+    setCancelling(true);
+    try {
+      await cancelAuditAction(publicId);
+      router.push("/dashboard");
+    } catch {
+      router.push("/dashboard");
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -125,14 +133,16 @@ export function AnalysisProgress({
 
   if (failed) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center px-4">
-        <div className="card w-full max-w-md p-8 text-center">
-          <AlertCircle className="mx-auto h-10 w-10 text-danger-500" aria-hidden />
-          <h1 className="mt-4 text-xl font-bold text-ink">Audit failed</h1>
-          <p className="mt-2 text-sm text-ink-secondary">{failed}</p>
+      <main className="flex min-h-screen flex-col items-center justify-center bg-[#dff2ed] px-4 py-12 font-lazzer">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200/80 bg-white p-8 text-center shadow-lg">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-red-600 mb-4">
+            <AlertCircle className="h-6 w-6" aria-hidden />
+          </div>
+          <h1 className="text-xl font-bold text-slate-900">Audit failed</h1>
+          <p className="mt-2 text-sm text-slate-600">{failed}</p>
           <Link
             href="/"
-            className="mt-6 inline-block rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
+            className="mt-6 inline-flex items-center justify-center rounded-full bg-slate-900 hover:bg-slate-800 active:bg-slate-950 px-6 py-3 text-sm font-bold text-white transition-all shadow-xs"
           >
             Try another website
           </Link>
@@ -142,28 +152,44 @@ export function AnalysisProgress({
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-[#dff2ed] px-4 py-12 font-lazzer relative selection:bg-slate-200">
+      {/* Background ambient lighting */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/40 rounded-full blur-3xl pointer-events-none -z-0" />
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Header with App Logo & Title */}
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 text-xl font-bold text-white">
-            A
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white p-2.5 shadow-md border border-slate-200/80 transition-transform hover:scale-105">
+            <BrandIcon className="h-full w-full" />
           </div>
-          <h1 className="mt-5 text-2xl font-bold tracking-tight text-ink">
+          <h1 className="mt-5 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             {finishing ? "Your report is ready" : "Analyzing your website"}
           </h1>
-          <p className="mt-1.5 text-sm text-ink-secondary">
-            {finishing ? "Taking you to the results…" : <>Running a full audit of <strong>{domain}</strong></>}
+          <p className="mt-2 text-sm sm:text-base text-slate-600">
+            {finishing ? (
+              "Taking you to the results…"
+            ) : (
+              <>
+                Running a full audit of <strong className="font-semibold text-slate-900">{domain}</strong>
+              </>
+            )}
           </p>
         </div>
 
-        {/* Progress bar */}
-        <div className="mt-8">
-          <div className="flex items-center justify-between text-xs text-ink-muted">
-            <span>{finishing ? "Complete" : "In progress"}</span>
-            <span className="tabular-nums">{Math.round(progress)}%</span>
+        {/* Progress Bar Section */}
+        <div className="mt-7">
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-2">
+            <span className="flex items-center gap-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-700 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-900"></span>
+              </span>
+              {finishing ? "Complete" : "In progress"}
+            </span>
+            <span className="tabular-nums font-bold text-slate-900">{Math.round(progress)}%</span>
           </div>
           <div
-            className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200"
+            className="h-2.5 overflow-hidden rounded-full bg-slate-200/90 shadow-inner"
             role="progressbar"
             aria-valuenow={Math.round(progress)}
             aria-valuemin={0}
@@ -171,14 +197,14 @@ export function AnalysisProgress({
             aria-label="Audit progress"
           >
             <div
-              className="h-full rounded-full bg-brand-600 transition-all duration-700 ease-out"
+              className="h-full rounded-full bg-slate-900 transition-all duration-700 ease-out shadow-xs"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
-        {/* Stage list */}
-        <ol className="card mt-6 divide-y divide-slate-100">
+        {/* Checklist Card */}
+        <ol className="mt-6 rounded-2xl border border-slate-200/80 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.04)] divide-y divide-slate-100 overflow-hidden">
           {STAGES.map((stage, i) => {
             const done = i < stageIndex || finishing;
             const active = i === stageIndex && !finishing;
@@ -186,22 +212,38 @@ export function AnalysisProgress({
               <li
                 key={stage.key}
                 className={cn(
-                  "flex items-center gap-3 px-5 py-3 text-sm transition-colors",
-                  done && "text-ink",
-                  active && "bg-brand-50/50 font-medium text-ink",
-                  !done && !active && "text-ink-muted",
+                  "flex items-center gap-3.5 px-5 py-3.5 text-sm transition-all duration-200",
+                  done && "text-slate-900 bg-white",
+                  active && "bg-slate-50 font-semibold text-slate-950",
+                  !done && !active && "text-slate-400 bg-white",
                 )}
               >
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center">
                   {done ? (
-                    <CheckCircle2 className="h-5 w-5 text-success-600" aria-hidden />
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600 transition-transform" aria-hidden />
                   ) : active ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-brand-600" aria-hidden />
+                    <Loader2 className="h-5 w-5 animate-spin text-slate-900" aria-hidden />
                   ) : (
-                    <stage.icon className="h-4 w-4" aria-hidden />
+                    <stage.icon className="h-4 w-4 text-slate-300" aria-hidden />
                   )}
                 </span>
-                {stage.label}
+                <span
+                  className={cn(
+                    "flex-1",
+                    done
+                      ? "text-slate-900 font-medium"
+                      : active
+                      ? "text-slate-950 font-bold"
+                      : "text-slate-400 font-normal",
+                  )}
+                >
+                  {stage.label}
+                </span>
+                {active && (
+                  <span className="text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200/80 px-2.5 py-0.5 rounded-full">
+                    Analyzing…
+                  </span>
+                )}
                 {active && <span className="sr-only">(in progress)</span>}
                 {done && <span className="sr-only">(complete)</span>}
               </li>
@@ -209,9 +251,21 @@ export function AnalysisProgress({
           })}
         </ol>
 
-        <p className="mt-5 text-center text-xs text-ink-muted">
-          This usually takes one to three minutes. Keep this tab open.
-        </p>
+        {/* Bottom Message & Stop Audit Button */}
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <p className="text-center text-xs text-slate-500 font-medium">
+            This usually takes one to three minutes. Keep this tab open.
+          </p>
+          <button
+            type="button"
+            onClick={handleStopAudit}
+            disabled={cancelling || finishing}
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/80 bg-white/90 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 px-4 py-1.5 text-xs font-semibold text-slate-600 shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+          >
+            <XCircle className="h-3.5 w-3.5" />
+            <span>{cancelling ? "Stopping audit..." : "Stop Audit"}</span>
+          </button>
+        </div>
       </div>
     </main>
   );

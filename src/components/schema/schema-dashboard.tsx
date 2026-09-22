@@ -66,39 +66,39 @@ export function SchemaDashboard({ initialUrl, initialDomain }: SchemaDashboardPr
   const domain = auditData?.domain || initialDomain || "website.com";
 
   return (
-    <div className="space-y-6 font-sans">
-      {/* 1. FIXED TOP BAR: Attached Edge-to-Edge, Sticky beneath Dashboard TopBar */}
-      <div className="sticky top-[52px] z-20 -mx-4 -mt-6 sm:-mx-8 border-b border-slate-200 bg-white/95 backdrop-blur-md px-4 sm:px-8 py-2.5 shadow-2xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-orange-50 text-[#FF4D00] shrink-0 border border-orange-200/60">
-              <FileCode className="h-4.5 w-4.5" />
+    <div className="space-y-6 font-lazzer text-slate-800">
+      {/* 1. FIXED TOP BAR */}
+      <div className="sticky top-[52px] z-20 -mx-4 -mt-6 sm:-mx-8 border-b border-slate-200 bg-white/95 backdrop-blur-md px-4 sm:px-8 py-3 shadow-2xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shrink-0 shadow-xs">
+              <FileCode className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-display text-base sm:text-lg font-bold tracking-tight text-slate-900 leading-tight">
+                <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 leading-tight">
                   {domain ? `${domain} Schema Markup` : "Schema Markup & Rich Results"}
                 </h1>
-                <span className="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2 py-0.5 text-[11px] font-bold text-[#FF4D00] font-sans border border-orange-200">
+                <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700 border border-slate-200">
                   <ShieldCheck className="h-3 w-3" />
                   <span>{auditData ? `${auditData.overallScore}/100 Health` : "Structured Data"}</span>
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-sans leading-tight mt-0.5">
+              <p className="text-xs text-slate-500 leading-tight mt-0.5">
                 Audit, validate, and generate Google-compliant JSON-LD structured data and rich results snippets.
               </p>
             </div>
           </div>
 
-          {/* View Switcher Tabs in Fixed Header */}
+          {/* View Switcher Tabs */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <button
               type="button"
               onClick={() => setActiveTab("AUDIT")}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-display font-bold rounded-[8px] transition-all cursor-pointer",
+                "inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer",
                 activeTab === "AUDIT"
-                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-2xs"
+                  ? "bg-slate-900 text-white shadow-xs"
                   : "bg-slate-100 hover:bg-slate-200 text-slate-700"
               )}
             >
@@ -109,9 +109,9 @@ export function SchemaDashboard({ initialUrl, initialDomain }: SchemaDashboardPr
               type="button"
               onClick={() => setActiveTab("GENERATOR")}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-display font-bold rounded-[8px] transition-all cursor-pointer",
+                "inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer",
                 activeTab === "GENERATOR"
-                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-2xs"
+                  ? "bg-slate-900 text-white shadow-xs"
                   : "bg-slate-100 hover:bg-slate-200 text-slate-700"
               )}
             >
@@ -122,9 +122,9 @@ export function SchemaDashboard({ initialUrl, initialDomain }: SchemaDashboardPr
               type="button"
               onClick={() => setActiveTab("VALIDATOR")}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-display font-bold rounded-[8px] transition-all cursor-pointer",
+                "inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer",
                 activeTab === "VALIDATOR"
-                  ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-2xs"
+                  ? "bg-slate-900 text-white shadow-xs"
                   : "bg-slate-100 hover:bg-slate-200 text-slate-700"
               )}
             >
@@ -134,9 +134,9 @@ export function SchemaDashboard({ initialUrl, initialDomain }: SchemaDashboardPr
           </div>
         </div>
 
-        {/* Fixed URL Scan Bar attached inside sticky header */}
+        {/* Fixed URL Scan Bar */}
         {activeTab === "AUDIT" && (
-          <div className="mt-2.5 pt-2.5 border-t border-slate-200/80">
+          <div className="mt-3 pt-3 border-t border-slate-100">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -145,20 +145,20 @@ export function SchemaDashboard({ initialUrl, initialDomain }: SchemaDashboardPr
               className="flex items-center gap-2"
             >
               <div className="relative flex-1">
-                <Globe className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Globe className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={targetUrl}
                   onChange={(e) => setTargetUrl(e.target.value)}
                   placeholder="https://example.com/page"
-                  className="w-full text-xs font-medium pl-9 pr-3 py-1.5 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-orange-500 focus:border-[#FF4D00]"
+                  className="w-full text-xs font-semibold pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300/40 focus:border-slate-500"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading || !targetUrl.trim()}
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-display font-bold rounded-[8px] bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] hover:opacity-95 disabled:opacity-50 text-white transition-opacity shadow-2xs cursor-pointer shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white transition-colors shadow-xs cursor-pointer shrink-0"
               >
                 {loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
                 <span>{loading ? "Scanning..." : "Scan Webpage"}</span>
@@ -169,7 +169,7 @@ export function SchemaDashboard({ initialUrl, initialDomain }: SchemaDashboardPr
       </div>
 
       {error && (
-        <div className="p-3 bg-rose-50 border border-rose-200 rounded-[8px] text-xs text-rose-700 flex items-center gap-2 font-medium">
+        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2 font-semibold">
           <AlertOctagon className="w-4 h-4 shrink-0 text-rose-600" />
           <span>{error}</span>
         </div>
@@ -180,11 +180,11 @@ export function SchemaDashboard({ initialUrl, initialDomain }: SchemaDashboardPr
         <>
           {loading ? (
             <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center shadow-xs">
-              <RefreshCw className="w-8 h-8 text-[#FF4D00] animate-spin mx-auto mb-3" />
-              <h3 className="text-sm font-bold text-slate-900 font-display">
+              <RefreshCw className="w-8 h-8 text-slate-900 animate-spin mx-auto mb-3" />
+              <h3 className="text-sm font-bold text-slate-900">
                 Extracting & Auditing Structured Data...
               </h3>
-              <p className="text-xs text-slate-500 font-sans mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Parsing JSON-LD scripts, Microdata nodes, and testing Google Rich Results rules.
               </p>
             </div>
@@ -212,17 +212,17 @@ export function SchemaDashboard({ initialUrl, initialDomain }: SchemaDashboardPr
             </div>
           ) : (
             <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center shadow-xs">
-              <FileCode className="w-12 h-12 text-orange-400 mx-auto mb-3 opacity-60" />
-              <h3 className="text-base font-bold text-slate-900 font-display">
+              <FileCode className="w-12 h-12 text-slate-400 mx-auto mb-3 opacity-60" />
+              <h3 className="text-base font-bold text-slate-900">
                 Ready to Audit Structured Data
               </h3>
-              <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4 font-sans">
+              <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4">
                 Enter any webpage URL above and click &quot;Scan Webpage&quot; to inspect its embedded Schema.org markup and Google Rich Results eligibility.
               </p>
               <button
                 type="button"
                 onClick={() => runAudit(false)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-display font-bold rounded-[8px] bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white hover:opacity-95 transition-opacity cursor-pointer shadow-2xs"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-colors cursor-pointer shadow-xs"
               >
                 Scan Sample ({targetUrl})
               </button>

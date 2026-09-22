@@ -21,17 +21,22 @@ export function RescanButton({
     setErrorText(null);
 
     startTransition(async () => {
-      let res;
-      if (reportId) {
-        res = await rerunAuditAction(reportId);
-      } else if (domain) {
-        res = await rescanWebsiteAction(domain);
-      }
+      try {
+        let res;
+        if (reportId) {
+          res = await rerunAuditAction(reportId);
+        } else if (domain) {
+          res = await rescanWebsiteAction(domain);
+        }
 
-      if (res?.ok && res.redirectTo) {
-        router.push(res.redirectTo);
-      } else if (!res?.ok) {
-        setErrorText(res?.error ?? "Failed to trigger re-scan.");
+        if (res?.ok && res.redirectTo) {
+          router.push(res.redirectTo);
+        } else if (!res?.ok) {
+          setErrorText(res?.error ?? "Failed to trigger re-scan.");
+        }
+      } catch (err: unknown) {
+        console.error("Rescan click error:", err);
+        setErrorText(err instanceof Error ? err.message : "Failed to trigger re-scan.");
       }
     });
   };
@@ -42,11 +47,11 @@ export function RescanButton({
         type="button"
         onClick={handleRescan}
         disabled={isPending || (!reportId && !domain)}
-        className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-display font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-slate-800 shadow-2xs hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer font-lazzer"
       >
         {isPending ? (
           <>
-            <RotateCw className="h-4 w-4 text-[#FF4D00] animate-spin" />
+            <RotateCw className="h-4 w-4 text-slate-900 animate-spin" />
             <span>Re-Scanning...</span>
           </>
         ) : (

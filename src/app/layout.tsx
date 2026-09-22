@@ -10,11 +10,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "AuditFlow — Free Shopify Store Audit",
-    template: "%s · AuditFlow",
+    default: "The Rank Writers — SEO & AI Search Visibility Platform",
+    template: "%s · The Rank Writers",
   },
   description:
-    "Audit your Shopify store in minutes: app bloat, theme performance, product schema, SEO and AI readiness — with fixes that name the exact Shopify setting or theme file to change.",
+    "Audit your store and website in minutes: technical SEO core, crawlability, indexability, speed, schema, AI discoverability, and recommendations with actionable fixes.",
 };
 
 import { NavigationProgressBar } from "@/components/ui/navigation-progress-bar";

@@ -272,7 +272,39 @@ const SECTIONS: SectionSeed[] = [
         },
       },
       {
-        name: "Largest Contentful Paint",
+        name: "Desktop Performance Score",
+        fieldKey: "speed.desktop_performance",
+        description: "Lighthouse performance score for desktop browsers.",
+        severity: Severity.HIGH,
+        planAccess: PlanAccess.BOTH,
+        score: 2,
+        inspection: {
+          inspectionType: InspectionType.LIGHTHOUSE_SCORE,
+          dataSource: "PSI",
+          operator: CriteriaOperator.GREATER_THAN_OR_EQUAL,
+          minValue: 90,
+          warnOperator: CriteriaOperator.GREATER_THAN_OR_EQUAL,
+          warnMinValue: 50,
+          config: { strategy: "desktop", category: "performance" },
+        },
+        messages: {
+          PASS: {
+            message: "Your desktop performance score is {{actualValue}} — excellent.",
+          },
+          WARNING: {
+            message: "Your desktop performance score is {{actualValue}}.",
+            suggestion:
+              "Optimize desktop assets, clean up render-blocking stylesheets, and leverage browser caching.",
+          },
+          FAIL: {
+            message: "Your desktop performance score is {{actualValue}}.",
+            suggestion:
+              "Improve server response time, defer heavy third-party bundles, and eliminate uncompressed assets.",
+          },
+        },
+      },
+      {
+        name: "Largest Contentful Paint (LCP)",
         fieldKey: "speed.lcp",
         description: "Time until the largest visible element finishes rendering (mobile).",
         severity: Severity.HIGH,
@@ -302,11 +334,39 @@ const SECTIONS: SectionSeed[] = [
         },
       },
       {
-        name: "Cumulative Layout Shift",
+        name: "First Contentful Paint (FCP)",
+        fieldKey: "speed.fcp",
+        description: "Time until the browser renders the first piece of DOM content (mobile).",
+        severity: Severity.MEDIUM,
+        planAccess: PlanAccess.BOTH,
+        score: 2,
+        inspection: {
+          inspectionType: InspectionType.PSI_METRIC,
+          dataSource: "PSI",
+          operator: CriteriaOperator.LESS_THAN_OR_EQUAL,
+          maxValue: 1800,
+          warnOperator: CriteriaOperator.LESS_THAN_OR_EQUAL,
+          warnMaxValue: 3000,
+          config: { strategy: "mobile", metric: "fcp_ms" },
+        },
+        messages: {
+          PASS: { message: "FCP is {{actualValue}}ms — fast initial render." },
+          WARNING: {
+            message: "FCP is {{actualValue}}ms — slightly slow to begin rendering.",
+            suggestion: "Eliminate render-blocking resources, inline critical CSS, and reduce font display delay.",
+          },
+          FAIL: {
+            message: "FCP is {{actualValue}}ms — user sees a blank screen for too long.",
+            suggestion: "Optimize server response time and eliminate blocking external scripts in head.",
+          },
+        },
+      },
+      {
+        name: "Cumulative Layout Shift (CLS)",
         fieldKey: "speed.cls",
         description: "Visual stability — how much the page layout shifts while loading (mobile).",
         severity: Severity.MEDIUM,
-        planAccess: PlanAccess.PREMIUM,
+        planAccess: PlanAccess.BOTH,
         score: 1,
         inspection: {
           inspectionType: InspectionType.PSI_METRIC,
@@ -322,12 +382,152 @@ const SECTIONS: SectionSeed[] = [
           WARNING: {
             message: "CLS is {{actualValue}} — some elements shift during load.",
             suggestion:
-              "Set explicit width/height on images and embeds, and reserve space for ads or dynamic content so the layout doesn't jump.",
+              "Set explicit width/height on images and embeds, and reserve space for dynamic content.",
           },
           FAIL: {
             message: "CLS is {{actualValue}} — your layout shifts significantly during load.",
             suggestion:
-              "Add size attributes to all media, avoid inserting content above existing content, and preload web fonts to prevent layout jumps.",
+              "Add size attributes to all media, avoid inserting content above existing content, and preload web fonts.",
+          },
+        },
+      },
+      {
+        name: "Total Blocking Time (TBT)",
+        fieldKey: "speed.tbt",
+        description: "Total time between FCP and TTI where CPU was blocked by long tasks.",
+        severity: Severity.HIGH,
+        planAccess: PlanAccess.BOTH,
+        score: 2,
+        inspection: {
+          inspectionType: InspectionType.PSI_METRIC,
+          dataSource: "PSI",
+          operator: CriteriaOperator.LESS_THAN_OR_EQUAL,
+          maxValue: 200,
+          warnOperator: CriteriaOperator.LESS_THAN_OR_EQUAL,
+          warnMaxValue: 600,
+          config: { strategy: "mobile", metric: "tbt_ms" },
+        },
+        messages: {
+          PASS: { message: "TBT is {{actualValue}}ms — smooth main-thread execution." },
+          WARNING: {
+            message: "TBT is {{actualValue}}ms — main thread is busy executing JavaScript.",
+            suggestion: "Split large JavaScript bundles, defer heavy third-party trackers, and remove unused libraries.",
+          },
+          FAIL: {
+            message: "TBT is {{actualValue}}ms — long JavaScript tasks delay page interactivity.",
+            suggestion: "Refactor long tasks, reduce script execution time, and minimize main-thread work.",
+          },
+        },
+      },
+      {
+        name: "Speed Index",
+        fieldKey: "speed.speed_index",
+        description: "How quickly the visual contents of the page are populated.",
+        severity: Severity.MEDIUM,
+        planAccess: PlanAccess.BOTH,
+        score: 1,
+        inspection: {
+          inspectionType: InspectionType.PSI_METRIC,
+          dataSource: "PSI",
+          operator: CriteriaOperator.LESS_THAN_OR_EQUAL,
+          maxValue: 3400,
+          warnOperator: CriteriaOperator.LESS_THAN_OR_EQUAL,
+          warnMaxValue: 5800,
+          config: { strategy: "mobile", metric: "speed_index_ms" },
+        },
+        messages: {
+          PASS: { message: "Speed Index is {{actualValue}}ms — content fills the screen rapidly." },
+          WARNING: {
+            message: "Speed Index is {{actualValue}}ms — visual completion takes longer than ideal.",
+            suggestion: "Optimize above-the-fold image delivery and prioritize visible viewport content rendering.",
+          },
+          FAIL: {
+            message: "Speed Index is {{actualValue}}ms — page contents take too long to visually appear.",
+            suggestion: "Ensure critical CSS is rendered first and defer non-critical assets.",
+          },
+        },
+      },
+      {
+        name: "Interaction to Next Paint (INP)",
+        fieldKey: "speed.inp",
+        description: "Assesses page responsiveness by measuring the latency of all user interactions.",
+        severity: Severity.HIGH,
+        planAccess: PlanAccess.BOTH,
+        score: 2,
+        inspection: {
+          inspectionType: InspectionType.PSI_METRIC,
+          dataSource: "PSI",
+          operator: CriteriaOperator.LESS_THAN_OR_EQUAL,
+          maxValue: 200,
+          warnOperator: CriteriaOperator.LESS_THAN_OR_EQUAL,
+          warnMaxValue: 500,
+          config: { strategy: "mobile", metric: "inp_ms" },
+        },
+        messages: {
+          PASS: { message: "INP is {{actualValue}}ms — responsive user interactions." },
+          WARNING: {
+            message: "INP is {{actualValue}}ms — interactions experience slight latency.",
+            suggestion: "Break up long event handlers and avoid heavy calculations during user input events.",
+          },
+          FAIL: {
+            message: "INP is {{actualValue}}ms — user clicks or taps suffer noticeable delay.",
+            suggestion: "Optimize input event listeners, avoid layout thrashing, and minimize main-thread blocking during interactions.",
+          },
+        },
+      },
+      {
+        name: "Time to Interactive (TTI)",
+        fieldKey: "speed.tti",
+        description: "Time until the page is fully interactive and responds reliably to inputs.",
+        severity: Severity.MEDIUM,
+        planAccess: PlanAccess.PREMIUM,
+        score: 1,
+        inspection: {
+          inspectionType: InspectionType.PSI_METRIC,
+          dataSource: "PSI",
+          operator: CriteriaOperator.LESS_THAN_OR_EQUAL,
+          maxValue: 3800,
+          warnOperator: CriteriaOperator.LESS_THAN_OR_EQUAL,
+          warnMaxValue: 7300,
+          config: { strategy: "mobile", metric: "tti_ms" },
+        },
+        messages: {
+          PASS: { message: "TTI is {{actualValue}}ms — page becomes usable quickly." },
+          WARNING: {
+            message: "TTI is {{actualValue}}ms — page takes a while to settle for interaction.",
+            suggestion: "Reduce JavaScript payload size and defer initialization of non-critical UI widgets.",
+          },
+          FAIL: {
+            message: "TTI is {{actualValue}}ms — slow interaction readiness.",
+            suggestion: "Eliminate unneeded scripts, code-split bundles, and reduce execution overhead.",
+          },
+        },
+      },
+      {
+        name: "Initial Server Response Time (TTFB)",
+        fieldKey: "speed.server_response",
+        description: "Time required for the server to send the first byte of HTML.",
+        severity: Severity.HIGH,
+        planAccess: PlanAccess.BOTH,
+        score: 2,
+        inspection: {
+          inspectionType: InspectionType.PSI_METRIC,
+          dataSource: "PSI",
+          operator: CriteriaOperator.LESS_THAN_OR_EQUAL,
+          maxValue: 600,
+          warnOperator: CriteriaOperator.LESS_THAN_OR_EQUAL,
+          warnMaxValue: 1200,
+          config: { strategy: "mobile", metric: "server_response_ms" },
+        },
+        messages: {
+          PASS: { message: "Server response time is {{actualValue}}ms — fast backend delivery." },
+          WARNING: {
+            message: "Server response time is {{actualValue}}ms — backend response is somewhat slow.",
+            suggestion: "Enable edge caching/CDN, optimize database queries, and use server-side page caching.",
+          },
+          FAIL: {
+            message: "Server response time is {{actualValue}}ms — slow initial connection.",
+            suggestion: "Deploy on a high-speed CDN, configure full-page caching, and review hosting resource limits.",
           },
         },
       },

@@ -274,6 +274,9 @@ model User {
   updatedBranding     BrandingSetting[]    @relation("BrandingUpdater")
   updatedEmailTpls    EmailTemplate[]      @relation("EmailTplUpdater")
   apiUsage            ApiUsage[]
+  usageEvents         UsageEvent[]
+  bonusCredits        BonusCredit[]
+  billingAuditLogs    BillingAuditLog[]    @relation("BillingActor")
 
   @@index([role])
   @@index([plan])
@@ -814,25 +817,92 @@ model ReportSnapshot {
 // ----------------------------------------------------------------
 
 model Plan {
-  id                   String   @id @default(uuid()) @db.Uuid
-  key                  UserPlan @unique
-  name                 String
-  description          String?
-  priceMonthlyCents    Int      @default(0) @map("price_monthly_cents")
-  priceYearlyCents     Int      @default(0) @map("price_yearly_cents")
-  currency             String   @default("usd")
-  stripeProductId      String?  @map("stripe_product_id")
-  stripePriceMonthlyId String?  @map("stripe_price_monthly_id")
-  stripePriceYearlyId  String?  @map("stripe_price_yearly_id")
-  auditLimitPerMonth   Int      @default(3) @map("audit_limit_per_month")
-  isActive             Boolean  @default(true) @map("is_active")
-  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id                    String              @id @default(uuid()) @db.Uuid
+  key                   String              @unique
+  name                  String
+  description           String?
+  priceMonthlyCents     Int                 @default(0) @map("price_monthly_cents")
+  priceYearlyCents      Int                 @default(0) @map("price_yearly_cents")
+  currency              String              @default("usd")
+  stripeProductId       String?             @map("stripe_product_id")
+  stripePriceMonthlyId  String?             @map("stripe_price_monthly_id")
+  stripePriceYearlyId   String?             @map("stripe_price_yearly_id")
+  auditLimitPerMonth    Int                 @default(3) @map("audit_limit_per_month")
+  auditLimitType        String              @default("MONTHLY") @map("audit_limit_type") // MONTHLY, BILLING_CYCLE, LIFETIME, UNLIMITED
+  auditResetPeriod      String              @default("MONTHLY") @map("audit_reset_period") // MONTHLY, BILLING_CYCLE, NEVER
+  concurrentAuditsLimit Int                 @default(1) @map("concurrent_audits_limit")
+  autoRefundOnFailure   Boolean             @default(true) @map("auto_refund_on_failure")
+  trialDays             Int                 @default(0) @map("trial_days")
+  setupFeeCents         Int                 @default(0) @map("setup_fee_cents")
+  isActive              Boolean             @default(true) @map("is_active")
+  isPublic              Boolean             @default(true) @map("is_public")
+  isPopular             Boolean             @default(false) @map("is_popular")
+  badgeText             String?             @map("badge_text")
+  customCtaText         String?             @map("custom_cta_text")
+  customCtaUrl          String?             @map("custom_cta_url")
+  displayOrder          Int                 @default(0) @map("display_order")
+  adminNotes            String?             @map("admin_notes") @db.Text
+  createdAt             DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime            @updatedAt @map("updated_at") @db.Timestamptz
 
-  features      PlanFeature[]
-  subscriptions Subscription[]
+  features              PlanFeature[]
+  publicFeatures        PlanPublicFeature[]
+  prices                PlanPrice[]
+  entitlements          PlanEntitlement[]
+  subscriptions         Subscription[]
 
   @@map("plans")
+}
+
+model PlanPrice {
+  id            String   @id @default(uuid()) @db.Uuid
+  planId        String   @map("plan_id") @db.Uuid
+  interval      String   // "month" | "year" | "one_time"
+  intervalCount Int      @default(1) @map("interval_count")
+  amountCents   Int      @map("amount_cents")
+  currency      String   @default("usd")
+  stripePriceId String?  @map("stripe_price_id")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId])
+  @@index([stripePriceId])
+  @@map("plan_prices")
+}
+
+model PlanEntitlement {
+  id          String   @id @default(uuid()) @db.Uuid
+  planId      String   @map("plan_id") @db.Uuid
+  featureKey  String   @map("feature_key")
+  enabled     Boolean  @default(true)
+  limit       Int?     // null = unlimited
+  limitType   String   @default("MONTHLY") @map("limit_type") // MONTHLY, BILLING_CYCLE, LIFETIME, UNLIMITED
+  resetPeriod String   @default("MONTHLY") @map("reset_period") // MONTHLY, BILLING_CYCLE, NEVER
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, featureKey])
+  @@map("plan_entitlements")
+}
+
+model PlanPublicFeature {
+  id           String   @id @default(uuid()) @db.Uuid
+  planId       String   @map("plan_id") @db.Uuid
+  label        String
+  isIncluded   Boolean  @default(true) @map("is_included")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId, displayOrder])
+  @@map("plan_public_features")
 }
 
 model PlanFeature {
@@ -848,6 +918,67 @@ model PlanFeature {
 
   @@unique([planId, featureKey])
   @@map("plan_features")
+}
+
+enum UsageEventType {
+  AUDIT_RUN
+  AUDIT_REFUNDED
+  BONUS_CREDIT_GRANTED
+  BONUS_CREDIT_EXPIRED
+  MANUAL_RESET
+  OVERAGE_CHARGE
+}
+
+model UsageEvent {
+  id             String         @id @default(uuid()) @db.Uuid
+  userId         String         @map("user_id") @db.Uuid
+  subscriptionId String?        @map("subscription_id") @db.Uuid
+  reportId       String?        @map("report_id") @db.Uuid
+  type           UsageEventType
+  units          Int            @default(1)
+  featureKey     String         @default("WEBSITE_AUDIT") @map("feature_key")
+  description    String?
+  metadata       Json?
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, featureKey, createdAt])
+  @@index([userId, createdAt])
+  @@map("usage_events")
+}
+
+model BonusCredit {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  units          Int
+  remainingUnits Int       @map("remaining_units")
+  reason         String?
+  grantedById    String?   @map("granted_by_id") @db.Uuid
+  expiresAt      DateTime? @map("expires_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("bonus_credits")
+}
+
+model BillingAuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String   // plan.created, plan.updated, stripe.synced, subscription.canceled, credit.granted, etc.
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  metadata   Json?
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  actor User? @relation("BillingActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([entityType, entityId])
+  @@map("billing_audit_logs")
 }
 
 model Subscription {

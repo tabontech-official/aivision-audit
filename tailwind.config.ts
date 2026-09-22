@@ -64,6 +64,16 @@ const config: Config = {
         },
       },
       fontFamily: {
+        lazzer: [
+          "Lazzer",
+          "var(--font-inter)",
+          "Inter",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "sans-serif",
+        ],
         sans: [
           "var(--font-inter)",
           "Inter",
