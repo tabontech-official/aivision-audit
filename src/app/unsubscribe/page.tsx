@@ -75,9 +75,9 @@ export default async function UnsubscribePage({
         )}
         <Link
           href="/"
-          className="mt-6 inline-block rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+          className="mt-6 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
         >
-          Back to AuditFlow
+          Back to AI Vision Audit
         </Link>
       </div>
     </main>

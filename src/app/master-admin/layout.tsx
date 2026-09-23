@@ -5,7 +5,7 @@ import { DashboardTopBar } from "@/components/dashboard/top-bar";
 import { isDevToolsEnabled } from "@/lib/dev/tools";
 
 export const metadata: Metadata = {
-  title: { default: "Master Admin", template: "%s · Admin · AuditFlow" },
+  title: { default: "Master Admin", template: "%s · Admin · AI Vision Audit" },
 };
 
 export default async function MasterAdminLayout({

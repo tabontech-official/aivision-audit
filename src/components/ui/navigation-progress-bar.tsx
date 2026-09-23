@@ -84,7 +84,7 @@ function NavigationProgressBarInner() {
       className="fixed top-0 left-0 right-0 z-[9999] pointer-events-none h-[3px] overflow-hidden"
     >
       <div
-        className="h-full bg-gradient-to-r from-[#FF6B00] via-[#FF4D00] to-[#FF9E00] shadow-[0_0_12px_rgba(255,77,0,0.8)] transition-all duration-200 ease-out"
+        className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.7)] transition-all duration-200 ease-out"
         style={{
           width: `${progress}%`,
           opacity: progress === 100 ? 0 : 1,

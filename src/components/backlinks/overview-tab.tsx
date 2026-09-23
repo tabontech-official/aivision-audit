@@ -188,7 +188,7 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
               <div>
                 <div className="flex items-center justify-between gap-2 mb-2.5">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-[#FF4D00]">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#dff2ed] text-slate-900">
                       <IconComponent className="h-4 w-4" />
                     </div>
                     <span className="text-xs font-bold text-slate-600 truncate font-sans">
@@ -239,7 +239,7 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
                 <button
                   type="button"
                   onClick={() => onNavigateTab(card.tabAction)}
-                  className="text-[11px] font-bold text-[#FF4D00] hover:text-[#e04400] flex items-center gap-1 transition-colors cursor-pointer"
+                  className="text-[11px] font-bold text-slate-900 hover:text-emerald-700 flex items-center gap-1 transition-colors cursor-pointer"
                 >
                   <span>View Details</span>
                   <ExternalLink className="h-3 w-3" />
@@ -256,7 +256,7 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Percent className="h-4 w-4 text-[#FF4D00]" />
+              <Percent className="h-4 w-4 text-slate-900" />
               <h3 className="font-display text-sm font-bold text-slate-900">
                 Link Attribute Distribution
               </h3>
@@ -323,7 +323,7 @@ export function OverviewTab({ audit, onNavigateTab }: OverviewTabProps) {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ShieldAlert className="h-4 w-4 text-[#FF4D00]" />
+              <ShieldAlert className="h-4 w-4 text-slate-900" />
               <h3 className="font-display text-sm font-bold text-slate-900">
                 Link Health & Status
               </h3>

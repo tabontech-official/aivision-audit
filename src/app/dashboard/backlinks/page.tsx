@@ -5,7 +5,7 @@ import { getExistingBacklinkAudit, sanitizeDomain } from "@/services/backlinks/e
 import { BacklinksClientView } from "./backlinks-client";
 
 export const metadata: Metadata = {
-  title: "Backlinks Audit | The Rank Writers",
+  title: "Backlinks Audit | AI Vision Audit",
   description: "Comprehensive backlink analysis, domain authority, referring domains, anchor distribution, and link quality tracking.",
 };
 

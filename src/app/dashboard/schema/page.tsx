@@ -4,7 +4,7 @@ import { db } from "@/lib/db/client";
 import { SchemaDashboard } from "@/components/schema/schema-dashboard";
 
 export const metadata: Metadata = {
-  title: "Schema Markup & Rich Results Suite · The Rank Writers",
+  title: "Schema Markup & Rich Results Suite · AI Vision Audit",
   description: "Audit and generate Google-compliant JSON-LD structured data and rich results snippets.",
 };
 

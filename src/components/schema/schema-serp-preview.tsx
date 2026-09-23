@@ -92,7 +92,7 @@ export function SchemaSerpPreview({ url, domain, items }: SchemaSerpPreviewProps
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-sm font-bold text-slate-900 font-display flex items-center gap-2">
-            <Globe className="w-4 h-4 text-[#FF4D00]" />
+            <Globe className="w-4 h-4 text-slate-900" />
             Google SERP Rich Results Simulation
           </h3>
           <p className="text-xs text-slate-500 font-sans mt-0.5">
@@ -101,12 +101,12 @@ export function SchemaSerpPreview({ url, domain, items }: SchemaSerpPreviewProps
         </div>
 
         {/* Desktop / Mobile Toggle */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-[8px]">
+        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
           <button
             type="button"
             onClick={() => setDevice("desktop")}
             className={cn(
-              "flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-[6px] transition-colors cursor-pointer",
+              "flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer",
               device === "desktop"
                 ? "bg-white text-slate-900 shadow-2xs"
                 : "text-slate-500 hover:text-slate-900"
@@ -119,7 +119,7 @@ export function SchemaSerpPreview({ url, domain, items }: SchemaSerpPreviewProps
             type="button"
             onClick={() => setDevice("mobile")}
             className={cn(
-              "flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-[6px] transition-colors cursor-pointer",
+              "flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer",
               device === "mobile"
                 ? "bg-white text-slate-900 shadow-2xs"
                 : "text-slate-500 hover:text-slate-900"
@@ -134,13 +134,13 @@ export function SchemaSerpPreview({ url, domain, items }: SchemaSerpPreviewProps
       {/* SERP Preview Box */}
       <div
         className={cn(
-          "bg-slate-50/70 border border-slate-200 rounded-[8px] p-5",
+          "bg-slate-50/70 border border-slate-200 rounded-xl p-5",
           device === "mobile" ? "max-w-md mx-auto" : "w-full"
         )}
       >
         {/* Favicon + Domain Breadcrumb Line */}
         <div className="flex items-center gap-2 text-xs text-slate-600 mb-1">
-          <div className="w-4 h-4 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center text-[10px] font-bold text-[#FF4D00]">
+          <div className="w-4 h-4 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-[10px] font-bold text-white">
             {domain.charAt(0).toUpperCase()}
           </div>
           <div className="truncate font-normal flex items-center gap-1">

@@ -1,13 +1,12 @@
 import Link from "next/link";
+import { BrandIcon } from "@/components/ui/brand-icon";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <Link href="/" className="mb-8 flex items-center gap-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-lg font-bold text-white">
-          A
-        </div>
-        <span className="text-xl font-semibold tracking-tight text-ink">AuditFlow</span>
+      <Link href="/" className="mb-8 flex items-center gap-2.5">
+        <BrandIcon className="w-8 h-8" />
+        <span className="text-xl font-bold font-lazzer tracking-tight text-slate-900">AI Vision Audit</span>
       </Link>
       <div className="card w-full max-w-md animate-fade-in p-8">{children}</div>
       <p className="mt-6 text-center text-xs text-ink-muted">

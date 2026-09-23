@@ -7,7 +7,7 @@ import { db } from "@/lib/db/client";
  */
 
 const DEFAULTS = {
-  product_name: "AuditFlow",
+  product_name: "AI Vision Audit",
   support_email: "support@example.com",
   free_audit_limit: 3,
   premium_audit_limit: 50,

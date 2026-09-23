@@ -295,7 +295,7 @@ export function RecommendationsTab({
                 : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
             )}
           >
-            <Filter className="h-3.5 w-3.5 text-[#FF4D00]" />
+            <Filter className={cn("h-3.5 w-3.5", selectedSeverity !== "ALL" ? "text-white" : "text-slate-700")} />
             <span>Filter: {currentOption.label} ({currentOption.count})</span>
             <ChevronDown className={cn("h-3.5 w-3.5 transition-transform opacity-70", isFilterDropdownOpen && "rotate-180")} />
           </button>

@@ -6,7 +6,7 @@ import { DashboardTopBar } from "@/components/dashboard/top-bar";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 
 export const metadata: Metadata = {
-  title: { default: "Dashboard", template: "%s · The Rank Writers" },
+  title: { default: "Dashboard", template: "%s · AI Vision Audit" },
 };
 
 export default async function DashboardLayout({

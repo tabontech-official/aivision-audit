@@ -44,7 +44,7 @@ export function SchemaDetectedTree({ items }: SchemaDetectedTreeProps) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-sm font-bold text-slate-900 font-display flex items-center gap-2">
-            <Code2 className="w-4 h-4 text-[#FF4D00]" />
+            <Code2 className="w-4 h-4 text-slate-900" />
             Detected Schema Items ({items.length})
           </h3>
           <p className="text-xs text-slate-500 font-sans mt-0.5">
@@ -56,7 +56,7 @@ export function SchemaDetectedTree({ items }: SchemaDetectedTreeProps) {
           <button
             type="button"
             onClick={() => setExpandedIds(new Set(items.map((i) => i.id)))}
-            className="text-xs font-bold text-slate-600 hover:text-[#FF4D00] transition-colors cursor-pointer"
+            className="text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
           >
             Expand All
           </button>
@@ -64,7 +64,7 @@ export function SchemaDetectedTree({ items }: SchemaDetectedTreeProps) {
           <button
             type="button"
             onClick={() => setExpandedIds(new Set())}
-            className="text-xs font-bold text-slate-600 hover:text-[#FF4D00] transition-colors cursor-pointer"
+            className="text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
           >
             Collapse All
           </button>

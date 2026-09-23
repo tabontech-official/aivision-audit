@@ -105,7 +105,7 @@ export function AnchorsTab({ anchors, totalBacklinks }: AnchorsTabProps) {
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <PieChart className="h-4 w-4 text-[#FF4D00]" />
+            <PieChart className="h-4 w-4 text-slate-900" />
             <h3 className="font-display text-sm font-bold text-slate-900">
               Anchor Text Classification & Profile Diversity
             </h3>
@@ -145,7 +145,7 @@ export function AnchorsTab({ anchors, totalBacklinks }: AnchorsTabProps) {
               className={cn(
                 "p-3 rounded-xl border text-left transition-all cursor-pointer font-sans",
                 selectedClass === item.key
-                  ? "border-[#FF4D00] bg-orange-50/50 shadow-2xs"
+                  ? "border-slate-900 bg-slate-100 shadow-2xs"
                   : "border-slate-100 bg-slate-50/70 hover:bg-slate-100/70"
               )}
             >
@@ -176,7 +176,7 @@ export function AnchorsTab({ anchors, totalBacklinks }: AnchorsTabProps) {
               setCurrentPage(1);
             }}
             placeholder="Search anchor keywords..."
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#FF4D00] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FF4D00]/20 font-sans"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-slate-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-300/40 font-sans"
           />
         </div>
 
@@ -284,7 +284,7 @@ export function AnchorsTab({ anchors, totalBacklinks }: AnchorsTabProps) {
                         <div className="h-2 flex-1 rounded-full bg-slate-100 overflow-hidden">
                           <div
                             style={{ width: `${Math.min(100, item.percentage * 2)}%` }}
-                            className="h-full bg-[#FF4D00] rounded-full"
+                            className="h-full bg-slate-900 rounded-full"
                           />
                         </div>
                         <span className="text-xs font-bold text-slate-800 tabular-nums w-10 text-right">

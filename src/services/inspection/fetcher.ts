@@ -23,7 +23,7 @@ const MAX_BODY_BYTES = 10 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 15_000;
 
 export const AUDIT_USER_AGENT =
-  "Mozilla/5.0 (compatible; AuditFlowBot/1.0; +https://auditflow.example/bot)";
+  "Mozilla/5.0 (compatible; AIVisionAuditBot/1.0; +https://aivisionaudit.com/bot)";
 
 /**
  * undici Agent whose DNS lookup rejects non-public IPs at connect time.

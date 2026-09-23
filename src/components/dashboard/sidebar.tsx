@@ -219,11 +219,11 @@ export function DashboardSidebar({
         <div className="flex h-[56px] items-center gap-2.5 px-4 border-b border-slate-100 shrink-0 bg-white">
           <img
             src="/images/logo.png"
-            alt="The Rank Writers Logo"
+            alt="AI Vision Audit Logo"
             className="h-7 w-7 object-contain shrink-0"
           />
           <span className="font-lazzer text-sm sm:text-base font-bold tracking-tight text-slate-900 whitespace-nowrap">
-            The Rank Writers
+            AI Vision Audit
           </span>
         </div>
 

@@ -160,7 +160,7 @@ export function BacklinksClientView({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50 text-[#FF4D00] shrink-0">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#dff2ed] text-slate-900 shrink-0">
                 <Link2 className="h-4 w-4" />
               </div>
               <div>
@@ -207,7 +207,7 @@ export function BacklinksClientView({
                 type="button"
                 onClick={handleManualRefresh}
                 disabled={isPending || isResuming}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] px-3.5 py-1.5 text-xs font-display font-bold text-white shadow-xs hover:opacity-95 transition-opacity cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-black transition-colors cursor-pointer disabled:opacity-50"
               >
                 <RotateCw className={cn("h-3 w-3", (isPending && !isResuming) && "animate-spin")} />
                 <span>
@@ -230,7 +230,7 @@ export function BacklinksClientView({
 
             return [
               { id: "overview", label: "Overview", icon: ShieldCheck, badgeBg: "bg-blue-600", count: undefined },
-              { id: "recommendations", label: "Recommendations", icon: Sparkles, badgeBg: "bg-orange-500", count: audit?.recommendations?.length ? audit.recommendations.length : undefined },
+              { id: "recommendations", label: "Recommendations", icon: Sparkles, badgeBg: "bg-teal-600", count: audit?.recommendations?.length ? audit.recommendations.length : undefined },
               { id: "backlinks", label: "Backlinks", icon: Link2, badgeBg: "bg-purple-600", count: detailedFetchedCount > 0 ? detailedFetchedCount : undefined },
               { id: "referring_domains", label: "Referring Domains", icon: Globe2, badgeBg: "bg-slate-700", count: audit?.referringDomains ? audit.referringDomains : undefined },
               { id: "anchors", label: "Anchor Text", icon: Tag, badgeBg: "bg-rose-600", count: audit?.anchors?.length ? audit.anchors.length : undefined },
@@ -321,7 +321,7 @@ export function BacklinksClientView({
                   type="button"
                   onClick={handleManualRefresh}
                   disabled={isPending}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] px-5 py-2.5 text-sm font-display font-bold text-white shadow-xs hover:opacity-95 transition-opacity cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-black px-5 py-2.5 text-sm font-bold text-white shadow-xs transition-colors cursor-pointer disabled:opacity-50"
                 >
                   <RotateCw className={cn("h-4 w-4", isPending && "animate-spin")} />
                   <span>{isPending ? "Fetching..." : `Run Backlink Analysis for ${initialDomain}`}</span>

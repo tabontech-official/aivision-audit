@@ -97,7 +97,7 @@ export async function getDynamicStripeClient(): Promise<Stripe | null> {
 
   return new Stripe(secretKey, {
     typescript: true,
-    appInfo: { name: "The Rank Writers", version: "2.0.0" },
+    appInfo: { name: "AI Vision Audit", version: "2.0.0" },
   });
 }
 

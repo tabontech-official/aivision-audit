@@ -57,10 +57,10 @@ export function AdminSidebar({
     <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
       <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-[#dff2ed]">
-          TRW
+          AVA
         </div>
         <div className="min-w-0">
-          <div className="truncate text-sm font-bold leading-tight text-slate-900">The Rank Writers</div>
+          <div className="truncate text-sm font-bold leading-tight text-slate-900">AI Vision Audit</div>
           <div className="text-[11px] font-medium leading-tight text-slate-500">Master Admin</div>
         </div>
       </div>

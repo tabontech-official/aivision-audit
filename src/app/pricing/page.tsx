@@ -6,7 +6,7 @@ import { PricingTable } from "@/components/pricing/pricing-table";
 import { Sparkles, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Pricing & Plans · The Rank Writers",
+  title: "Pricing & Plans · AI Vision Audit",
   description: "Simple, transparent pricing for AI website audits, Core Web Vitals, and technical SEO suites.",
 };
 
@@ -44,10 +44,10 @@ export default async function PricingPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-[#dff2ed]">
-              TRW
+              AVA
             </div>
             <span className="text-base font-bold tracking-tight text-slate-900">
-              The Rank Writers
+              AI Vision Audit
             </span>
           </Link>
 
@@ -115,7 +115,7 @@ export default async function PricingPage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-8 text-center text-xs text-slate-500">
-        <p>© {new Date().getFullYear()} The Rank Writers. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} AI Vision Audit. All rights reserved.</p>
       </footer>
     </div>
   );

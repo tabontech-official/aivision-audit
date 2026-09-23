@@ -167,7 +167,7 @@ export function AuditUrlForm({
           type="submit"
           disabled={pending}
           className={cn(
-            "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#FF4D00] font-semibold text-white shadow-sm transition-colors hover:bg-[#E64500] disabled:cursor-not-allowed disabled:bg-orange-300",
+            "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#181818] font-semibold text-white shadow-xs transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-slate-300 font-lazzer cursor-pointer",
             isLg ? "px-6 py-3 text-sm" : "px-4 py-2 text-sm",
           )}
         >

@@ -61,7 +61,7 @@ export function ReferringDomainsTab({ referringDomains }: ReferringDomainsTabPro
               setCurrentPage(1);
             }}
             placeholder="Search referring domains..."
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#FF4D00] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FF4D00]/20 font-sans"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-slate-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-300/40 font-sans"
           />
         </div>
 
@@ -123,7 +123,7 @@ export function ReferringDomainsTab({ referringDomains }: ReferringDomainsTabPro
                       {/* Domain Name */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-[#FF4D00] shrink-0 font-bold text-xs">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#dff2ed] text-slate-900 shrink-0 font-bold text-xs">
                             {item.domain.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -131,7 +131,7 @@ export function ReferringDomainsTab({ referringDomains }: ReferringDomainsTabPro
                               href={`https://${item.domain}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="font-bold text-slate-900 hover:text-[#FF4D00] flex items-center gap-1.5 transition-colors"
+                              className="font-bold text-slate-900 hover:text-emerald-700 flex items-center gap-1.5 transition-colors"
                             >
                               <span>{item.domain}</span>
                               <ExternalLink className="h-3 w-3 text-slate-400" />

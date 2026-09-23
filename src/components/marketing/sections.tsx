@@ -313,7 +313,7 @@ export function Features() {
 
           {/* Main Headline */}
           <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-[#111827] tracking-tight font-lazzer">
-            The Rank Writers’ Core Capabilities
+            AI Vision Audit’s Core Capabilities
           </h2>
 
           {/* Description */}
@@ -696,19 +696,14 @@ export function OtherFeatures() {
                 }`}
               >
                 <div>
-                  {/* Icon, Title & Badge */}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-[#dff2ed] text-slate-900 shrink-0">
-                        <Icon className="h-4.5 w-4.5 text-slate-900" />
-                      </div>
-                      <h3 className="text-base sm:text-lg font-bold text-[#111827] font-lazzer">
-                        {item.title}
-                      </h3>
+                  {/* Top Row: Icon on left, Badge on right */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-slate-900 shrink-0">
+                      <Icon className="h-5 w-5 text-slate-900" />
                     </div>
 
                     <span
-                      className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${
+                      className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shrink-0 ${
                         item.isLive
                           ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                           : "bg-amber-100 text-amber-800 border border-amber-300"
@@ -718,8 +713,13 @@ export function OtherFeatures() {
                     </span>
                   </div>
 
+                  {/* Title (Full Width - no line breaks) */}
+                  <h3 className="mt-3.5 text-base sm:text-[17px] font-bold text-[#111827] font-lazzer tracking-tight">
+                    {item.title}
+                  </h3>
+
                   {/* Body Subtitle */}
-                  <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                  <p className="mt-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
                     {item.body}
                   </p>
 
@@ -1439,7 +1439,7 @@ export function Pricing() {
 const FAQS = [
   {
     q: "Do I need to install anything on my website?",
-    a: "No. The Rank Writers analyzes your live public website from the outside — the same way search engines, Googlebot, and visitors see it. No scripts, plugins, or code changes are required.",
+    a: "No. AI Vision Audit analyzes your live public website from the outside — the same way search engines, Googlebot, and visitors see it. No scripts, plugins, or code changes are required.",
   },
   {
     q: "Is the free audit really free?",
@@ -1726,7 +1726,7 @@ export function MarketingFooter() {
             <Link href="/" className="flex items-center gap-2.5">
               <BrandIcon className="h-8 w-8 text-[rgb(24,30,21)] shrink-0" />
               <span className="font-display text-xl font-bold text-slate-900 tracking-tight whitespace-nowrap font-lazzer">
-                The Rank Writers
+                AI Vision Audit
               </span>
             </Link>
 
@@ -1847,7 +1847,7 @@ export function MarketingFooter() {
 
         {/* Bottom Bar */}
         <div className="mt-16 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500 whitespace-nowrap">
-          <p>© {new Date().getFullYear()} The Rank Writers. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} AI Vision Audit. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>

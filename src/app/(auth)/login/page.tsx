@@ -33,10 +33,10 @@ export default async function LoginPage({
       </div>
       <LoginForm returnTo={returnTo} />
       <p className="text-center text-sm text-ink-secondary">
-        New to AuditFlow?{" "}
+        New to AI Vision Audit?{" "}
         <Link
           href={returnTo ? `/signup?next=${encodeURIComponent(returnTo)}` : "/signup"}
-          className="font-medium text-brand-600 hover:text-brand-700"
+          className="font-medium text-emerald-600 hover:text-emerald-700"
         >
           Create an account
         </Link>

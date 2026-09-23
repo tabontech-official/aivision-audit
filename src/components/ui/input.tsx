@@ -27,7 +27,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           aria-describedby={describedBy}
           className={cn(
             "h-12 w-full rounded-xl border bg-white px-4 text-sm sm:text-base text-slate-900 placeholder:text-slate-400",
-            "transition-all focus:border-[#FF4D00] focus:outline-none focus:ring-2 focus:ring-[#FF4D00]/25",
+            "transition-all focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/15",
             error ? "border-red-500" : "border-slate-200 hover:border-slate-300",
             className,
           )}

@@ -36,12 +36,12 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs font-sans">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs font-lazzer">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div>
           <h3 className="text-sm font-bold text-slate-900 font-display flex items-center gap-2">
-            <Filter className="w-4 h-4 text-[#FF4D00]" />
-            Validation Findings & Action Items ({issues.length})
+            <Filter className="w-4 h-4 text-slate-900" />
+            Validation Findings &amp; Action Items ({issues.length})
           </h3>
           <p className="text-xs text-slate-500 font-sans mt-0.5">
             Resolve required errors and recommended enhancements to maximize rich snippet visibility
@@ -54,7 +54,7 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
             type="button"
             onClick={() => setFilter("ALL")}
             className={cn(
-              "px-3 py-1 text-xs font-bold rounded-[8px] transition-colors cursor-pointer",
+              "px-3 py-1 text-xs font-bold rounded-xl transition-colors cursor-pointer",
               filter === "ALL"
                 ? "bg-slate-900 text-white shadow-2xs"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -66,7 +66,7 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
             type="button"
             onClick={() => setFilter("ERROR")}
             className={cn(
-              "px-3 py-1 text-xs font-bold rounded-[8px] transition-colors cursor-pointer",
+              "px-3 py-1 text-xs font-bold rounded-xl transition-colors cursor-pointer",
               filter === "ERROR"
                 ? "bg-rose-600 text-white shadow-2xs"
                 : "bg-rose-50 text-rose-700 hover:bg-rose-100"
@@ -78,7 +78,7 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
             type="button"
             onClick={() => setFilter("WARNING")}
             className={cn(
-              "px-3 py-1 text-xs font-bold rounded-[8px] transition-colors cursor-pointer",
+              "px-3 py-1 text-xs font-bold rounded-xl transition-colors cursor-pointer",
               filter === "WARNING"
                 ? "bg-amber-600 text-white shadow-2xs"
                 : "bg-amber-50 text-amber-700 hover:bg-amber-100"
@@ -90,10 +90,10 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
             type="button"
             onClick={() => setFilter("OPPORTUNITY")}
             className={cn(
-              "px-3 py-1 text-xs font-bold rounded-[8px] transition-colors cursor-pointer",
+              "px-3 py-1 text-xs font-bold rounded-xl transition-colors cursor-pointer",
               filter === "OPPORTUNITY"
-                ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-2xs"
-                : "bg-orange-50 text-[#FF4D00] hover:bg-orange-100"
+                ? "bg-teal-700 text-white shadow-2xs"
+                : "bg-teal-50 text-teal-800 hover:bg-teal-100"
             )}
           >
             Opportunities ({opportunityCount})
@@ -111,12 +111,12 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
             <div
               key={idx}
               className={cn(
-                "border rounded-[8px] p-4 transition-all",
+                "border rounded-xl p-4 transition-all",
                 isError
                   ? "border-rose-200 bg-rose-50/40"
                   : isWarning
                   ? "border-amber-200 bg-amber-50/40"
-                  : "border-orange-200 bg-orange-50/30"
+                  : "border-teal-200 bg-teal-50/30"
               )}
             >
               <div className="flex items-start justify-between gap-3">
@@ -127,24 +127,24 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
                     ) : isWarning ? (
                       <AlertTriangle className="w-4 h-4 text-amber-600" />
                     ) : (
-                      <Layers className="w-4 h-4 text-[#FF4D00]" />
+                      <Layers className="w-4 h-4 text-teal-700" />
                     )}
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span
                         className={cn(
-                          "text-[11px] font-bold uppercase px-2 py-0.5 rounded-[6px]",
+                          "text-[11px] font-bold uppercase px-2 py-0.5 rounded-md",
                           isError
                             ? "bg-rose-100 text-rose-800"
                             : isWarning
                             ? "bg-amber-100 text-amber-800"
-                            : "bg-orange-100 text-[#FF4D00]"
+                            : "bg-teal-100 text-teal-800"
                         )}
                       >
                         {issue.severity}
                       </span>
-                      <span className="text-xs font-mono font-bold text-slate-700 bg-slate-200/70 px-2 py-0.5 rounded-[6px]">
+                      <span className="text-xs font-mono font-bold text-slate-700 bg-slate-200/70 px-2 py-0.5 rounded-md">
                         @{issue.schemaType}
                       </span>
                       {issue.field && (
@@ -158,8 +158,8 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
                       {issue.message}
                     </p>
 
-                    <div className="bg-white border border-slate-200 rounded-[8px] p-2.5 text-xs text-slate-600 flex items-start gap-2 font-sans">
-                      <ArrowRight className="w-3.5 h-3.5 text-[#FF4D00] mt-0.5 shrink-0" />
+                    <div className="bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-600 flex items-start gap-2 font-sans">
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-900 mt-0.5 shrink-0" />
                       <div>
                         <span className="font-bold text-slate-800">How to Fix: </span>
                         {issue.recommendation}

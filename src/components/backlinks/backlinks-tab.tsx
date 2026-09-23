@@ -145,7 +145,7 @@ export function BacklinksTab({
               setCurrentPage(1);
             }}
             placeholder="Search by domain, URL, target, or anchor text..."
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#FF4D00] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FF4D00]/20 font-sans"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-slate-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-300/40 font-sans"
           />
         </div>
 
@@ -230,7 +230,7 @@ export function BacklinksTab({
         </div>
 
         <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500 font-sans">
-          {isPending && <RotateCw className="h-3.5 w-3.5 animate-spin text-[#FF4D00]" />}
+          {isPending && <RotateCw className="h-3.5 w-3.5 animate-spin text-slate-900" />}
           <span>
             Total: <strong className="text-slate-900 font-bold">{totalCount.toLocaleString()}</strong> backlinks
           </span>
@@ -307,7 +307,7 @@ export function BacklinksTab({
                             href={item.referringUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[11px] text-slate-500 hover:text-[#FF4D00] truncate block flex items-center gap-1"
+                            className="text-[11px] text-slate-500 hover:text-emerald-700 truncate block flex items-center gap-1"
                           >
                             <span className="truncate">{item.referringUrl}</span>
                             <ExternalLink className="h-2.5 w-2.5 shrink-0" />
@@ -326,7 +326,7 @@ export function BacklinksTab({
                           href={item.targetUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[11px] text-slate-400 hover:text-[#FF4D00] truncate block flex items-center gap-1"
+                          className="text-[11px] text-slate-400 hover:text-emerald-700 truncate block flex items-center gap-1"
                         >
                           <span className="truncate">{item.targetUrl}</span>
                           <ExternalLink className="h-2.5 w-2.5 shrink-0" />
@@ -406,7 +406,7 @@ export function BacklinksTab({
                       <button
                         type="button"
                         onClick={() => setInspectItem(item)}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-[#FF4D00] p-1 rounded transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-slate-900 p-1 rounded transition-colors cursor-pointer"
                         title="View Backlink Details"
                       >
                         <Eye className="h-3.5 w-3.5" />
@@ -435,7 +435,7 @@ export function BacklinksTab({
               of <strong className="text-slate-800 font-medium">{totalCount.toLocaleString()}</strong> backlinks
             </span>
             {isPending && (
-              <RotateCw className="h-3 w-3 animate-spin text-[#FF4D00]" />
+              <RotateCw className="h-3 w-3 animate-spin text-slate-900" />
             )}
           </div>
 
@@ -506,7 +506,7 @@ export function BacklinksTab({
           <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl space-y-4 border border-slate-100 relative">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <Globe2 className="h-5 w-5 text-[#FF4D00]" />
+                <Globe2 className="h-5 w-5 text-slate-900" />
                 <h3 className="font-display text-base font-bold text-slate-900">
                   Backlink Details: {inspectItem.referringDomain}
                 </h3>
@@ -527,7 +527,7 @@ export function BacklinksTab({
                   href={inspectItem.referringUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-semibold text-slate-800 hover:text-[#FF4D00] break-all block flex items-center gap-1"
+                  className="text-xs font-semibold text-slate-800 hover:text-emerald-700 break-all block flex items-center gap-1"
                 >
                   <span>{inspectItem.referringUrl}</span>
                   <ExternalLink className="h-3 w-3 shrink-0" />
@@ -540,7 +540,7 @@ export function BacklinksTab({
                   href={inspectItem.targetUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-semibold text-slate-800 hover:text-[#FF4D00] break-all block flex items-center gap-1"
+                  className="text-xs font-semibold text-slate-800 hover:text-emerald-700 break-all block flex items-center gap-1"
                 >
                   <span>{inspectItem.targetUrl}</span>
                   <ExternalLink className="h-3 w-3 shrink-0" />

@@ -92,7 +92,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
         <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
           <BrandIcon className="h-8 w-8 text-[rgb(24,30,21)] shrink-0" />
           <span className="text-[18px] sm:text-[19px] font-bold tracking-tight text-[rgb(24,30,21)] font-lazzer">
-            The Rank Writers
+            AI Vision Audit
           </span>
         </Link>
 
@@ -106,7 +106,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           >
             <button
               type="button"
-              className={`flex items-center gap-1.5 px-3 py-1.5 font-lazzer text-[16px] font-[600] leading-[19.2px] transition-colors rounded-lg ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 font-lazzer text-[16px] font-[600] leading-[19.2px] transition-colors rounded-lg focus:outline-none focus-visible:outline-none focus:ring-0 ${
                 activeDropdown === "features"
                   ? "text-black font-bold"
                   : "text-[rgb(24,30,21)] hover:text-black"
@@ -129,12 +129,12 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                       onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3 rounded-lg p-1 transition"
                     >
-                      <div className="mt-0.5 shrink-0 text-[#FF4D00]">
-                        <Search className="h-5 w-5" strokeWidth={2} />
+                      <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-[rgb(24,30,21)] shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                        <Search className="h-4.5 w-4.5" strokeWidth={2} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
+                          <span className="text-[15px] font-bold text-slate-900 group-hover:text-black transition-colors">
                             SEO Health Check
                           </span>
                           <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-sm border border-emerald-200">
@@ -152,12 +152,12 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                       onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3 rounded-lg p-1 transition"
                     >
-                      <div className="mt-0.5 shrink-0 text-[#FF4D00]">
-                        <Layers className="h-5 w-5" strokeWidth={2} />
+                      <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-[rgb(24,30,21)] shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                        <Layers className="h-4.5 w-4.5" strokeWidth={2} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
+                          <span className="text-[15px] font-bold text-slate-900 group-hover:text-black transition-colors">
                             Schema Markup Suite
                           </span>
                           <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-sm border border-emerald-200">
@@ -175,12 +175,12 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                       onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3 rounded-lg p-1 transition"
                     >
-                      <div className="mt-0.5 shrink-0 text-[#FF4D00]">
-                        <Gauge className="h-5 w-5" strokeWidth={2} />
+                      <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-[rgb(24,30,21)] shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                        <Gauge className="h-4.5 w-4.5" strokeWidth={2} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
+                          <span className="text-[15px] font-bold text-slate-900 group-hover:text-black transition-colors">
                             Speed &amp; Core Vitals
                           </span>
                           <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-sm border border-emerald-200">
@@ -198,12 +198,12 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                       onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3 rounded-lg p-1 transition"
                     >
-                      <div className="mt-0.5 shrink-0 text-[#FF4D00]">
-                        <ShieldCheck className="h-5 w-5" strokeWidth={2} />
+                      <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-[rgb(24,30,21)] shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                        <ShieldCheck className="h-4.5 w-4.5" strokeWidth={2} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
+                          <span className="text-[15px] font-bold text-slate-900 group-hover:text-black transition-colors">
                             Security &amp; SSL Trust
                           </span>
                           <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-sm border border-emerald-200">
@@ -217,8 +217,8 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                     </Link>
 
                     <div className="flex items-start gap-3 rounded-lg p-1 opacity-75">
-                      <div className="mt-0.5 shrink-0 text-slate-400">
-                        <BarChart2 className="h-5 w-5" strokeWidth={2} />
+                      <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-slate-100 text-slate-500 shrink-0">
+                        <BarChart2 className="h-4.5 w-4.5" strokeWidth={2} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -236,8 +236,8 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                     </div>
 
                     <div className="flex items-start gap-3 rounded-lg p-1 opacity-75">
-                      <div className="mt-0.5 shrink-0 text-slate-400">
-                        <Globe className="h-5 w-5" strokeWidth={2} />
+                      <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-slate-100 text-slate-500 shrink-0">
+                        <Globe className="h-4.5 w-4.5" strokeWidth={2} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           >
             <button
               type="button"
-              className={`flex items-center gap-1.5 px-3 py-1.5 font-lazzer text-[16px] font-[600] leading-[19.2px] transition-colors rounded-lg ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 font-lazzer text-[16px] font-[600] leading-[19.2px] transition-colors rounded-lg focus:outline-none focus-visible:outline-none focus:ring-0 ${
                 activeDropdown === "useCases"
                   ? "text-black font-bold"
                   : "text-[rgb(24,30,21)] hover:text-black"
@@ -289,9 +289,9 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                       href="#product"
                       className="group flex items-start gap-3.5 rounded-lg transition"
                     >
-                      <div className="mt-0.5 shrink-0 text-[#FF4D00]">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-[rgb(24,30,21)] shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
                         <svg
-                          className="h-5 w-5"
+                          className="h-4.5 w-4.5"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -307,7 +307,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                         </svg>
                       </div>
                       <div>
-                        <div className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
+                        <div className="text-[15px] font-bold text-slate-900 group-hover:text-black transition-colors">
                           Content-Led Companies
                         </div>
                         <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
@@ -320,9 +320,9 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                       href="#product"
                       className="group flex items-start gap-3.5 rounded-lg transition"
                     >
-                      <div className="mt-0.5 shrink-0 text-[#FF4D00]">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-[rgb(24,30,21)] shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
                         <svg
-                          className="h-5 w-5"
+                          className="h-4.5 w-4.5"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -330,13 +330,13 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         >
-                          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6l-3-4z" />
                           <line x1="3" y1="6" x2="21" y2="6" />
                           <path d="M16 10a4 4 0 0 1-8 0" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
+                        <div className="text-[15px] font-bold text-slate-900 group-hover:text-black transition-colors">
                           E-commerce Brands
                         </div>
                         <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
@@ -349,9 +349,9 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                       href="#product"
                       className="group flex items-start gap-3.5 rounded-lg transition"
                     >
-                      <div className="mt-0.5 shrink-0 text-[#FF4D00]">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-[rgb(24,30,21)] shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
                         <svg
-                          className="h-5 w-5"
+                          className="h-4.5 w-4.5"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -367,7 +367,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                         </svg>
                       </div>
                       <div>
-                        <div className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
+                        <div className="text-[15px] font-bold text-slate-900 group-hover:text-black transition-colors">
                           Growth Agencies
                         </div>
                         <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
@@ -380,9 +380,9 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                       href="#product"
                       className="group flex items-start gap-3.5 rounded-lg transition"
                     >
-                      <div className="mt-0.5 shrink-0 text-[#FF4D00]">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-[rgb(24,30,21)] shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
                         <svg
-                          className="h-5 w-5"
+                          className="h-4.5 w-4.5"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -396,7 +396,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                         </svg>
                       </div>
                       <div>
-                        <div className="text-[15px] font-bold text-slate-900 group-hover:text-[#FF4D00] transition-colors">
+                        <div className="text-[15px] font-bold text-slate-900 group-hover:text-black transition-colors">
                           SaaS Marketers
                         </div>
                         <p className="mt-1 text-[13px] leading-relaxed text-slate-500">

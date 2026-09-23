@@ -63,7 +63,7 @@ export function SchemaGenerator() {
       { name: "Headphones", url: "https://example.com/products/headphones" },
     ],
     // Software State
-    softName: "AuditFlow Pro",
+    softName: "AI Vision Audit Pro",
     softOs: "Web, macOS, Windows",
     softCategory: "BusinessApplication",
     softPrice: "49.00",
@@ -161,14 +161,14 @@ export function SchemaGenerator() {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs font-sans">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs font-lazzer">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
-            <FileText className="w-5 h-5 text-[#FF4D00]" />
+            <FileText className="w-5 h-5 text-slate-900" />
             Interactive Schema Generator
           </h3>
-          <p className="text-xs text-slate-500 font-sans mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Create 100% valid, Google-compliant JSON-LD structured data in seconds
           </p>
         </div>
@@ -179,7 +179,7 @@ export function SchemaGenerator() {
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value as SchemaGeneratorInput["type"])}
-            className="px-3 py-1.5 text-xs font-bold rounded-[8px] border border-slate-200 bg-white text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF4D00] cursor-pointer shadow-2xs"
+            className="px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300/40 focus:border-slate-500 cursor-pointer shadow-2xs"
           >
             <option value="FAQPage">FAQ Page</option>
             <option value="Organization">Organization / Company</option>
@@ -203,7 +203,7 @@ export function SchemaGenerator() {
               </div>
 
               {formData.questions.map((q: any, idx: number) => (
-                <div key={idx} className="p-3.5 bg-slate-50 border border-slate-200 rounded-[8px] space-y-2">
+                <div key={idx} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-500 uppercase">Question #{idx + 1}</span>
                     {formData.questions.length > 1 && (
@@ -230,7 +230,7 @@ export function SchemaGenerator() {
                       updateField("questions", copy);
                     }}
                     placeholder="Enter question"
-                    className="w-full text-xs px-3 py-2 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                    className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                   />
                   <textarea
                     value={q.answer}
@@ -241,7 +241,7 @@ export function SchemaGenerator() {
                     }}
                     placeholder="Enter answer"
                     rows={2}
-                    className="w-full text-xs px-3 py-2 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                    className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                   />
                 </div>
               ))}
@@ -252,7 +252,7 @@ export function SchemaGenerator() {
                 onClick={() =>
                   updateField("questions", [...formData.questions, { question: "New Question?", answer: "New Answer." }])
                 }
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-display font-bold text-[#FF4D00] bg-orange-50/80 hover:bg-orange-100/90 border border-orange-200/80 rounded-[8px] transition-colors cursor-pointer shadow-2xs"
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-bold text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl transition-colors cursor-pointer shadow-2xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Question</span>
@@ -269,7 +269,7 @@ export function SchemaGenerator() {
                   type="text"
                   value={formData.orgName}
                   onChange={(e) => updateField("orgName", e.target.value)}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                 />
               </div>
               <div>
@@ -278,7 +278,7 @@ export function SchemaGenerator() {
                   type="url"
                   value={formData.orgUrl}
                   onChange={(e) => updateField("orgUrl", e.target.value)}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                 />
               </div>
               <div>
@@ -287,7 +287,7 @@ export function SchemaGenerator() {
                   type="url"
                   value={formData.orgLogo}
                   onChange={(e) => updateField("orgLogo", e.target.value)}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                 />
               </div>
               <div>
@@ -296,7 +296,7 @@ export function SchemaGenerator() {
                   value={formData.orgSameAs}
                   onChange={(e) => updateField("orgSameAs", e.target.value)}
                   rows={3}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 font-mono focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 font-mono focus:outline-none focus:border-slate-500"
                 />
               </div>
             </div>
@@ -311,7 +311,7 @@ export function SchemaGenerator() {
                   type="text"
                   value={formData.bizName}
                   onChange={(e) => updateField("bizName", e.target.value)}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -321,7 +321,7 @@ export function SchemaGenerator() {
                     type="text"
                     value={formData.bizPhone}
                     onChange={(e) => updateField("bizPhone", e.target.value)}
-                    className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                    className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                   />
                 </div>
                 <div>
@@ -331,7 +331,7 @@ export function SchemaGenerator() {
                     value={formData.bizPrice}
                     onChange={(e) => updateField("bizPrice", e.target.value)}
                     placeholder="$$"
-                    className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                    className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                   />
                 </div>
               </div>
@@ -341,7 +341,7 @@ export function SchemaGenerator() {
                   type="text"
                   value={formData.bizStreet}
                   onChange={(e) => updateField("bizStreet", e.target.value)}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                 />
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -351,7 +351,7 @@ export function SchemaGenerator() {
                     type="text"
                     value={formData.bizCity}
                     onChange={(e) => updateField("bizCity", e.target.value)}
-                    className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                    className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                   />
                 </div>
                 <div>
@@ -360,7 +360,7 @@ export function SchemaGenerator() {
                     type="text"
                     value={formData.bizRegion}
                     onChange={(e) => updateField("bizRegion", e.target.value)}
-                    className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                    className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                   />
                 </div>
                 <div>
@@ -369,7 +369,7 @@ export function SchemaGenerator() {
                     type="text"
                     value={formData.bizPostal}
                     onChange={(e) => updateField("bizPostal", e.target.value)}
-                    className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                    className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                   />
                 </div>
               </div>
@@ -385,7 +385,7 @@ export function SchemaGenerator() {
                   type="text"
                   value={formData.prodName}
                   onChange={(e) => updateField("prodName", e.target.value)}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -396,7 +396,7 @@ export function SchemaGenerator() {
                     step="0.01"
                     value={formData.prodPrice}
                     onChange={(e) => updateField("prodPrice", e.target.value)}
-                    className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                    className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                   />
                 </div>
                 <div>
@@ -405,7 +405,7 @@ export function SchemaGenerator() {
                     type="text"
                     value={formData.prodCurrency}
                     onChange={(e) => updateField("prodCurrency", e.target.value)}
-                    className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                    className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                   />
                 </div>
               </div>
@@ -419,7 +419,7 @@ export function SchemaGenerator() {
                     max="5"
                     value={formData.prodRating}
                     onChange={(e) => updateField("prodRating", e.target.value)}
-                    className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                    className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                   />
                 </div>
                 <div>
@@ -428,7 +428,7 @@ export function SchemaGenerator() {
                     type="number"
                     value={formData.prodReviews}
                     onChange={(e) => updateField("prodReviews", e.target.value)}
-                    className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                    className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                   />
                 </div>
               </div>
@@ -444,7 +444,7 @@ export function SchemaGenerator() {
                   type="text"
                   value={formData.articleHeadline}
                   onChange={(e) => updateField("articleHeadline", e.target.value)}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                 />
               </div>
               <div>
@@ -453,7 +453,7 @@ export function SchemaGenerator() {
                   type="text"
                   value={formData.articleAuthor}
                   onChange={(e) => updateField("articleAuthor", e.target.value)}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                 />
               </div>
               <div>
@@ -462,7 +462,7 @@ export function SchemaGenerator() {
                   type="text"
                   value={formData.articlePublisher}
                   onChange={(e) => updateField("articlePublisher", e.target.value)}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                 />
               </div>
             </div>
@@ -486,7 +486,7 @@ export function SchemaGenerator() {
                       updateField("breadcrumbs", copy);
                     }}
                     placeholder="Page Name"
-                    className="text-xs px-3 py-1.5 rounded-[8px] border border-slate-200 bg-white w-1/3 text-slate-900"
+                    className="text-xs px-3 py-1.5 rounded-xl border border-slate-200 bg-white w-1/3 text-slate-900"
                   />
                   <input
                     type="url"
@@ -497,7 +497,7 @@ export function SchemaGenerator() {
                       updateField("breadcrumbs", copy);
                     }}
                     placeholder="https://example.com/page"
-                    className="text-xs px-3 py-1.5 rounded-[8px] border border-slate-200 bg-white flex-1 text-slate-900"
+                    className="text-xs px-3 py-1.5 rounded-xl border border-slate-200 bg-white flex-1 text-slate-900"
                   />
                 </div>
               ))}
@@ -507,7 +507,7 @@ export function SchemaGenerator() {
                 onClick={() =>
                   updateField("breadcrumbs", [...formData.breadcrumbs, { name: "Sub Page", url: "https://example.com/sub" }])
                 }
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-display font-bold text-[#FF4D00] bg-orange-50/80 hover:bg-orange-100/90 border border-orange-200/80 rounded-[8px] transition-colors cursor-pointer shadow-2xs"
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-bold text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl transition-colors cursor-pointer shadow-2xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Level</span>
@@ -524,7 +524,7 @@ export function SchemaGenerator() {
                   type="text"
                   value={formData.softName}
                   onChange={(e) => updateField("softName", e.target.value)}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                 />
               </div>
               <div>
@@ -533,7 +533,7 @@ export function SchemaGenerator() {
                   type="text"
                   value={formData.softOs}
                   onChange={(e) => updateField("softOs", e.target.value)}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                 />
               </div>
               <div>
@@ -542,7 +542,7 @@ export function SchemaGenerator() {
                   type="number"
                   value={formData.softPrice}
                   onChange={(e) => updateField("softPrice", e.target.value)}
-                  className="w-full text-xs px-3 py-2 mt-1 rounded-[8px] border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-[#FF4D00]"
+                  className="w-full text-xs px-3 py-2 mt-1 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-slate-500"
                 />
               </div>
             </div>
@@ -550,7 +550,7 @@ export function SchemaGenerator() {
         </div>
 
         {/* Right JSON-LD Output Column */}
-        <div className="lg:col-span-6 flex flex-col justify-between bg-slate-950 rounded-[8px] p-4 border border-slate-800 text-slate-100">
+        <div className="lg:col-span-6 flex flex-col justify-between bg-slate-950 rounded-2xl p-4 border border-slate-800 text-slate-100">
           <div className="flex items-center justify-between pb-3 border-b border-slate-800">
             <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5" />
@@ -561,15 +561,15 @@ export function SchemaGenerator() {
               <button
                 type="button"
                 onClick={handleCopy}
-                className="flex items-center gap-1 px-3 py-1 text-xs font-display font-bold rounded-[8px] bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] hover:opacity-95 text-white transition-opacity cursor-pointer shadow-2xs"
+                className="flex items-center gap-1 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-colors cursor-pointer shadow-2xs border border-slate-700"
               >
-                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                 <span>{copied ? "Copied!" : "Copy Snippet"}</span>
               </button>
               <button
                 type="button"
                 onClick={handleDownload}
-                className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-[8px] bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer border border-slate-800"
               >
                 <Download className="w-3 h-3" />
                 <span>JSON</span>
@@ -581,7 +581,7 @@ export function SchemaGenerator() {
             <pre>{scriptSnippet}</pre>
           </div>
 
-          <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center gap-1.5 font-sans">
+          <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center gap-1.5">
             <HelpCircle className="w-3.5 h-3.5 text-slate-500 shrink-0" />
             <span>Paste this code snippet directly into the <code className="text-slate-200 font-mono">&lt;head&gt;</code> section of your HTML.</span>
           </div>

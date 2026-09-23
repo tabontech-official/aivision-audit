@@ -196,7 +196,7 @@ export function KeywordSearchModal({
       <svg className="w-14 h-5 overflow-visible" viewBox={`0 0 ${width} ${height}`}>
         <polyline
           fill="none"
-          stroke={isGrowing ? "#10b981" : "#FF4D00"}
+          stroke={isGrowing ? "#10b981" : "#64748b"}
           strokeWidth="1.75"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -224,7 +224,7 @@ export function KeywordSearchModal({
   const getDifficultyBadge = (kd: number) => {
     if (kd <= 29) return { bg: "bg-emerald-50 text-emerald-700 border-emerald-200", label: "Easy" };
     if (kd <= 49) return { bg: "bg-amber-50 text-amber-700 border-amber-200", label: "Possible" };
-    if (kd <= 69) return { bg: "bg-orange-50 text-orange-700 border-orange-200", label: "Hard" };
+    if (kd <= 69) return { bg: "bg-teal-50 text-teal-700 border-teal-200", label: "Hard" };
     return { bg: "bg-rose-50 text-rose-700 border-rose-200", label: "Very Hard" };
   };
 
@@ -284,12 +284,12 @@ export function KeywordSearchModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/70">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-orange-50 text-[#FF4D00] border border-orange-200 shrink-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#dff2ed] text-slate-900 border border-emerald-300 shrink-0">
               <Key className="h-4.5 w-4.5" />
             </div>
             <div>
               <h2 className="font-display text-base font-bold text-slate-900 leading-tight">
-                Keyword Research & Opportunity Finder
+                Keyword Research &amp; Opportunity Finder
               </h2>
               <p className="text-xs text-slate-500 font-sans">
                 Explore high-intent keyword variations, search volume, KD difficulty, and top SERP competitors
@@ -299,7 +299,7 @@ export function KeywordSearchModal({
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-[8px] text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -321,14 +321,14 @@ export function KeywordSearchModal({
                 placeholder="Enter seed keyword or topic (e.g. 'seo audit tool', 'marketing agency')..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-[8px] text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF4D00] text-slate-900 placeholder-slate-400"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-300/40 focus:border-slate-500 text-slate-900 placeholder-slate-400"
               />
             </div>
 
             <select
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-[8px] text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20 focus:border-[#FF4D00] shrink-0"
+              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300/40 focus:border-slate-500 shrink-0 cursor-pointer"
             >
               {COUNTRIES.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -340,7 +340,7 @@ export function KeywordSearchModal({
             <button
               type="submit"
               disabled={loading || !query.trim()}
-              className="px-5 py-2.5 bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] hover:opacity-95 text-white font-display font-bold text-xs rounded-[8px] transition-all shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shrink-0"
+              className="px-5 py-2.5 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition-colors shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shrink-0"
             >
               {loading ? (
                 <>
@@ -382,7 +382,7 @@ export function KeywordSearchModal({
         <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50/40">
           {loading ? (
             <div className="py-20 text-center">
-              <RefreshCw className="w-8 h-8 text-[#FF4D00] animate-spin mx-auto mb-3" />
+              <RefreshCw className="w-8 h-8 text-slate-900 animate-spin mx-auto mb-3" />
               <div className="text-sm font-bold text-slate-900">
                 Searching Global Keyword Database...
               </div>
@@ -419,15 +419,15 @@ export function KeywordSearchModal({
               />
 
               {/* Tabs + Filter Bar + Export */}
-              <div className="bg-white p-3 rounded-[8px] border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                 {/* Category Tabs */}
                 <div className="flex items-center gap-1.5 overflow-x-auto">
                   <button
                     onClick={() => setActiveTab("related")}
                     className={cn(
-                      "px-3 py-1.5 rounded-[8px] text-xs font-bold font-sans transition-all flex items-center gap-1.5 cursor-pointer",
+                      "px-3 py-1.5 rounded-lg text-xs font-bold font-sans transition-all flex items-center gap-1.5 cursor-pointer",
                       activeTab === "related"
-                        ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-xs"
+                        ? "bg-slate-900 text-white shadow-xs"
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     )}
                   >
@@ -437,9 +437,9 @@ export function KeywordSearchModal({
                   <button
                     onClick={() => setActiveTab("questions")}
                     className={cn(
-                      "px-3 py-1.5 rounded-[8px] text-xs font-bold font-sans transition-all flex items-center gap-1.5 cursor-pointer",
+                      "px-3 py-1.5 rounded-lg text-xs font-bold font-sans transition-all flex items-center gap-1.5 cursor-pointer",
                       activeTab === "questions"
-                        ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-xs"
+                        ? "bg-slate-900 text-white shadow-xs"
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     )}
                   >
@@ -449,9 +449,9 @@ export function KeywordSearchModal({
                   <button
                     onClick={() => setActiveTab("autocomplete")}
                     className={cn(
-                      "px-3 py-1.5 rounded-[8px] text-xs font-bold font-sans transition-all flex items-center gap-1.5 cursor-pointer",
+                      "px-3 py-1.5 rounded-lg text-xs font-bold font-sans transition-all flex items-center gap-1.5 cursor-pointer",
                       activeTab === "autocomplete"
-                        ? "bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] text-white shadow-xs"
+                        ? "bg-slate-900 text-white shadow-xs"
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     )}
                   >
@@ -466,11 +466,11 @@ export function KeywordSearchModal({
                     placeholder="Filter results..."
                     value={tableFilter}
                     onChange={(e) => setTableFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-[8px] text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-hidden focus:border-[#FF4D00] w-36 sm:w-44"
+                    className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-500 w-36 sm:w-44"
                   />
                   <button
                     onClick={exportCsv}
-                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-[8px] text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shrink-0"
                   >
                     <Download className="w-3 h-3" />
                     Export CSV
@@ -479,7 +479,7 @@ export function KeywordSearchModal({
               </div>
 
               {/* Keyword Table inside Modal */}
-              <div className="bg-white border border-slate-200 rounded-[8px] shadow-xs overflow-hidden">
+              <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse font-sans">
                     <thead>
@@ -562,7 +562,7 @@ export function KeywordSearchModal({
                                   </span>
                                   <button
                                     onClick={() => handleCopy(item.keyword)}
-                                    className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-slate-700 transition-all rounded-[6px] hover:bg-slate-200 cursor-pointer"
+                                    className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-slate-700 transition-all rounded-md hover:bg-slate-200 cursor-pointer"
                                     title="Copy keyword"
                                   >
                                     {copiedKeyword === item.keyword ? (
@@ -589,7 +589,7 @@ export function KeywordSearchModal({
                               </td>
 
                               <td className="py-2.5 px-3 text-center">
-                                <span className={cn("px-1.5 py-0.5 rounded-[6px] font-bold text-[10px] border", kdInfo.bg)}>
+                                <span className={cn("px-1.5 py-0.5 rounded-md font-bold text-[10px] border", kdInfo.bg)}>
                                   {item.difficulty}
                                 </span>
                               </td>
@@ -604,7 +604,7 @@ export function KeywordSearchModal({
                                 <div className="flex items-center justify-end gap-1.5">
                                   <button
                                     onClick={() => setSelectedSerpKeyword(item.keyword)}
-                                    className="px-2 py-1 rounded-[6px] bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-[#FF4D00] font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer border border-transparent hover:border-orange-200"
+                                    className="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer border border-transparent hover:border-slate-300"
                                     title="Inspect top 10 SERP competitors"
                                   >
                                     <Globe className="w-3 h-3" />
@@ -615,15 +615,15 @@ export function KeywordSearchModal({
                                     onClick={() => handleTrackToggle(item)}
                                     disabled={trackingLoading === item.keyword}
                                     className={cn(
-                                      "inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] text-[11px] font-bold transition-all cursor-pointer border",
+                                      "inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer border",
                                       isTracked
-                                        ? "bg-amber-50 text-amber-700 border-amber-300 shadow-2xs"
-                                        : "bg-orange-50 hover:bg-orange-100 text-[#FF4D00] border-orange-200"
+                                        ? "bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs"
+                                        : "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200"
                                     )}
                                   >
                                     {isTracked ? (
                                       <>
-                                        <BookmarkCheck className="w-3 h-3 text-amber-600" />
+                                        <BookmarkCheck className="w-3 h-3 text-emerald-600" />
                                         <span>Tracked</span>
                                       </>
                                     ) : (

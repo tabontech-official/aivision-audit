@@ -13,7 +13,7 @@ const secretKey = process.env.STRIPE_SECRET_KEY;
 export const stripe: Stripe | null = secretKey
   ? new Stripe(secretKey, {
       typescript: true,
-      appInfo: { name: "AuditFlow", version: "1.0.0" },
+      appInfo: { name: "AI Vision Audit", version: "1.0.0" },
     })
   : null;
 

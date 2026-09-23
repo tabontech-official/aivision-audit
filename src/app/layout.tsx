@@ -10,8 +10,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "The Rank Writers — SEO & AI Search Visibility Platform",
-    template: "%s · The Rank Writers",
+    default: "AI Vision Audit — SEO & AI Search Visibility Platform",
+    template: "%s · AI Vision Audit",
   },
   description:
     "Audit your store and website in minutes: technical SEO core, crawlability, indexability, speed, schema, AI discoverability, and recommendations with actionable fixes.",

@@ -86,7 +86,7 @@ export function SchemaValidatorTool() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
         <div>
           <h3 className="text-sm font-bold text-slate-900 font-display flex items-center gap-2">
-            <Code2 className="w-4 h-4 text-[#FF4D00]" />
+            <Code2 className="w-4 h-4 text-slate-900" />
             Direct Schema Code Validator
           </h3>
           <p className="text-xs text-slate-500 font-sans mt-0.5">
@@ -98,7 +98,7 @@ export function SchemaValidatorTool() {
           type="button"
           onClick={handleValidate}
           disabled={loading || !inputCode.trim()}
-          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-display font-bold rounded-[8px] bg-gradient-to-r from-[#FF6B00] to-[#FF3D00] hover:opacity-95 disabled:opacity-50 text-white transition-opacity shadow-2xs cursor-pointer shrink-0"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-black disabled:opacity-50 text-white transition-colors shadow-2xs cursor-pointer shrink-0"
         >
           {loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
           <span>{loading ? "Testing..." : "Validate Code"}</span>

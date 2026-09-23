@@ -112,7 +112,7 @@ export function AuthGateModal({
             <div className="flex items-center gap-2">
               <BrandIcon className="h-7 w-7 text-[rgb(24,30,21)]" />
               <span className="font-display font-bold text-base sm:text-lg text-slate-900 tracking-tight">
-                The Rank Writers
+                AI Vision Audit
               </span>
             </div>
             <button

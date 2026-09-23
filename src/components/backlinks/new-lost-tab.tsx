@@ -180,7 +180,7 @@ export function NewLostTab({ newBacklinks, lostBacklinks, domain }: NewLostTabPr
                               href={item.referringUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[11px] text-slate-500 hover:text-[#FF4D00] truncate block flex items-center gap-1"
+                              className="text-[11px] text-slate-500 hover:text-emerald-700 truncate block flex items-center gap-1"
                             >
                               <span className="truncate">{item.referringUrl}</span>
                               <ExternalLink className="h-2.5 w-2.5 shrink-0" />
@@ -199,7 +199,7 @@ export function NewLostTab({ newBacklinks, lostBacklinks, domain }: NewLostTabPr
                             href={item.targetUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[11px] text-slate-400 hover:text-[#FF4D00] truncate block flex items-center gap-1"
+                            className="text-[11px] text-slate-400 hover:text-emerald-700 truncate block flex items-center gap-1"
                           >
                             <span className="truncate">{item.targetUrl}</span>
                             <ExternalLink className="h-2.5 w-2.5 shrink-0" />

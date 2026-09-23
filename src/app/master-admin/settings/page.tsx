@@ -21,7 +21,7 @@ export default async function SettingsPage() {
   return (
     <SettingsForm
       initial={{
-        product_name: get("product_name", "AuditFlow"),
+        product_name: get("product_name", "AI Vision Audit"),
         support_email: get("support_email", "support@example.com"),
         free_audit_limit: get("free_audit_limit", 3),
         premium_audit_limit: get("premium_audit_limit", 50),

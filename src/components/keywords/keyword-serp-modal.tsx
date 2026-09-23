@@ -43,7 +43,7 @@ export function KeywordSerpModal({ keyword, onClose }: KeywordSerpModalProps) {
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/70">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-orange-50 text-[#FF4D00] border border-orange-200 shrink-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#dff2ed] text-slate-900 border border-emerald-300 shrink-0">
               <Globe className="w-4.5 h-4.5" />
             </div>
             <div>
@@ -58,7 +58,7 @@ export function KeywordSerpModal({ keyword, onClose }: KeywordSerpModalProps) {
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-[8px] text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -68,7 +68,7 @@ export function KeywordSerpModal({ keyword, onClose }: KeywordSerpModalProps) {
         <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30">
           {loading ? (
             <div className="py-16 text-center">
-              <RefreshCw className="w-8 h-8 text-[#FF4D00] animate-spin mx-auto mb-3" />
+              <RefreshCw className="w-8 h-8 text-slate-900 animate-spin mx-auto mb-3" />
               <div className="text-sm font-semibold text-slate-800">
                 Fetching Real-Time SERP Positions...
               </div>

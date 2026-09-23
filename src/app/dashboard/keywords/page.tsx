@@ -4,7 +4,7 @@ import { db } from "@/lib/db/client";
 import { KeywordDashboard } from "@/components/keywords/keyword-dashboard";
 
 export const metadata: Metadata = {
-  title: "Keyword Research & SERP Intelligence · The Rank Writers",
+  title: "Keyword Research & SERP Intelligence · AI Vision Audit",
   description: "Discover search volume, keyword difficulty, intent, 12-month trends, and live Google SERP competitor rankings.",
 };
 

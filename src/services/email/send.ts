@@ -15,7 +15,7 @@ type SendEmailInput = {
   text?: string;
 };
 
-const FROM = process.env.EMAIL_FROM ?? "AuditFlow <onboarding@resend.dev>";
+const FROM = process.env.EMAIL_FROM ?? "AI Vision Audit <onboarding@resend.dev>";
 
 export async function sendEmail({ to, subject, html, text }: SendEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -58,7 +58,7 @@ function layout(content: string): string {
         <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;">
           <tr><td style="padding:32px;">
             <div style="font-size:18px;font-weight:700;margin-bottom:24px;">
-              <span style="display:inline-block;background:#4f46e5;color:#fff;border-radius:8px;width:28px;height:28px;line-height:28px;text-align:center;margin-right:8px;">A</span>AuditFlow
+              <span style="display:inline-block;background:#059669;color:#fff;border-radius:8px;width:28px;height:28px;line-height:28px;text-align:center;margin-right:8px;">AVA</span>AI Vision Audit
             </div>
             ${content}
             <p style="font-size:12px;color:#94a3b8;margin-top:32px;">
@@ -80,15 +80,15 @@ export async function sendVerificationEmail(to: string, rawToken: string) {
     html: layout(`
       <h1 style="font-size:20px;margin:0 0 12px;">Verify your email</h1>
       <p style="font-size:14px;color:#475569;line-height:1.6;">
-        Welcome to AuditFlow. Confirm your email address to activate your account.
+        Welcome to AI Vision Audit. Confirm your email address to activate your account.
       </p>
       <p style="margin:24px 0;">
-        <a href="${url}" style="background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:600;display:inline-block;">
+        <a href="${url}" style="background:#059669;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:600;display:inline-block;">
           Verify email address
         </a>
       </p>
       <p style="font-size:12px;color:#94a3b8;">This link expires in 24 hours.</p>`),
-    text: `Verify your AuditFlow email: ${url} (expires in 24 hours)`,
+    text: `Verify your AI Vision Audit email: ${url} (expires in 24 hours)`,
   });
 }
 
@@ -100,14 +100,14 @@ export async function sendPasswordResetEmail(to: string, rawToken: string) {
     html: layout(`
       <h1 style="font-size:20px;margin:0 0 12px;">Reset your password</h1>
       <p style="font-size:14px;color:#475569;line-height:1.6;">
-        We received a request to reset the password for your AuditFlow account.
+        We received a request to reset the password for your AI Vision Audit account.
       </p>
       <p style="margin:24px 0;">
-        <a href="${url}" style="background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:600;display:inline-block;">
+        <a href="${url}" style="background:#059669;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:600;display:inline-block;">
           Choose a new password
         </a>
       </p>
       <p style="font-size:12px;color:#94a3b8;">This link expires in 1 hour and can be used once.</p>`),
-    text: `Reset your AuditFlow password: ${url} (expires in 1 hour)`,
+    text: `Reset your AI Vision Audit password: ${url} (expires in 1 hour)`,
   });
 }

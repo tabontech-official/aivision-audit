@@ -73,7 +73,7 @@ export function TopPagesTab({ topPages }: TopPagesTabProps) {
               setCurrentPage(1);
             }}
             placeholder="Search target pages by URL path..."
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-[#FF4D00] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FF4D00]/20 font-sans"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-slate-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-300/40 font-sans"
           />
         </div>
 
@@ -135,7 +135,7 @@ export function TopPagesTab({ topPages }: TopPagesTabProps) {
                               href={page.targetUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="font-bold text-slate-900 hover:text-[#FF4D00] flex items-center gap-1.5 transition-colors truncate"
+                              className="font-bold text-slate-900 hover:text-emerald-700 flex items-center gap-1.5 transition-colors truncate"
                             >
                               <span className="truncate">{page.targetUrl}</span>
                               <ExternalLink className="h-3 w-3 text-slate-400 shrink-0" />
