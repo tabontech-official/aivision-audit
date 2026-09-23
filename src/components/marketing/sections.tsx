@@ -32,6 +32,7 @@ import {
 import { AuditUrlForm } from "./audit-url-form";
 import { HeroSearchForm } from "./hero-search-form";
 import { BrandIcon } from "@/components/ui/brand-icon";
+import { AuthActionButton } from "./auth-modal-context";
 
 /* ------------------------------------------------------------------ */
 /* Hero                                                                */
@@ -45,16 +46,15 @@ export function Hero() {
 
       <div className="relative mx-auto max-w-5xl px-4 sm:px-8 lg:px-12 text-center">
         {/* Main Headline */}
-        <h1 className="font-display font-semibold text-5xl sm:text-6xl md:text-7xl lg:text-[76px] xl:text-[80px] tracking-[-0.035em] text-[#111827] leading-[1.06] max-w-4xl mx-auto">
-          Be found everywhere
+        <h1 className="font-display font-semibold text-5xl sm:text-6xl md:text-7xl lg:text-[76px] xl:text-[80px] tracking-[-0.035em] text-[#111827] leading-[1.06] max-w-4xl mx-auto font-lazzer">
+          AI Website Audit
           <br />
-          search happens
+          &amp; Schema Suite
         </h1>
 
         {/* Subtitle */}
-        <p className="mt-4 sm:mt-5 text-base sm:text-lg md:text-[19px] text-[#374151] max-w-xl mx-auto font-normal leading-relaxed">
-          The leading platform to grow and measure
-          <br className="hidden sm:inline" /> brand visibility across every digital channel.
+        <p className="mt-4 sm:mt-5 text-base sm:text-lg md:text-[19px] text-[#374151] max-w-2xl mx-auto font-normal leading-relaxed font-lazzer">
+          Instantly diagnose 70+ technical SEO factors, Google Core Web Vitals, and structured JSON-LD schema markup to dominate Google and emerging AI answer engines.
         </p>
 
         {/* Search Bar Pill Container */}
@@ -104,26 +104,25 @@ export function CredibilityStrip() {
                 <div>
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-black/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-900 mb-3">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    <span>Live Audit Engine</span>
+                    <span>AI Vision Audit Engine</span>
                   </div>
 
                   <h2 className="font-display font-bold text-2xl sm:text-3xl lg:text-[34px] xl:text-[36px] leading-[1.1] tracking-tight text-[#161e2e]">
-                    <span className="block">Complete Website</span>
-                    <span className="block">SEO & Speed Audit</span>
+                    <span className="block">Complete 70+ Factor</span>
+                    <span className="block">SEO &amp; Speed Audit</span>
                   </h2>
 
                   <p className="mt-4 text-xs sm:text-sm font-medium text-slate-900/90 leading-relaxed max-w-xs">
-                    Inspect 70+ technical SEO factors, Google Core Web Vitals, mobile UX, security headers, and on-page crawlability with prioritized fixes.
+                    Uncover technical crawl errors, broken meta tags, Core Web Vitals bottlenecks, mobile UX flaws, and security gaps with instant, developer-ready code fixes.
                   </p>
                 </div>
 
                 <div className="mt-5 flex items-center gap-3">
-                  <Link
-                    href="/signup"
+                  <AuthActionButton
                     className="inline-flex items-center justify-center rounded-full bg-[#181818] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black cursor-pointer shadow-xs font-lazzer"
                   >
                     Run Free Audit
-                  </Link>
+                  </AuthActionButton>
                 </div>
               </div>
 
@@ -134,12 +133,12 @@ export function CredibilityStrip() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-sm sm:text-base font-bold text-slate-900 font-display">
-                        Audit Health Breakdown
+                        Audit Health Diagnostics
                       </h3>
-                      <p className="text-[11px] text-slate-500 font-medium">Real-time technical &amp; performance checks</p>
+                      <p className="text-[11px] text-slate-500 font-medium">Real-time technical &amp; performance validation</p>
                     </div>
                     <div className="flex items-center rounded-sm border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
-                      Score: 94/100
+                      Health Score: 98/100
                     </div>
                   </div>
 
@@ -307,18 +306,18 @@ export function Features() {
           {/* Eyebrow Tag */}
           <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer justify-center">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
-            <span>FIND &amp; FIX SEO &amp; SCHEMA ISSUES IN SECONDS</span>
+            <span>PRECISION AUDITING &amp; STRUCTURED DATA</span>
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
           </div>
 
           {/* Main Headline */}
           <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-[#111827] tracking-tight font-lazzer">
-            AI Vision Audit’s Core Capabilities
+            Built for SEO Leaders, Agencies &amp; Growth Teams
           </h2>
 
           {/* Description */}
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed font-normal">
-            Precision SEO intelligence and structured data automation. Run deep technical audits across 70+ factors, generate Google-compliant JSON-LD schema markup, and optimize your Core Web Vitals.
+            From deep technical audits across 70+ factors to Google-compliant schema generation, AI Vision Audit equips you with the exact intelligence and tools to maximize search ranking.
           </p>
         </div>
 
@@ -333,36 +332,35 @@ export function Features() {
                 <span>Available Now</span>
               </div>
               <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight font-lazzer">
-                Deep Technical SEO Audits
+                Deep Technical SEO &amp; Crawl Diagnostics
               </h3>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
-                Stop guessing what holds your website back. We crawl and inspect 70+ technical SEO factors, metadata, indexability, canonicals, robots.txt, and link health with instant actionable fixes.
+                Eliminate the guesswork from search optimization. We crawl your pages to identify broken metadata, canonical conflicts, robots.txt blocks, missing sitemaps, and indexing barriers with prioritized action steps.
               </p>
 
               {/* Bullet Checklist */}
               <ul className="mt-6 space-y-3">
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>70+ on-page and technical crawl checks</span>
+                  <span>70+ on-page and technical crawl factor inspections</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Prioritized fix roadmap with code snippets</span>
+                  <span>Prioritized fix roadmap with copy-paste code snippets</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Crawlability, sitemaps, and indexing diagnostics</span>
+                  <span>Complete indexability, sitemap, and canonical diagnostics</span>
                 </li>
               </ul>
 
               {/* Action Buttons */}
               <div className="mt-8 flex flex-wrap items-center gap-3.5">
-                <Link
-                  href="/signup"
+                <AuthActionButton
                   className="inline-flex items-center justify-center rounded-full bg-[#181818] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black cursor-pointer shadow-xs font-lazzer"
                 >
                   Run Free Audit
-                </Link>
+                </AuthActionButton>
                 <Link
                   href="/tools/seo-health-check"
                   className="inline-flex items-center justify-center rounded-full border border-slate-700/60 bg-transparent px-6 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-900/5 cursor-pointer font-lazzer"
@@ -406,25 +404,25 @@ export function Features() {
                 <span>Available Now</span>
               </div>
               <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight font-lazzer">
-                Schema Markup &amp; Structured Data
+                Schema Markup &amp; Structured Data Suite
               </h3>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
-                Help search engines and AI models accurately understand your entities, products, FAQs, and brand. Generate clean JSON-LD markup and validate syntax with zero errors.
+                Help Google and AI search bots understand your entities, products, FAQs, and brand hierarchy. Generate error-free JSON-LD markup and preview rich snippets before publishing.
               </p>
 
               {/* Bullet Checklist */}
               <ul className="mt-6 space-y-3">
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Generate Organization, Product, FAQ, Article &amp; Local schema</span>
+                  <span>10+ Google schema types (Organization, Product, FAQ, Article, Local)</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Live Schema syntax validation &amp; issue detection</span>
+                  <span>Real-time syntax testing and schema validation</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Google Rich Snippets visual preview</span>
+                  <span>Instant Google Rich Results SERP visualizer</span>
                 </li>
               </ul>
 
@@ -436,12 +434,11 @@ export function Features() {
                 >
                   Open Schema Suite
                 </Link>
-                <Link
-                  href="/signup"
+                <AuthActionButton
                   className="inline-flex items-center justify-center rounded-full border border-slate-700/60 bg-transparent px-6 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-900/5 cursor-pointer font-lazzer"
                 >
                   Get Started Free
-                </Link>
+                </AuthActionButton>
               </div>
             </div>
           </div>
@@ -455,17 +452,17 @@ export function Features() {
                 <span>Available Now</span>
               </div>
               <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight font-lazzer">
-                Page Speed &amp; Core Web Vitals
+                Page Speed &amp; Core Web Vitals Lab
               </h3>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
-                Direct integration with Google PageSpeed Insights. Measure mobile and desktop performance, Largest Contentful Paint (LCP), Cumulative Layout Shift (CLS), and Total Blocking Time (TBT).
+                Powered by direct Google PageSpeed Insights data. Measure mobile and desktop performance, Largest Contentful Paint (LCP), Cumulative Layout Shift (CLS), and Total Blocking Time (TBT).
               </p>
 
               {/* Bullet Checklist */}
               <ul className="mt-6 space-y-3">
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Real Google PageSpeed data for Mobile &amp; Desktop</span>
+                  <span>Real Google PageSpeed data for mobile &amp; desktop</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
@@ -473,7 +470,7 @@ export function Features() {
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Asset optimization &amp; script reduction advice</span>
+                  <span>Practical asset compression and script reduction recommendations</span>
                 </li>
               </ul>
 
@@ -485,12 +482,11 @@ export function Features() {
                 >
                   Test Site Speed
                 </Link>
-                <Link
-                  href="/signup"
+                <AuthActionButton
                   className="inline-flex items-center justify-center rounded-full border border-slate-700/60 bg-transparent px-6 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-900/5 cursor-pointer font-lazzer"
                 >
-                  Learn more
-                </Link>
+                  Run Free Audit
+                </AuthActionButton>
               </div>
             </div>
 
@@ -528,7 +524,7 @@ export function Features() {
                 <span>Available Now</span>
               </div>
               <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight font-lazzer">
-                AI &amp; Answer Engine Readiness
+                AI &amp; Answer Engine Search Readiness
               </h3>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
                 Search is shifting towards AI answers in ChatGPT, Claude, Gemini, and Perplexity. Audit your content clarity, entity citations, and schema depth so AI bots can reference your brand.
@@ -552,12 +548,11 @@ export function Features() {
 
               {/* Action Buttons */}
               <div className="mt-8 flex flex-wrap items-center gap-3.5">
-                <Link
-                  href="/signup"
+                <AuthActionButton
                   className="inline-flex items-center justify-center rounded-full bg-[#181818] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black cursor-pointer shadow-xs font-lazzer"
                 >
                   Audit AI Readiness
-                </Link>
+                </AuthActionButton>
                 <Link
                   href="#how-it-works"
                   className="inline-flex items-center justify-center rounded-full border border-slate-700/60 bg-transparent px-6 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-900/5 cursor-pointer font-lazzer"
@@ -579,32 +574,46 @@ export function Features() {
 
 const OTHER_FEATURES = [
   {
-    icon: Zap,
-    title: "Site Speed & Core Vitals",
+    icon: Search,
+    title: "Technical SEO Audit Engine",
     badge: "Available Now",
     isLive: true,
-    body: "Monitor page load speed, LCP, and Core Web Vitals across mobile and desktop.",
+    body: "Deep crawl of 70+ on-page SEO signals, canonicals, robots.txt, and metadata.",
     checklist: [
-      "Google PageSpeed metrics",
-      "Mobile & Desktop breakdown",
-      "Prioritized speed fixes",
+      "70+ technical factor checks",
+      "Indexability & crawl diagnostics",
+      "Prioritized fix recommendations",
     ],
-    linkText: "Test Site Speed",
-    linkHref: "/tools/speed-core-vitals",
+    linkText: "Run Free Audit",
+    linkHref: "/signup",
   },
   {
     icon: Link2,
-    title: "Schema Markup Suite",
+    title: "Schema Markup & JSON-LD Suite",
     badge: "Available Now",
     isLive: true,
-    body: "Generate, validate, and preview structured data for Google Rich Results.",
+    body: "Generate, validate, and preview Google-compliant structured data for rich snippets.",
     checklist: [
-      "10+ Schema JSON-LD generators",
-      "Live syntax & error validator",
-      "SERP snippet visualizer",
+      "10+ Google schema generators",
+      "Live syntax & schema validator",
+      "SERP rich snippet previewer",
     ],
     linkText: "Explore Schema Suite",
     linkHref: "/dashboard/schema",
+  },
+  {
+    icon: Zap,
+    title: "Site Speed & Core Web Vitals",
+    badge: "Available Now",
+    isLive: true,
+    body: "Measure Google PageSpeed metrics, LCP, CLS, and TBT across mobile and desktop.",
+    checklist: [
+      "Google PageSpeed Insights data",
+      "Mobile & Desktop breakdown",
+      "Asset & script optimizations",
+    ],
+    linkText: "Test Site Speed",
+    linkHref: "/tools/speed-core-vitals",
   },
   {
     icon: Briefcase,
@@ -613,51 +622,37 @@ const OTHER_FEATURES = [
     isLive: true,
     body: "Generate client-ready PDF and interactive SEO audit reports with your branding.",
     checklist: [
-      "Custom branding & logos",
+      "Custom agency branding & logo",
       "Executive summaries & roadmaps",
-      "Export PDF and share links",
+      "Exportable PDF & share links",
     ],
     linkText: "View Sample Report",
     linkHref: "/signup",
   },
   {
     icon: Link2,
-    title: "Backlinks Explorer",
+    title: "Backlink Explorer & Authority",
     badge: "Coming Soon",
     isLive: false,
-    body: "Track referring domains, domain authority, anchor texts, and new link growth.",
+    body: "Track referring domains, domain authority, anchor texts, and link profile health.",
     checklist: [
-      "Monitor backlink profile",
-      "Analyze link authority",
-      "Spot toxic backlinks",
-    ],
-    linkText: "Coming Soon",
-    linkHref: "#",
-  },
-  {
-    icon: Flag,
-    title: "Keyword Position Tracker",
-    badge: "Coming Soon",
-    isLive: false,
-    body: "Monitor keyword rankings daily across search engines, locations, and devices.",
-    checklist: [
-      "Daily rank tracking",
-      "Multi-location SERP monitoring",
-      "Competitor rank comparisons",
+      "Monitor backlink growth",
+      "Domain authority tracking",
+      "Detect toxic link risks",
     ],
     linkText: "Coming Soon",
     linkHref: "#",
   },
   {
     icon: BookOpen,
-    title: "Keyword Research & Studio",
+    title: "Keyword Rank & SERP Studio",
     badge: "Coming Soon",
     isLive: false,
-    body: "Discover high-intent keyword ideas, search volumes, and difficulty scores.",
+    body: "Discover high-intent keyword targets, track daily rankings, and analyze competitor SERPs.",
     checklist: [
-      "Untapped keyword ideas",
+      "Daily position tracking",
       "Search volume & intent data",
-      "Content optimization suggestions",
+      "Competitor SERP analysis",
     ],
     linkText: "Coming Soon",
     linkHref: "#",
@@ -672,13 +667,13 @@ export function OtherFeatures() {
         <div className="flex flex-col items-start text-left mb-8 sm:mb-10">
           <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer mb-2">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
-            <span>MODULES &amp; ROADMAP</span>
+            <span>PLATFORM MODULES &amp; ROADMAP</span>
           </div>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-[#111827] tracking-tight font-lazzer">
-            Platform Capabilities &amp; Roadmap
+            Complete SEO &amp; Schema Command Center
           </h2>
           <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl font-normal">
-            Website Audits and Schema Markup are live today. Backlinks, Rank Tracking, and Keyword Research are actively coming soon!
+            Website Audits and Schema Markup are 100% live today. Backlink Explorer, Rank Tracker, and Keyword Studio are in active development and coming soon!
           </p>
         </div>
 
@@ -747,13 +742,22 @@ export function OtherFeatures() {
                 {/* Bottom Link */}
                 <div className="mt-6 pt-2">
                   {item.isLive ? (
-                    <Link
-                      href={item.linkHref}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-slate-900 hover:text-black transition-all font-lazzer"
-                    >
-                      <span>{item.linkText}</span>
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </Link>
+                    item.linkHref === "/signup" ? (
+                      <AuthActionButton
+                        className="inline-flex items-center gap-1 text-xs font-bold text-slate-900 hover:text-black transition-all font-lazzer cursor-pointer"
+                      >
+                        <span>{item.linkText}</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </AuthActionButton>
+                    ) : (
+                      <Link
+                        href={item.linkHref}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-slate-900 hover:text-black transition-all font-lazzer"
+                      >
+                        <span>{item.linkText}</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </Link>
+                    )
                   ) : (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 font-lazzer">
                       <span>In active development</span>
@@ -782,17 +786,17 @@ export function AiShiftSection() {
           {/* Eyebrow Tag */}
           <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
-            <span>THE PROBLEM YOU DON&apos;T KNOW YOU HAVE</span>
+            <span>THE FUTURE OF SEARCH DISCOVERY</span>
           </div>
 
           {/* Headline */}
           <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-[46px] font-bold text-[#111827] leading-[1.12] tracking-tight font-lazzer">
-            Search is shifting to AI. And you&apos;re invisible.
+            Search Has Shifted to AI. Are You Visible?
           </h2>
 
           {/* Subtitle */}
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed font-normal">
-            40% of searches now happen in AI engines. Your competitors appear in ChatGPT, Gemini, Perplexity and other LLM generated answers. You are not.
+            Over 40% of queries now run through AI engines. When prospects prompt ChatGPT, Gemini, Claude, and Perplexity, AI Vision Audit ensures your brand gets cited.
           </p>
         </div>
 
@@ -807,10 +811,10 @@ export function AiShiftSection() {
                   <AlertTriangle className="h-4 w-4" />
                 </div>
                 <h3 className="mt-3 text-sm sm:text-base font-bold text-slate-900 leading-snug font-lazzer">
-                  You&apos;re losing deals to competitors cited by AI
+                  Losing high-intent leads to competitors cited by AI
                 </h3>
                 <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Prospects ask ChatGPT for recommendations. Your competitors get cited. You don&apos;t. By the time they reach your site, the decision&apos;s already made.
+                  When prospects ask LLMs for product recommendations, cited competitors win the deal before users ever land on your website.
                 </p>
               </div>
 
@@ -820,10 +824,10 @@ export function AiShiftSection() {
                   <AlertTriangle className="h-4 w-4" />
                 </div>
                 <h3 className="mt-3 text-sm sm:text-base font-bold text-slate-900 leading-snug font-lazzer">
-                  You don&apos;t know what prompts are triggering competitors
+                  Zero visibility into prompts driving citations
                 </h3>
                 <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Competitors dominate specific AI prompts in your category. You don&apos;t know which questions trigger citations or how to compete.
+                  Competitors dominate specific generative prompts in your category. You need precise intelligence on entity authority and semantic gaps.
                 </p>
               </div>
 
@@ -833,10 +837,10 @@ export function AiShiftSection() {
                   <AlertTriangle className="h-4 w-4" />
                 </div>
                 <h3 className="mt-3 text-sm sm:text-base font-bold text-slate-900 leading-snug font-lazzer">
-                  Your brand is not mentioned by LLM agents
+                  Missing structured data and entity grounding
                 </h3>
                 <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  ChatGPT, Claude, Gemini, Perplexity, none cite your brand. Competitors with similar products appear in AI answers.
+                  LLMs require schema markup, structured JSON-LD, and verified brand facts to confidently cite your website in direct answers.
                 </p>
               </div>
 
@@ -846,22 +850,21 @@ export function AiShiftSection() {
                   <AlertTriangle className="h-4 w-4" />
                 </div>
                 <h3 className="mt-3 text-sm sm:text-base font-bold text-slate-900 leading-snug font-lazzer">
-                  You don&apos;t know how to optimize for AI visibility
+                  Traditional SEO scores ignore AI-readiness
                 </h3>
                 <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  LLMs need structured data, clear facts, and trust signals, not keywords. Your Google #1 ranking might score 0/100 for AI-readiness.
+                  Keyword stuffing is obsolete. LLM answer engines prioritize entity clarity, fast Core Web Vitals, and authoritative trust signals.
                 </p>
               </div>
             </div>
 
             {/* CTA Button */}
             <div className="mt-8 sm:mt-10">
-              <Link
-                href="/signup"
+              <AuthActionButton
                 className="inline-flex items-center justify-center rounded-full bg-[#181818] px-7 py-3 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-black font-lazzer cursor-pointer"
               >
-                Check your AI Visibility
-              </Link>
+                Check Your AI Visibility
+              </AuthActionButton>
             </div>
           </div>
 
@@ -890,18 +893,18 @@ export function AiShiftSection() {
 const STEPS = [
   {
     icon: FileSearch,
-    title: "Enter your URL",
-    body: "Paste any public website address. We fetch and inspect the live page — no installation or code changes needed.",
+    title: "Enter any website URL",
+    body: "Type or paste any domain address. We crawl and analyze the live site just like search engine bots do.",
   },
   {
     icon: ListChecks,
-    title: "We run 60+ checks",
-    body: "Speed, SEO, accessibility, security, mobile, and conversion checks run automatically against your real pages.",
+    title: "70+ automated audit checks",
+    body: "Technical SEO, Core Web Vitals, JSON-LD schema, mobile UX, and security headers are tested in real time.",
   },
   {
     icon: Rocket,
-    title: "Get your action plan",
-    body: "A scored report with prioritized recommendations — what to fix first and exactly how to fix it.",
+    title: "Get your action roadmap",
+    body: "Receive an overall health score with prioritized, step-by-step code solutions and rich schema outputs.",
   },
 ];
 
@@ -912,140 +915,96 @@ export function HowItWorks() {
       className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer"
     >
       <div className="w-full px-4 sm:px-8 lg:px-12">
-
         <div className="grid items-center gap-14 md:grid-cols-2">
-
-
           {/* Left */}
           <div>
-
-            <div className="mb-5 text-sm font-semibold uppercase tracking-wider text-blue-600">
-              HOW IT WORKS
+            <div className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer inline-flex items-center gap-2">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
+              <span>HOW IT WORKS</span>
             </div>
 
-            <h2 className="max-w-xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-              From website URL
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
-                {" "}to growth insights
-              </span>
+            <h2 className="max-w-xl text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-950 font-lazzer">
+              From Website URL to High-Impact Growth Insights
             </h2>
 
-            <p className="mt-5 max-w-lg text-lg leading-relaxed text-slate-600">
-              Run a complete website audit and discover exactly what needs
-              improvement with clear, actionable recommendations.
+            <p className="mt-4 max-w-lg text-base sm:text-lg leading-relaxed text-slate-600 font-normal">
+              Run an in-depth audit in under a minute — no tracking code, plugins, or developer setup required.
             </p>
 
-
             <div className="mt-8 space-y-5">
-
               {STEPS.map((s, i) => (
                 <div
                   key={s.title}
                   className="flex items-start gap-4"
                 >
-
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-[#181818] text-white">
                     <s.icon className="h-5 w-5" aria-hidden />
                   </div>
 
-
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-blue-600">
+                      <span className="text-xs font-bold uppercase tracking-wide text-emerald-700">
                         Step {i + 1}
                       </span>
 
-                      <h3 className="font-semibold text-slate-900">
+                      <h3 className="font-bold text-slate-900 font-lazzer text-base">
                         {s.title}
                       </h3>
                     </div>
 
-                    <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600 font-normal">
                       {s.body}
                     </p>
                   </div>
-
                 </div>
               ))}
-
             </div>
-
           </div>
 
-
-
           {/* Right Demo Card */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
-
-            <div className="rounded-xl bg-slate-100 px-5 py-4 text-sm text-slate-500">
+          <div className="rounded-sm border border-slate-200 bg-white p-6 shadow-xs">
+            <div className="rounded-xs bg-slate-100 px-5 py-3.5 text-sm text-slate-600 font-medium">
               https://yourwebsite.com
             </div>
 
-
-            <div className="mt-5 rounded-2xl bg-blue-50 p-5">
-
-              <div className="text-sm font-semibold text-blue-700">
-                AUDIT REPORT
+            <div className="mt-5 rounded-xs bg-[#dff2ed]/60 p-5 border border-emerald-200/50">
+              <div className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+                AI VISION AUDIT REPORT
               </div>
 
-              <div className="mt-3 text-xl font-semibold text-slate-900">
-                Website Score: 86/100
+              <div className="mt-2 text-xl font-bold text-slate-900 font-lazzer">
+                Health Score: 94/100
               </div>
 
-
-              <div className="mt-5 space-y-3 text-sm">
-
-                <div className="flex justify-between">
-                  <span className="text-slate-600">
-                    SEO Health
-                  </span>
-                  <strong>
-                    92%
-                  </strong>
+              <div className="mt-4 space-y-2.5 text-sm font-medium">
+                <div className="flex justify-between border-b border-slate-200/50 pb-1.5">
+                  <span className="text-slate-600">Technical SEO</span>
+                  <strong className="text-emerald-700">98% Passed</strong>
                 </div>
 
-
-                <div className="flex justify-between">
-                  <span className="text-slate-600">
-                    Performance
-                  </span>
-                  <strong>
-                    84%
-                  </strong>
+                <div className="flex justify-between border-b border-slate-200/50 pb-1.5">
+                  <span className="text-slate-600">Core Web Vitals</span>
+                  <strong className="text-emerald-700">Good (1.2s)</strong>
                 </div>
 
-
                 <div className="flex justify-between">
-                  <span className="text-slate-600">
-                    Accessibility
-                  </span>
-                  <strong>
-                    90%
-                  </strong>
+                  <span className="text-slate-600">Schema Markup</span>
+                  <strong className="text-emerald-700">Validated JSON-LD</strong>
                 </div>
-
               </div>
-
             </div>
 
-
-            <div className="mt-5 rounded-2xl border border-dashed border-blue-300 p-5">
-
-              <div className="text-sm font-semibold text-blue-700">
-                AUDIT INSIGHT
+            <div className="mt-5 rounded-xs border border-dashed border-slate-300 p-4 bg-slate-50">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                ACTIONABLE AUDIT INSIGHT
               </div>
 
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                Your website is performing well, but improving page speed and
-                content structure can increase visibility.
+              <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-600">
+                Your technical SEO foundations are strong. Implementing JSON-LD FAQ schema and compressing hero assets will secure top search positions.
               </p>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
     </section>
   );
@@ -1058,128 +1017,86 @@ export function ReportPreview() {
   return (
     <section className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer">
       <div className="w-full px-4 sm:px-8 lg:px-12">
-      <div className="grid items-center gap-14 lg:grid-cols-2">
+        <div className="grid items-center gap-14 lg:grid-cols-2">
+          {/* Left Content */}
+          <div>
+            <div className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer inline-flex items-center gap-2">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
+              <span>SMART REPORTING</span>
+            </div>
 
+            <h2 className="max-w-xl text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-950 font-lazzer">
+              Reports Built for Real Growth &amp; Rankings
+            </h2>
 
-        {/* Left Content */}
-        <div>
+            <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600 font-normal">
+              No confusing vanity metrics. Every issue comes with raw evidence, business impact, and clear step-by-step instructions to improve your website.
+            </p>
 
-          <div className="mb-5 text-sm font-semibold uppercase tracking-wider text-blue-600">
-            SMART REPORTING
+            <ul className="mt-8 space-y-4">
+              {[
+                "Overall health score with categorized technical breakdowns",
+                "Raw code evidence and detected values behind every flag",
+                "Simple, prioritized recommendations anyone can follow",
+                "Exportable client-ready white-label PDF reports",
+              ].map((item) => (
+                <li
+                  key={item}
+                  className="flex items-start gap-3 text-sm text-slate-700 font-medium"
+                >
+                  <CheckCircle2
+                    className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
+                  />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
-
-          <h2 className="max-w-xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-            Reports built for
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
-              {" "}real improvements
-            </span>
-          </h2>
-
-
-          <p className="mt-5 text-lg leading-relaxed text-slate-600">
-            No confusing scores. Every issue comes with evidence, impact,
-            and clear steps to improve your website.
-          </p>
-
-
-          <ul className="mt-8 space-y-4">
-
-            {[
-              "Overall health score with detailed breakdowns",
-              "Evidence behind every detected issue",
-              "Simple recommendations anyone can follow",
-              "Prioritized fixes based on impact",
-            ].map((item) => (
-              <li
-                key={item}
-                className="flex items-start gap-3 text-sm text-slate-700"
-              >
-                <CheckCircle2
-                  className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500"
-                />
-                {item}
-              </li>
-            ))}
-
-          </ul>
-
-        </div>
-
-
-
-        {/* Report Preview Card */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl">
-
-
-          {/* Header */}
-          <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-5">
-
-            <div>
-              <div className="text-sm font-semibold text-slate-900">
-                example.com
+          {/* Report Preview Card */}
+          <div className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs">
+            {/* Header */}
+            <div className="flex items-center justify-between rounded-xs bg-[#dff2ed]/50 p-5 border border-emerald-200/40">
+              <div>
+                <div className="text-base font-bold text-slate-900 font-lazzer">
+                  example.com
+                </div>
+                <div className="mt-1 text-xs text-slate-500 font-medium">
+                  AI Vision Audit completed in 18s
+                </div>
               </div>
 
-              <div className="mt-1 text-xs text-slate-500">
-                Audit completed recently
+              <div className="flex h-14 w-14 items-center justify-center rounded-full border-3 border-emerald-600 bg-white text-lg font-bold text-slate-900 font-lazzer">
+                94
               </div>
             </div>
 
-
-            <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-blue-500 text-xl font-bold text-slate-900">
-              86
+            {/* Report Items */}
+            <div className="mt-5 space-y-2.5">
+              <PreviewRow
+                icon={<CheckCircle2 className="h-5 w-5 text-emerald-600" />}
+                title="Technical SEO Structure"
+                detail="All critical metadata, canonicals, and robots rules passed"
+              />
+              <PreviewRow
+                icon={<CheckCircle2 className="h-5 w-5 text-emerald-600" />}
+                title="JSON-LD Schema Markup"
+                detail="Valid Organization and FAQ schema detected"
+              />
+              <PreviewRow
+                icon={<AlertTriangle className="h-5 w-5 text-amber-500" />}
+                title="Page Speed Optimization"
+                detail="Compress 2 hero images to improve LCP from 1.8s to 1.1s"
+              />
+              <PreviewRow
+                icon={<Lock className="h-5 w-5 text-slate-800" />}
+                title="AI Answer Engine Citation Depth"
+                detail="Available with Pro plan"
+                locked
+              />
             </div>
-
           </div>
-
-
-
-          {/* Report Items */}
-          <div className="mt-5 space-y-3">
-
-
-            <PreviewRow
-              icon={
-                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-              }
-              title="SEO structure"
-              detail="All important metadata detected"
-            />
-
-
-            <PreviewRow
-              icon={
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-              }
-              title="Page performance"
-              detail="Mobile speed needs improvement"
-            />
-
-
-            <PreviewRow
-              icon={
-                <XCircle className="h-5 w-5 text-red-500" />
-              }
-              title="Missing optimization"
-              detail="Improve content structure and keywords"
-            />
-
-
-            <PreviewRow
-              icon={
-                <Lock className="h-5 w-5 text-blue-600" />
-              }
-              title="AI visibility insights"
-              detail="Available with Premium"
-              locked
-            />
-
-          </div>
-
-
         </div>
-
-      </div>
       </div>
     </section>
   );
@@ -1197,11 +1114,11 @@ function PreviewRow({
   locked?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 px-5 py-3.5">
+    <div className="flex items-center gap-3 px-4 py-3 rounded-xs bg-slate-50 border border-slate-100">
       {icon}
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium text-ink">{title}</div>
-        <div className={`text-xs ${locked ? "text-premium-600" : "text-ink-muted"}`}>
+        <div className="text-sm font-bold text-slate-900 font-lazzer">{title}</div>
+        <div className={`text-xs ${locked ? "text-slate-500 font-medium" : "text-slate-600 font-normal"}`}>
           {detail}
         </div>
       </div>
@@ -1215,22 +1132,23 @@ function PreviewRow({
 
 const PLAN_ROWS: Array<{ label: string; free: boolean | string; premium: boolean | string }> = [
   { label: "Website audits per month", free: "3", premium: "50" },
-  { label: "Overall website score", free: true, premium: true },
-  { label: "Core SEO & speed checks", free: true, premium: true },
-  { label: "Essential recommendations", free: true, premium: true },
-  { label: "All audit sections unlocked", free: false, premium: true },
-  { label: "Full evidence & detected values", free: false, premium: true },
-  { label: "Prioritized improvement roadmap", free: false, premium: true },
-  { label: "Downloadable PDF reports", free: false, premium: true },
-  { label: "Historical comparisons", free: false, premium: true },
+  { label: "Overall website health score", free: true, premium: true },
+  { label: "Core SEO & speed factor checks", free: true, premium: true },
+  { label: "Essential recommendations & fixes", free: true, premium: true },
+  { label: "All 70+ audit inspection sections unlocked", free: false, premium: true },
+  { label: "Schema Markup Suite & JSON-LD Generator", free: true, premium: true },
+  { label: "Full raw evidence & detected code values", free: false, premium: true },
+  { label: "Prioritized developer improvement roadmap", free: false, premium: true },
+  { label: "Downloadable white-label PDF reports", free: false, premium: true },
+  { label: "Historical audit comparison & tracking", free: false, premium: true },
 ];
 
 function PlanCell({ value }: { value: boolean | string }) {
   if (typeof value === "string") {
-    return <span className="text-sm font-medium text-ink">{value}</span>;
+    return <span className="text-sm font-semibold text-slate-900 font-lazzer">{value}</span>;
   }
   return value ? (
-    <Check className="mx-auto h-4 w-4 text-success-600" aria-label="Included" />
+    <Check className="mx-auto h-4 w-4 text-emerald-600" aria-label="Included" />
   ) : (
     <Minus className="mx-auto h-4 w-4 text-slate-300" aria-label="Not included" />
   );
@@ -1243,190 +1161,133 @@ export function Pricing() {
       className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer"
     >
       <div className="w-full px-4 sm:px-8 lg:px-12">
-
-
         {/* Header */}
         <div className="mx-auto max-w-3xl text-center">
-
-          <div className="mb-5 text-sm font-semibold uppercase tracking-wider text-blue-600">
-            PRICING
+          <div className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer inline-flex items-center gap-2 justify-center">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
+            <span>TRANSPARENT PRICING</span>
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
           </div>
 
-          <h2 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-            Simple pricing that
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
-              {" "}scales with you
-            </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-950 font-lazzer">
+            Simple Pricing That Scales With You
           </h2>
 
-          <p className="mt-5 text-lg text-slate-600">
-            Start with a free audit and upgrade when you need deeper insights,
-            reports, and advanced recommendations.
+          <p className="mt-4 text-base sm:text-lg text-slate-600 font-normal">
+            Start with a free audit and upgrade when you need deeper insights, white-label reports, and high-frequency crawling.
           </p>
-
         </div>
-
-
 
         {/* Cards */}
         <div className="mx-auto mt-12 grid max-w-5xl gap-6 md:grid-cols-2">
-
-
           {/* Free */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-8">
-
-            <h3 className="text-lg font-semibold text-slate-900">
-              Free
+          <div className="rounded-sm border border-slate-200 bg-white p-8 shadow-xs">
+            <h3 className="text-xl font-bold text-slate-900 font-lazzer">
+              Free Plan
             </h3>
 
-
             <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-5xl font-semibold text-slate-950">
+              <span className="text-5xl font-bold text-slate-950 font-lazzer">
                 $0
               </span>
-
-              <span className="text-sm text-slate-500">
+              <span className="text-sm text-slate-500 font-medium">
                 / forever
               </span>
             </div>
 
-
-            <p className="mt-4 text-sm leading-relaxed text-slate-600">
-              Essential website checks to understand your current performance.
+            <p className="mt-4 text-sm leading-relaxed text-slate-600 font-normal">
+              Essential website checks to diagnose technical SEO and page speed health.
             </p>
 
-
-            <Link
-              href="/signup"
-              className="mt-8 block rounded-xl border border-slate-300 px-5 py-3 text-center text-sm font-medium text-slate-900 transition hover:bg-slate-50"
+            <AuthActionButton
+              className="mt-8 block w-full rounded-full border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-900 transition hover:bg-slate-50 font-lazzer cursor-pointer"
             >
-              Create free account
-            </Link>
+              Create Free Account
+            </AuthActionButton>
 
-
-            <ul className="mt-8 space-y-3 text-sm text-slate-600">
-
-              <li>✓ Basic SEO checks</li>
-              <li>✓ Performance overview</li>
-              <li>✓ Limited recommendations</li>
-
+            <ul className="mt-8 space-y-3 text-sm text-slate-600 font-medium">
+              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> 3 Audits per month</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Core SEO &amp; Speed health scores</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Schema Markup Suite access</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Essential fix recommendations</li>
             </ul>
-
           </div>
 
-
-
-
           {/* Premium */}
-          <div className="relative rounded-3xl border-2 border-blue-600 bg-white p-8 shadow-xl">
-
-
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-1 text-xs font-semibold text-white">
+          <div className="relative rounded-sm border-2 border-slate-900 bg-white p-8 shadow-md">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#181818] px-4 py-1 text-xs font-bold uppercase tracking-wider text-white">
               MOST POPULAR
             </div>
 
-
-            <h3 className="text-lg font-semibold text-slate-900">
-              Premium
+            <h3 className="text-xl font-bold text-slate-900 font-lazzer">
+              Pro Plan
             </h3>
 
-
             <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-5xl font-semibold text-slate-950">
+              <span className="text-5xl font-bold text-slate-950 font-lazzer">
                 $29
               </span>
-
-              <span className="text-sm text-slate-500">
+              <span className="text-sm text-slate-500 font-medium">
                 / month
               </span>
             </div>
 
-
-            <p className="mt-4 text-sm leading-relaxed text-slate-600">
-              Complete audit insights with detailed reports, evidence,
-              exports, and history.
+            <p className="mt-4 text-sm leading-relaxed text-slate-600 font-normal">
+              Complete audit insights, white-label PDF reports, evidence inspectors, and unlimited exports.
             </p>
 
-
-            <Link
-              href="/signup"
-              className="mt-8 block rounded-xl bg-black px-5 py-3 text-center text-sm font-medium text-white transition hover:bg-slate-800"
+            <AuthActionButton
+              className="mt-8 block w-full rounded-full bg-[#181818] px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-black font-lazzer cursor-pointer"
             >
-              Start Premium
-            </Link>
+              Start Pro Trial
+            </AuthActionButton>
 
-
-            <ul className="mt-8 space-y-3 text-sm text-slate-600">
-
-              <li>✓ Full audit sections</li>
-              <li>✓ Detailed recommendations</li>
-              <li>✓ PDF exports</li>
-              <li>✓ Audit history</li>
-
+            <ul className="mt-8 space-y-3 text-sm text-slate-600 font-medium">
+              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> 50 Audits per month</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> All 70+ inspection factors unlocked</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Full schema generator &amp; validator suite</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Exportable white-label PDF reports</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Historical audit comparisons</li>
             </ul>
-
-
           </div>
-
-
         </div>
 
-
-
-        {/* Comparison */}
-        <div className="mx-auto mt-14 max-w-5xl overflow-hidden rounded-2xl border border-slate-200">
-
+        {/* Comparison Table */}
+        <div className="mx-auto mt-14 max-w-5xl overflow-hidden rounded-sm border border-slate-200 bg-white">
           <table className="w-full text-left">
-
-            <thead className="bg-slate-50">
+            <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-4 text-sm font-semibold text-slate-900">
-                  Features
+                <th className="px-6 py-4 text-sm font-bold text-slate-900 font-lazzer">
+                  Platform Features
                 </th>
-
-                <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900">
+                <th className="px-6 py-4 text-center text-sm font-bold text-slate-900 font-lazzer">
                   Free
                 </th>
-
-                <th className="px-6 py-4 text-center text-sm font-semibold text-blue-600">
-                  Premium
+                <th className="px-6 py-4 text-center text-sm font-bold text-emerald-700 font-lazzer">
+                  Pro
                 </th>
               </tr>
             </thead>
-
-
             <tbody>
-
               {PLAN_ROWS.map((row) => (
                 <tr
                   key={row.label}
-                  className="border-t border-slate-100"
+                  className="border-t border-slate-100 font-medium"
                 >
-
-                  <td className="px-6 py-4 text-sm text-slate-600">
+                  <td className="px-6 py-4 text-sm text-slate-700">
                     {row.label}
                   </td>
-
-
                   <td className="px-6 py-4 text-center">
                     <PlanCell value={row.free} />
                   </td>
-
-
                   <td className="px-6 py-4 text-center">
                     <PlanCell value={row.premium} />
                   </td>
-
                 </tr>
               ))}
-
             </tbody>
-
           </table>
-
         </div>
-
-
       </div>
     </section>
   );
@@ -1438,32 +1299,32 @@ export function Pricing() {
 
 const FAQS = [
   {
-    q: "Do I need to install anything on my website?",
-    a: "No. AI Vision Audit analyzes your live public website from the outside — the same way search engines, Googlebot, and visitors see it. No scripts, plugins, or code changes are required.",
+    q: "Do I need to install code or plugins on my website?",
+    a: "No. AI Vision Audit analyzes your live public website from the outside — exactly the way search engines, Googlebot, and LLM crawlers inspect it. Zero scripts, plugins, or code changes required.",
   },
   {
     q: "Is the free audit really free?",
-    a: "Yes. You can run an audit and inspect your core SEO, speed, and schema results without entering a credit card.",
+    a: "Yes. You can run an audit immediately and review your technical SEO, page speed, and schema markup results without entering any credit card.",
   },
   {
-    q: "What schema markup types are supported?",
+    q: "What structured data types are supported in the Schema Suite?",
     a: "Our Schema Markup Suite supports Organization, LocalBusiness, FAQPage, Article, Product, BreadcrumbList, WebSite, and more with instant JSON-LD generation and live syntax validation.",
   },
   {
     q: "How long does a website audit take?",
-    a: "Most audits complete in under a minute, delivering full technical SEO, Core Web Vitals, and structured data diagnostics.",
+    a: "Most audits complete in under 30 seconds, delivering full technical SEO, Core Web Vitals, and structured data diagnostics.",
   },
   {
     q: "What features are live vs coming soon?",
-    a: "Our core Website SEO Audits, Page Speed & Core Web Vitals, and Schema Markup & Structured Data Suite are fully live and active. Backlinks Explorer, Keyword Rank Tracker, and Keyword Research Studio are in active development and coming soon.",
+    a: "Our core Website SEO Audits, Page Speed & Core Web Vitals, and Schema Markup Suite are 100% live today. Backlink Explorer, Keyword Rank Tracker, and Keyword Research Studio are in active development and coming soon.",
   },
   {
-    q: "Can I audit any website?",
-    a: "You can audit any publicly reachable website over HTTP or HTTPS.",
+    q: "Can I audit any website URL?",
+    a: "You can audit any publicly accessible website reachable over HTTP or HTTPS.",
   },
   {
     q: "Can I cancel my subscription anytime?",
-    a: "Yes. You can cancel your subscription at any time directly from your billing dashboard with zero hassle.",
+    a: "Yes. You can cancel or change your plan at any time directly from your billing settings with zero hassle.",
   },
 ];
 
@@ -1474,53 +1335,40 @@ export function Faq() {
       className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer"
     >
       <div className="w-full px-4 sm:px-8 lg:px-12">
-
-
         {/* Heading */}
         <div className="text-center">
-
-          <div className="mb-5 text-sm font-semibold uppercase tracking-wider text-blue-600">
-            FAQ
+          <div className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer inline-flex items-center gap-2 justify-center">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
+            <span>FREQUENTLY ASKED QUESTIONS</span>
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
           </div>
 
-
-          <h2 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-            Frequently asked
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-400 bg-clip-text text-transparent">
-              {" "}questions
-            </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-950 font-lazzer">
+            Frequently Asked Questions
           </h2>
 
-
-          <p className="mt-4 text-lg text-slate-600">
-            Everything you need to know about website audits and reports.
+          <p className="mt-4 text-base sm:text-lg text-slate-600 font-normal">
+            Everything you need to know about website audits, schema generation, and reporting.
           </p>
-
         </div>
 
-
-
         {/* FAQ Items */}
-        <div className="mt-12 overflow-hidden rounded-3xl border border-slate-200 bg-white">
-
+        <div className="mt-12 overflow-hidden rounded-sm border border-slate-200 bg-white shadow-xs max-w-4xl mx-auto">
           {FAQS.map((f) => (
             <details
               key={f.q}
               className="group border-b border-slate-100 last:border-none"
             >
-
               <summary
                 className="
                   flex cursor-pointer list-none items-center justify-between
-                  gap-5 px-6 py-5 text-left text-base font-medium
+                  gap-5 px-6 py-5 text-left text-base font-bold
                   text-slate-900 transition
                   hover:bg-slate-50
-                  [&::-webkit-details-marker]:hidden
+                  [&::-webkit-details-marker]:hidden font-lazzer
                 "
               >
-
                 {f.q}
-
 
                 <span
                   className="
@@ -1533,25 +1381,16 @@ export function Faq() {
                 >
                   +
                 </span>
-
               </summary>
 
-
               <div className="px-6 pb-5">
-
-                <p className="max-w-3xl text-sm leading-relaxed text-slate-600">
+                <p className="max-w-3xl text-sm leading-relaxed text-slate-600 font-normal">
                   {f.a}
                 </p>
-
               </div>
-
-
             </details>
           ))}
-
         </div>
-
-
       </div>
     </section>
   );
@@ -1562,26 +1401,26 @@ export function Faq() {
 
 const ARTICLES = [
   {
-    title: "How to Optimize Your Site for ChatGPT and LLM Search Engines",
-    excerpt: "Learn the key strategies for ensuring your brand gets cited in AI-generated answers across ChatGPT, Gemini, and Perplexity.",
-    category: "SEO & AI",
-    date: "FEB 12, 2026",
+    title: "How to Optimize Your Website for ChatGPT & AI Answer Engines",
+    excerpt: "Discover key technical strategies, structured data, and entity grounding techniques to get cited in generative AI search results.",
+    category: "AI SEARCH & GEO",
+    date: "SEP 2026",
     image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80",
     href: "#",
   },
   {
-    title: "Understanding Technical SEO Audits: 70+ Critical Factors",
-    excerpt: "A comprehensive guide to analyzing and fixing crawlability, indexability, speed, schema markup, and mobile usability issues.",
-    category: "TECHNICAL SEO",
-    date: "FEB 08, 2026",
+    title: "The Complete 2026 Schema Markup & JSON-LD Guide",
+    excerpt: "How to implement and validate Google-compliant structured data for rich snippets across Organizations, FAQs, Products, and Local Businesses.",
+    category: "STRUCTURED DATA",
+    date: "SEP 2026",
     image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
     href: "#",
   },
   {
-    title: "Why Page Type Grouping Changes Everything in SEO Reporting",
-    excerpt: "Discover how organizing your site by page types helps you identify high-impact issues faster and scale reporting for clients.",
-    category: "GROWTH",
-    date: "JAN 28, 2026",
+    title: "Mastering Core Web Vitals & Technical SEO Diagnostics",
+    excerpt: "A deep dive into optimizing LCP, CLS, and TBT metrics alongside 70+ crawlability checks to elevate organic search rankings.",
+    category: "TECHNICAL SEO",
+    date: "AUG 2026",
     image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
     href: "#",
   },
@@ -1599,7 +1438,7 @@ export function LatestWritings() {
               <span>INSIGHTS &amp; GUIDES</span>
             </div>
             <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold text-[#111827] tracking-tight font-lazzer">
-              Latest writings
+              Latest Insights &amp; SEO Articles
             </h2>
           </div>
           <Link
@@ -1667,29 +1506,28 @@ export function FinalCta() {
             <div className="lg:col-span-7 flex flex-col items-start text-left z-10">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-slate-200">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                <span>COMPLETE SEO &amp; AI MONITORING</span>
+                <span>NEXT-GENERATION AUDIT PLATFORM</span>
               </div>
 
               <h2 className="mt-5 font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight font-lazzer">
-                Dominate Search in Google &amp; AI Engines
+                Accelerate Your SEO &amp; AI Search Visibility Today
               </h2>
 
               <p className="mt-4 text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl">
-                Start tracking your SEO performance, monitoring AI visibility across 6 engines, and auditing 70+ technical factors today.
+                Run an instant 70+ factor technical audit, generate Google-compliant JSON-LD schema markup, and monitor site speed with AI Vision Audit.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3.5">
-                <Link
-                  href="/signup"
+                <AuthActionButton
                   className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3 text-sm font-bold text-slate-950 shadow-xs transition-colors hover:bg-slate-100 font-lazzer cursor-pointer"
                 >
-                  Start for Free
-                </Link>
+                  Run Free Audit Now
+                </AuthActionButton>
                 <Link
-                  href="#pricing"
+                  href="/dashboard/schema"
                   className="inline-flex items-center justify-center rounded-full border border-white/30 bg-transparent px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 font-lazzer cursor-pointer"
                 >
-                  See Pricing
+                  Explore Schema Suite
                 </Link>
               </div>
             </div>
@@ -1731,7 +1569,7 @@ export function MarketingFooter() {
             </Link>
 
             <p className="text-sm leading-relaxed text-slate-600 max-w-sm">
-              Comprehensive SEO audit tool and AI engine visibility platform. Analyze, monitor, and optimize your organic search presence.
+              AI Vision Audit is the modern website audit and structured data intelligence platform. Analyze technical SEO, validate schema markup, and optimize for Google and generative AI engines.
             </p>
 
             {/* Quick Audit Form */}

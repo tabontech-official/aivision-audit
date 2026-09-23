@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth/auth";
 import { MarketingHeader } from "@/components/marketing/header";
+import { AuthModalProvider } from "@/components/marketing/auth-modal-context";
 import {
   Hero,
   CredibilityStrip,
@@ -15,7 +16,7 @@ export default async function HomePage() {
   const session = await auth();
 
   return (
-    <>
+    <AuthModalProvider isLoggedIn={!!session?.user}>
       <MarketingHeader isLoggedIn={!!session?.user} />
       <main>
         <Hero />
@@ -27,6 +28,6 @@ export default async function HomePage() {
         <FinalCta />
       </main>
       <MarketingFooter />
-    </>
+    </AuthModalProvider>
   );
 }

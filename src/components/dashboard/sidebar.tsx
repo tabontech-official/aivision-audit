@@ -79,9 +79,6 @@ export function DashboardSidebar({
   const currentSectionParam = searchParams.get("section");
 
   // Section collapse state
-  const [overviewOpen, setOverviewOpen] = useState(true);
-  const [optimizationOpen, setOptimizationOpen] = useState(true);
-  const [growthOpen, setGrowthOpen] = useState(true);
   const [aiFixesOpen, setAiFixesOpen] = useState(true);
 
   const [projects, setProjects] = useState<string[]>(initialProjects);
@@ -306,227 +303,189 @@ export function DashboardSidebar({
           )}
         </div>
 
-        {/* 2. SCROLLABLE NAVIGATION LIST */}
-        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1 custom-scrollbar">
-          {/* SECTION 1: Overview */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setOverviewOpen(!overviewOpen)}
-              className="flex w-full items-center justify-between py-1.5 px-2 text-[13px] font-semibold text-slate-800 hover:text-slate-950 transition-colors cursor-pointer"
-            >
-              <span>Overview</span>
-              <span className="flex h-4 w-4 items-center justify-center rounded border border-slate-300 text-slate-400">
-                {overviewOpen ? (
-                  <Minus className="h-2.5 w-2.5 stroke-[2.5]" />
-                ) : (
-                  <Plus className="h-2.5 w-2.5 stroke-[2.5]" />
+        {/* 2. NAVIGATION LIST (Overview, Schema & Growth Fixed; AI Automation Fixes with dedicated Scroller) */}
+        <div className="flex-1 overflow-hidden px-3 py-2 flex flex-col space-y-1">
+          {/* SECTION 1: Overview (Fixed) */}
+          <div className="shrink-0">
+            <div className="py-1.5 px-2 text-[13px] font-semibold text-slate-800">
+              Overview
+            </div>
+
+            <div className="space-y-0.5 mt-1">
+              {/* Performance / SEO Dashboard */}
+              <Link
+                href="/dashboard"
+                prefetch={true}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
+                  isDashboardActive
+                    ? "bg-slate-100/90 text-slate-950 font-semibold"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 )}
-              </span>
-            </button>
+              >
+                {isDashboardActive ? (
+                  <div className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-white shrink-0">
+                    <BarChart3 className="h-3 w-3" />
+                  </div>
+                ) : (
+                  <BarChart3 className="h-4 w-4 text-slate-500 shrink-0" />
+                )}
+                <span className="truncate">Performance</span>
+              </Link>
 
-            {overviewOpen && (
-              <div className="space-y-0.5 mt-1">
-                {/* Performance / SEO Dashboard */}
-                <Link
-                  href="/dashboard"
-                  prefetch={true}
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
-                    isDashboardActive
-                      ? "bg-slate-100/90 text-slate-950 font-semibold"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  )}
-                >
-                  {isDashboardActive ? (
-                    <div className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-white shrink-0">
-                      <BarChart3 className="h-3 w-3" />
-                    </div>
-                  ) : (
-                    <BarChart3 className="h-4 w-4 text-slate-500 shrink-0" />
-                  )}
-                  <span className="truncate">Performance</span>
-                </Link>
-
-                {/* Page Audit */}
-                <Link
-                  href={selectedProject ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}` : "/dashboard/reports"}
-                  prefetch={true}
-                  onClick={(e) => handleSidebarItemClick(e)}
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
-                    isReportsActive
-                      ? "bg-slate-100/90 text-slate-950 font-semibold"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  )}
-                >
-                  {isReportsActive ? (
-                    <div className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-white shrink-0">
-                      <FileText className="h-3 w-3" />
-                    </div>
-                  ) : (
-                    <FileText className="h-4 w-4 text-slate-500 shrink-0" />
-                  )}
-                  <span className="truncate">Page Audit</span>
-                </Link>
-              </div>
-            )}
+              {/* Page Audit */}
+              <Link
+                href={selectedProject ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}` : "/dashboard/reports"}
+                prefetch={true}
+                onClick={(e) => handleSidebarItemClick(e)}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
+                  isReportsActive
+                    ? "bg-slate-100/90 text-slate-950 font-semibold"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                )}
+              >
+                {isReportsActive ? (
+                  <div className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-white shrink-0">
+                    <FileText className="h-3 w-3" />
+                  </div>
+                ) : (
+                  <FileText className="h-4 w-4 text-slate-500 shrink-0" />
+                )}
+                <span className="truncate">Page Audit</span>
+              </Link>
+            </div>
           </div>
 
-          <div className="my-2 border-t border-slate-100" />
+          <div className="my-1.5 border-t border-slate-100 shrink-0" />
 
-          {/* SECTION 2: Optimization / Tools */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setOptimizationOpen(!optimizationOpen)}
-              className="flex w-full items-center justify-between py-1.5 px-2 text-[13px] font-semibold text-slate-800 hover:text-slate-950 transition-colors cursor-pointer"
-            >
-              <span>Optimization</span>
-              <span className="flex h-4 w-4 items-center justify-center rounded border border-slate-300 text-slate-400">
-                {optimizationOpen ? (
-                  <Minus className="h-2.5 w-2.5 stroke-[2.5]" />
+          {/* SECTION 2: Optimization (Fixed Schema Markup + Scrollable AI Automation Fixes) */}
+          <div className="flex-1 min-h-0 flex flex-col">
+            <div className="py-1.5 px-2 text-[13px] font-semibold text-slate-800 shrink-0">
+              Optimization
+            </div>
+
+            <div className="space-y-0.5 mt-1 flex-1 min-h-0 flex flex-col">
+              {/* Schema Markup (Fixed) */}
+              <Link
+                href={selectedProject ? `/dashboard/schema?project=${encodeURIComponent(selectedProject)}` : "/dashboard/schema"}
+                prefetch={true}
+                onClick={(e) => handleSidebarItemClick(e)}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors shrink-0",
+                  isSchemaActive
+                    ? "bg-slate-100/90 text-slate-950 font-semibold"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                )}
+              >
+                {isSchemaActive ? (
+                  <div className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-white shrink-0">
+                    <Code2 className="h-3 w-3" />
+                  </div>
                 ) : (
-                  <Plus className="h-2.5 w-2.5 stroke-[2.5]" />
+                  <Code2 className="h-4 w-4 text-slate-500 shrink-0" />
                 )}
-              </span>
-            </button>
+                <span className="truncate">Schema Markup</span>
+              </Link>
 
-            {optimizationOpen && (
-              <div className="space-y-0.5 mt-1">
-                {/* Schema Markup */}
-                <Link
-                  href={selectedProject ? `/dashboard/schema?project=${encodeURIComponent(selectedProject)}` : "/dashboard/schema"}
-                  prefetch={true}
-                  onClick={(e) => handleSidebarItemClick(e)}
+              {/* AI Automation Fixes Accordion Header */}
+              <button
+                type="button"
+                onClick={() => setAiFixesOpen(!aiFixesOpen)}
+                className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer shrink-0"
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  <Sparkles className="h-4 w-4 text-slate-500 shrink-0" />
+                  <span className="truncate">AI Automation Fixes</span>
+                </div>
+                <ChevronDown
                   className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
-                    isSchemaActive
-                      ? "bg-slate-100/90 text-slate-950 font-semibold"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    "h-3.5 w-3.5 transition-transform duration-200 text-slate-400 shrink-0",
+                    aiFixesOpen && "rotate-180"
                   )}
-                >
-                  {isSchemaActive ? (
-                    <div className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-white shrink-0">
-                      <Code2 className="h-3 w-3" />
-                    </div>
-                  ) : (
-                    <Code2 className="h-4 w-4 text-slate-500 shrink-0" />
-                  )}
-                  <span className="truncate">Schema Markup</span>
-                </Link>
+                />
+              </button>
 
-                {/* AI Automation Fixes Accordion Header */}
-                <button
-                  type="button"
-                  onClick={() => setAiFixesOpen(!aiFixesOpen)}
-                  className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center gap-2.5 truncate">
-                    <Sparkles className="h-4 w-4 text-slate-500 shrink-0" />
-                    <span className="truncate">AI Automation Fixes</span>
-                  </div>
-                  <ChevronDown
-                    className={cn(
-                      "h-3.5 w-3.5 transition-transform duration-200 text-slate-400 shrink-0",
-                      aiFixesOpen && "rotate-180"
-                    )}
-                  />
-                </button>
+              {/* AI Automation Fixes Scroller */}
+              {aiFixesOpen && (
+                <div className="flex-1 min-h-0 max-h-48 sm:max-h-56 overflow-y-auto custom-scrollbar space-y-0.5 pl-3.5 pr-1 border-l border-slate-200 my-1 ml-2.5">
+                  {activeSections.map((item, idx) => {
+                    const isSelected = currentSectionParam === item.slug;
+                    const rawScore = selectedProject ? projectSectionScores[selectedProject]?.[item.slug] : null;
+                    const displayValue = rawScore !== null && rawScore !== undefined ? Math.round(rawScore) : null;
+                    const colorHex = displayValue !== null ? scoreColor(displayValue) : "#94a3b8";
 
-                {aiFixesOpen && (
-                  <div className="space-y-0.5 pl-4 border-l border-slate-200 my-1 ml-2.5">
-                    {activeSections.map((item, idx) => {
-                      const isSelected = currentSectionParam === item.slug;
-                      const rawScore = selectedProject ? projectSectionScores[selectedProject]?.[item.slug] : null;
-                      const displayValue = rawScore !== null && rawScore !== undefined ? Math.round(rawScore) : null;
-                      const colorHex = displayValue !== null ? scoreColor(displayValue) : "#94a3b8";
-
-                      return (
-                        <Link
-                          key={idx}
-                          href={
-                            selectedProject
-                              ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}&section=${encodeURIComponent(item.slug)}`
-                              : `/dashboard/reports?section=${encodeURIComponent(item.slug)}`
-                          }
-                          prefetch={true}
-                          onClick={(e) => handleSidebarItemClick(e, item.slug)}
-                          className={cn(
-                            "flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium transition-colors cursor-pointer",
-                            isSelected
-                              ? "bg-slate-100 text-slate-950 font-semibold"
-                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                          )}
-                        >
-                          <span className="truncate pr-2" title={item.name}>{item.name}</span>
-                          {Boolean(selectedProject) && (
-                            <span
-                              className="shrink-0 font-bold tabular-nums text-[11px]"
-                              style={{ color: colorHex }}
-                            >
-                              {displayValue !== null ? displayValue : item.count}
-                            </span>
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+                    return (
+                      <Link
+                        key={idx}
+                        href={
+                          selectedProject
+                            ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}&section=${encodeURIComponent(item.slug)}`
+                            : `/dashboard/reports?section=${encodeURIComponent(item.slug)}`
+                        }
+                        prefetch={true}
+                        onClick={(e) => handleSidebarItemClick(e, item.slug)}
+                        className={cn(
+                          "flex items-center justify-between rounded-md px-2 py-1 text-[11px] font-medium transition-colors cursor-pointer",
+                          isSelected
+                            ? "bg-slate-100 text-slate-950 font-semibold"
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        )}
+                      >
+                        <span className="truncate pr-2" title={item.name}>{item.name}</span>
+                        {Boolean(selectedProject) && (
+                          <span
+                            className="shrink-0 font-bold tabular-nums text-[11px]"
+                            style={{ color: colorHex }}
+                          >
+                            {displayValue !== null ? displayValue : item.count}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="my-2 border-t border-slate-100" />
+          <div className="my-1.5 border-t border-slate-100 shrink-0" />
 
-          {/* SECTION 3: Growth & Intelligence (Coming Soon Modules) */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setGrowthOpen(!growthOpen)}
-              className="flex w-full items-center justify-between py-1.5 px-2 text-[13px] font-semibold text-slate-800 hover:text-slate-950 transition-colors cursor-pointer"
-            >
-              <span>Growth</span>
-              <span className="flex h-4 w-4 items-center justify-center rounded border border-slate-300 text-slate-400">
-                {growthOpen ? (
-                  <Minus className="h-2.5 w-2.5 stroke-[2.5]" />
-                ) : (
-                  <Plus className="h-2.5 w-2.5 stroke-[2.5]" />
-                )}
-              </span>
-            </button>
+          {/* SECTION 3: Growth & Intelligence (Fixed) */}
+          <div className="shrink-0">
+            <div className="py-1.5 px-2 text-[13px] font-semibold text-slate-800">
+              Growth
+            </div>
 
-            {growthOpen && (
-              <div className="space-y-0.5 mt-1">
-                {/* Backlinks */}
-                <div
-                  className="flex items-center justify-between rounded-lg px-2.5 py-2 text-[13px] font-medium text-slate-500 hover:bg-slate-50/60 select-none cursor-default"
-                  title="Backlinks — Coming in next update"
-                >
-                  <div className="flex items-center gap-2.5 truncate">
-                    <Link2 className="h-4 w-4 text-slate-400 shrink-0" />
-                    <span className="truncate">Backlinks</span>
-                  </div>
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500 border border-slate-200 shrink-0">
-                    Coming Soon
-                  </span>
+            <div className="space-y-0.5 mt-1">
+              {/* Backlinks */}
+              <div
+                className="flex items-center justify-between rounded-lg px-2.5 py-2 text-[13px] font-medium text-slate-500 hover:bg-slate-50/60 select-none cursor-default"
+                title="Backlinks — Coming in next update"
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  <Link2 className="h-4 w-4 text-slate-400 shrink-0" />
+                  <span className="truncate">Backlinks</span>
                 </div>
-
-                {/* Keywords */}
-                <div
-                  className="flex items-center justify-between rounded-lg px-2.5 py-2 text-[13px] font-medium text-slate-500 hover:bg-slate-50/60 select-none cursor-default"
-                  title="Keywords — Coming in next update"
-                >
-                  <div className="flex items-center gap-2.5 truncate">
-                    <Key className="h-4 w-4 text-slate-400 shrink-0" />
-                    <span className="truncate">Keywords</span>
-                  </div>
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500 border border-slate-200 shrink-0">
-                    Coming Soon
-                  </span>
-                </div>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500 border border-slate-200 shrink-0">
+                  Coming Soon
+                </span>
               </div>
-            )}
+
+              {/* Keywords */}
+              <div
+                className="flex items-center justify-between rounded-lg px-2.5 py-2 text-[13px] font-medium text-slate-500 hover:bg-slate-50/60 select-none cursor-default"
+                title="Keywords — Coming in next update"
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  <Key className="h-4 w-4 text-slate-400 shrink-0" />
+                  <span className="truncate">Keywords</span>
+                </div>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500 border border-slate-200 shrink-0">
+                  Coming Soon
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
