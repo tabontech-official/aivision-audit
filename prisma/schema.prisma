@@ -1637,6 +1637,28 @@ model TrackedKeyword {
   @@map("tracked_keywords")
 }
 
+model Article {
+  id              String    @id @default(uuid()) @db.Uuid
+  slug            String    @unique
+  title           String
+  description     String?   @db.Text
+  content         String    @db.Text
+  coverImage      String?   @map("cover_image")
+  authorName      String    @default("Editorial Team") @map("author_name")
+  authorTitle     String?   @map("author_title")
+  authorAvatar    String?   @map("author_avatar")
+  category        String    @default("Technical SEO")
+  tags            String[]  @default([])
+  readTimeMinutes Int       @default(5) @map("read_time_minutes")
+  isPublished     Boolean   @default(false) @map("is_published")
+  isFeatured      Boolean   @default(false) @map("is_featured")
+  viewCount       Int       @default(0) @map("view_count")
+  publishedAt     DateTime? @map("published_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-
-
+  @@index([isPublished, publishedAt])
+  @@index([category])
+  @@index([slug])
+  @@map("articles")
+}

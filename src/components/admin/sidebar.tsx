@@ -16,12 +16,14 @@ import {
   Receipt,
   SlidersHorizontal,
   History,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { logoutAction } from "@/app/(auth)/actions";
 
 const MAIN_NAV = [
   { href: "/master-admin", label: "Overview", icon: LayoutDashboard, exact: true },
+  { href: "/master-admin/articles", label: "Articles & Blog", icon: BookOpen },
   { href: "/master-admin/builder", label: "Report Builder", icon: Blocks },
   { href: "/master-admin/leads", label: "Leads", icon: Contact },
   { href: "/master-admin/users", label: "Users", icon: Users },

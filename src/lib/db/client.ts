@@ -4,20 +4,37 @@ import { PrismaClient } from "@prisma/client";
  * Prisma client singleton — prevents connection exhaustion during
  * Next.js dev hot-reload, and reuses one client per serverless instance.
  */
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
-
-export const db =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+function createPrismaClient(): PrismaClient {
+  return new PrismaClient({
     log:
       process.env.NODE_ENV === "development"
         ? ["warn", "error"]
         : ["error"],
   });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = db;
 }
+
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+
+export function getDb(): PrismaClient {
+  if (
+    !globalForPrisma.prisma ||
+    (process.env.NODE_ENV !== "production" && !(globalForPrisma.prisma as any).article)
+  ) {
+    globalForPrisma.prisma = createPrismaClient();
+  }
+  return globalForPrisma.prisma;
+}
+
+export const db: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const client = getDb();
+    const value = (client as any)[prop];
+    if (typeof value === "function") {
+      return value.bind(client);
+    }
+    return value;
+  },
+});
 
 /**
  * A dropped-connection error rather than a real query failure.

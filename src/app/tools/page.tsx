@@ -47,7 +47,7 @@ export default async function FreeToolsHubPage() {
       ],
     },
     {
-      title: "Schema Markup & JSON-LD Suite",
+      title: "Schema Markup & JSON-LD",
       description:
         "Generate, validate, and preview structured data for Articles, Products, Organizations, FAQs, Local Businesses, and Breadcrumbs.",
       badge: "Core Feature",
@@ -62,7 +62,7 @@ export default async function FreeToolsHubPage() {
       ],
     },
     {
-      title: "Speed & Core Web Vitals Analyzer",
+      title: "Speed & Core Web Vitals",
       description:
         "Measure real-world performance metrics: LCP, INP, CLS, TTFB, and get prioritized speed recommendations to improve search rankings.",
       badge: "Speed Benchmark",
@@ -77,7 +77,7 @@ export default async function FreeToolsHubPage() {
       ],
     },
     {
-      title: "Mobile UX & Viewport Optimizer",
+      title: "Mobile UX & Viewport",
       description:
         "Ensure your website delivers a seamless mobile experience with responsive layout diagnostics, tap target spacing, and font readability.",
       badge: "Mobile First",
@@ -92,7 +92,7 @@ export default async function FreeToolsHubPage() {
       ],
     },
     {
-      title: "Security, SSL & Trust Signals",
+      title: "Security & SSL Trust",
       description:
         "Inspect SSL certificates, HSTS enforcement, security headers (CSP, X-Frame-Options), and safe browsing status to protect visitors.",
       badge: "Security & Trust",
@@ -107,7 +107,7 @@ export default async function FreeToolsHubPage() {
       ],
     },
     {
-      title: "AI Answer Engine Citation Scanner",
+      title: "AI Answer Engine Scanner",
       description:
         "Evaluate how generative AI engines (ChatGPT, Perplexity, Claude, Gemini) read and cite your domain for key search queries.",
       badge: "AI Powered",
@@ -195,7 +195,7 @@ export default async function FreeToolsHubPage() {
                         </span>
                       </div>
 
-                      <h3 className="text-xl font-bold text-slate-900 group-hover:text-black transition-colors">
+                      <h3 className="text-base sm:text-[17px] font-bold text-slate-900 group-hover:text-black transition-colors whitespace-nowrap overflow-hidden text-ellipsis font-lazzer">
                         {tool.title}
                       </h3>
 

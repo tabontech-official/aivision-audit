@@ -589,7 +589,7 @@ const OTHER_FEATURES = [
   },
   {
     icon: Link2,
-    title: "Schema Markup & JSON-LD Suite",
+    title: "Schema Markup & JSON-LD",
     badge: "Available Now",
     isLive: true,
     body: "Generate, validate, and preview Google-compliant structured data for rich snippets.",
@@ -1442,7 +1442,7 @@ export function LatestWritings() {
             </h2>
           </div>
           <Link
-            href="#"
+            href="/articles"
             className="mt-4 sm:mt-0 inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:text-black transition-colors font-lazzer"
           >
             <span>View All Articles</span>

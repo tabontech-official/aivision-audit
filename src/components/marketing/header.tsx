@@ -126,6 +126,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                   <div className="grid grid-cols-2 gap-x-7 gap-y-6">
                     <Link
                       href="/tools/seo-health-check"
+                      prefetch={true}
                       onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3 rounded-lg p-1 transition"
                     >
@@ -149,6 +150,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
 
                     <Link
                       href="/dashboard/schema"
+                      prefetch={true}
                       onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3 rounded-lg p-1 transition"
                     >
@@ -172,6 +174,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
 
                     <Link
                       href="/tools/speed-core-vitals"
+                      prefetch={true}
                       onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3 rounded-lg p-1 transition"
                     >
@@ -195,6 +198,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
 
                     <Link
                       href="/tools/security-trust"
+                      prefetch={true}
                       onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3 rounded-lg p-1 transition"
                     >
@@ -287,6 +291,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                     <Link
                       href="/use-cases/content-led-companies"
+                      prefetch={true}
                       onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3.5 rounded-lg transition"
                     >
@@ -319,6 +324,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
 
                     <Link
                       href="/use-cases/ecommerce-brands"
+                      prefetch={true}
                       onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3.5 rounded-lg transition"
                     >
@@ -349,6 +355,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
 
                     <Link
                       href="/use-cases/growth-agencies"
+                      prefetch={true}
                       onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3.5 rounded-lg transition"
                     >
@@ -381,6 +388,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
 
                     <Link
                       href="/use-cases/saas-marketers"
+                      prefetch={true}
                       onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3.5 rounded-lg transition"
                     >
@@ -417,6 +425,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           {/* Free Tools */}
           <Link
             href="/tools"
+            prefetch={true}
             className="px-3 py-1.5 font-lazzer text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)] transition hover:text-black"
           >
             Free Tools
@@ -425,6 +434,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           {/* Pricing */}
           <Link
             href="/pricing"
+            prefetch={true}
             className="px-3 py-1.5 font-lazzer text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)] transition hover:text-black"
           >
             Pricing
@@ -432,7 +442,8 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           {/* Articles */}
           <Link
-            href="/#faq"
+            href="/articles"
+            prefetch={true}
             className="px-3 py-1.5 font-lazzer text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)] transition hover:text-black"
           >
             Articles
@@ -452,6 +463,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
               </button>
               <Link
                 href="/dashboard"
+                prefetch={true}
                 className="inline-flex items-center justify-center rounded-full bg-[#181818] px-5 py-2 text-sm font-semibold text-white transition hover:bg-black cursor-pointer shadow-xs"
               >
                 Dashboard
@@ -553,7 +565,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
               Pricing
             </Link>
             <Link
-              href="/#faq"
+              href="/articles"
               onClick={() => setMobileMenuOpen(false)}
               className="text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)]"
             >
