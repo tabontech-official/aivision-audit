@@ -577,6 +577,20 @@ export async function runAudit(reportId: string): Promise<void> {
       meta: { overallScore: summary.overallScore, grade: summary.grade, status: psiFailed ? "PARTIAL" : "COMPLETED" },
     });
 
+    // In-app user notification when audit completes
+    if (report.userId) {
+      const targetHost = page.finalUrl ? new URL(page.finalUrl).hostname : new URL(report.website.url).hostname;
+      await db.notification.create({
+        data: {
+          userId: report.userId,
+          type: "REPORT_READY",
+          title: `Audit Completed: ${targetHost}`,
+          body: `Overall score: ${summary.overallScore}/100 (${summary.grade}). ${summary.passedCount} checks passed, ${summary.failedCount} issues detected.`,
+          linkUrl: `/dashboard/reports/${report.id}`,
+        },
+      }).catch(() => undefined);
+    }
+
     // Lead follow-through: platform data onto the Lead + the result email the
     // visitor asked for. Best-effort — never fails the audit.
     await recordFunnelEvent("audit_completed", reportId);
