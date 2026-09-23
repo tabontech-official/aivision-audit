@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Globe, Sparkles, UserCheck, X } from "lucide-react";
+import { ArrowLeft, Globe, CheckCircle2, UserCheck, X } from "lucide-react";
 import {
   continueWithEmailSchema,
   type ContinueWithEmailInput,
@@ -216,7 +216,7 @@ export function AuthGateModal({
                 {returning ? (
                   <UserCheck className="mt-0.5 h-4 w-4 shrink-0 text-slate-800" aria-hidden />
                 ) : (
-                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs sm:text-sm text-slate-900">

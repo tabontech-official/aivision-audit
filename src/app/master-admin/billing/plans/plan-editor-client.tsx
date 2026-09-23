@@ -11,7 +11,6 @@ import {
   AlertCircle,
   Plus,
   Trash2,
-  Sparkles,
   Zap,
   CreditCard,
   Gauge,

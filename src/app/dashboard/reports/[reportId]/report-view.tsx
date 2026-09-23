@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   RotateCw,
   Lock,
-  Sparkles,
   ChevronDown,
   ExternalLink,
   Zap,
@@ -960,7 +959,7 @@ function UpgradeCta({
 
   return (
     <div className="rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-8 text-center shadow-xs font-lazzer">
-      <Sparkles className="mx-auto h-6 w-6 text-slate-900" aria-hidden />
+      <Lock className="mx-auto h-6 w-6 text-slate-900" aria-hidden />
       <h3 className="mt-2 text-lg font-bold text-slate-900">Unlock your full report</h3>
       <p className="mx-auto mt-1 max-w-md text-xs sm:text-sm text-slate-500">
         {parts.join(" and ")} {parts.length ? "are" : "is"} locked. Upgrade to Premium for full

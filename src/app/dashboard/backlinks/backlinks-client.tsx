@@ -12,7 +12,7 @@ import {
   CheckCircle2,
   Database,
   TrendingUp,
-  Sparkles,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { OverviewTab } from "@/components/backlinks/overview-tab";
@@ -230,7 +230,7 @@ export function BacklinksClientView({
 
             return [
               { id: "overview", label: "Overview", icon: ShieldCheck, badgeBg: "bg-blue-600", count: undefined },
-              { id: "recommendations", label: "Recommendations", icon: Sparkles, badgeBg: "bg-teal-600", count: audit?.recommendations?.length ? audit.recommendations.length : undefined },
+              { id: "recommendations", label: "Recommendations", icon: Zap, badgeBg: "bg-teal-600", count: audit?.recommendations?.length ? audit.recommendations.length : undefined },
               { id: "backlinks", label: "Backlinks", icon: Link2, badgeBg: "bg-purple-600", count: detailedFetchedCount > 0 ? detailedFetchedCount : undefined },
               { id: "referring_domains", label: "Referring Domains", icon: Globe2, badgeBg: "bg-slate-700", count: audit?.referringDomains ? audit.referringDomains : undefined },
               { id: "anchors", label: "Anchor Text", icon: Tag, badgeBg: "bg-rose-600", count: audit?.anchors?.length ? audit.anchors.length : undefined },

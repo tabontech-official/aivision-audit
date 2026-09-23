@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
-  Sparkles,
+  ListChecks,
   AlertTriangle,
   AlertOctagon,
   CheckCircle2,
@@ -222,7 +222,7 @@ export function RecommendationsTab({
           <div className="flex items-center justify-between gap-2 mb-2">
             <span className="text-xs font-bold text-slate-600 font-sans">Total Recommendations</span>
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
-              <Sparkles className="h-4 w-4" />
+              <ListChecks className="h-4 w-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">

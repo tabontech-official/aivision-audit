@@ -14,7 +14,6 @@ import {
   Percent,
   ShieldAlert,
   Layers,
-  Sparkles,
   ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";

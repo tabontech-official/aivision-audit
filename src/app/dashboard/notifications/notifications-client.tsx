@@ -7,7 +7,7 @@ import {
   CheckCircle2,
   AlertCircle,
   XCircle,
-  Sparkles,
+  Award,
   ShieldCheck,
   CheckCheck,
   Trash2,
@@ -101,7 +101,7 @@ export function NotificationsClient({
         return <XCircle className="h-5 w-5 text-rose-600" />;
       case "PLAN_UPGRADED":
       case "PLAN_DOWNGRADED":
-        return <Sparkles className="h-5 w-5 text-purple-600" />;
+        return <Award className="h-5 w-5 text-purple-600" />;
       case "SYSTEM":
         return <ShieldCheck className="h-5 w-5 text-blue-600" />;
       default:

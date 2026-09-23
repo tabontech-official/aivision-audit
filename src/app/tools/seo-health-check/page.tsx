@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth/auth";
 import { MarketingHeader } from "@/components/marketing/header";
 import { MarketingFooter } from "@/components/marketing/sections";
 import { AuditUrlForm } from "@/components/marketing/audit-url-form";
-import { Search, CheckCircle2, ShieldCheck, FileText, Globe, Link2, Sparkles } from "lucide-react";
+import { Search, CheckCircle2, ShieldCheck, FileText, Globe, Link2, Zap } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
@@ -98,7 +98,7 @@ export default async function SeoHealthCheckPage() {
 
               <div className="rounded-sm border border-slate-200/90 p-6 sm:p-7 bg-white shadow-2xs">
                 <div className="h-9 w-9 rounded-sm bg-[#dff2ed] text-slate-900 flex items-center justify-center font-bold text-sm mb-4">
-                  <Sparkles className="h-4.5 w-4.5" />
+                  <Zap className="h-4.5 w-4.5" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-2">Image Optimization &amp; Alt Tags</h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">

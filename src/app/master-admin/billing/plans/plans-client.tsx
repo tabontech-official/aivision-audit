@@ -14,7 +14,7 @@ import {
   ExternalLink,
   Users,
   CreditCard,
-  Sparkles,
+  Award,
   Zap,
 } from "lucide-react";
 import { duplicatePlanAction, deletePlanAction, syncPlanToStripeAction } from "./actions";
@@ -136,7 +136,7 @@ export function PlansListClient({ initialPlans }: { initialPlans: any[] }) {
 
                   {plan.badgeText && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-[#dff2ed] px-2.5 py-0.5 text-[11px] font-bold text-slate-900">
-                      <Sparkles className="h-3 w-3 text-[#1b4e42]" />
+                      <Award className="h-3 w-3 text-[#1b4e42]" />
                       {plan.badgeText}
                     </span>
                   )}

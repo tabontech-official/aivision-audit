@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, Sparkles, Loader2, ArrowRight } from "lucide-react";
+import { Check, Award, Loader2, ArrowRight, Zap } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { startPublicCheckoutAction } from "./actions";
 
@@ -34,6 +34,21 @@ export function PricingTable({
   const [pending, startTransition] = useTransition();
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const getGridClasses = (count: number) => {
+    switch (count) {
+      case 1:
+        return "max-w-md mx-auto grid grid-cols-1 gap-8 items-stretch justify-center";
+      case 2:
+        return "max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch justify-center";
+      case 3:
+        return "max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch justify-center";
+      case 4:
+        return "max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch justify-center";
+      default:
+        return "max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch justify-center";
+    }
+  };
 
   const handleCheckout = (plan: PublicPricingPlan) => {
     if (plan.customCtaUrl) {
@@ -101,8 +116,8 @@ export function PricingTable({
         </div>
       )}
 
-      {/* Cards Grid */}
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 items-stretch max-w-7xl mx-auto">
+      {/* Dynamic Centered Cards Grid */}
+      <div className={getGridClasses(plans.length)}>
         {plans.map((plan) => {
           const price = interval === "yearly" ? plan.priceYearly : plan.priceMonthly;
           const per = interval === "yearly" ? "year" : "month";
@@ -122,7 +137,7 @@ export function PricingTable({
               {plan.badgeText && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                   <span className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3.5 py-1 text-xs font-bold text-[#dff2ed] shadow-sm">
-                    <Sparkles className="h-3.5 w-3.5 text-[#dff2ed]" />
+                    <Award className="h-3.5 w-3.5 text-[#dff2ed]" />
                     {plan.badgeText}
                   </span>
                 </div>
@@ -150,10 +165,13 @@ export function PricingTable({
                   )}
                 </div>
 
-                <div className="mt-6 rounded-xl bg-[#dff2ed]/30 border border-[#2f7a68]/15 p-3 text-xs font-bold text-[#143a31]">
-                  {plan.auditLimitType === "UNLIMITED"
-                    ? "✨ Unlimited Website Audits"
-                    : `⚡ ${plan.auditLimitPerMonth} Audits Included / Month`}
+                <div className="mt-6 rounded-xl bg-[#dff2ed]/30 border border-[#2f7a68]/15 p-3 text-xs font-bold text-[#143a31] flex items-center gap-2">
+                  <Zap className="h-3.5 w-3.5 text-emerald-700 shrink-0" />
+                  <span>
+                    {plan.auditLimitType === "UNLIMITED"
+                      ? "Unlimited Website Audits"
+                      : `${plan.auditLimitPerMonth} Audits Included / Month`}
+                  </span>
                 </div>
 
                 {/* Features list */}

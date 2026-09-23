@@ -6,7 +6,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   BarChart3,
   FileText,
-  Sparkles,
   Key,
   ChevronDown,
   ChevronsUpDown,
@@ -395,7 +394,7 @@ export function DashboardSidebar({
                 className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer shrink-0"
               >
                 <div className="flex items-center gap-2.5 truncate">
-                  <Sparkles className="h-4 w-4 text-slate-500 shrink-0" />
+                  <Zap className="h-4 w-4 text-slate-500 shrink-0" />
                   <span className="truncate">AI Automation Fixes</span>
                 </div>
                 <ChevronDown

@@ -1659,11 +1659,10 @@ export function MarketingFooter() {
                 USE CASES
               </h4>
               <ul className="space-y-2.5 text-xs sm:text-sm font-medium">
-                <li className="whitespace-nowrap"><Link href="#saas" className="hover:text-black transition-colors">For SaaS Marketers</Link></li>
-                <li className="whitespace-nowrap"><Link href="#content-led" className="hover:text-black transition-colors">Content Companies</Link></li>
-                <li className="whitespace-nowrap"><Link href="#agencies" className="hover:text-black transition-colors">Growth Agencies</Link></li>
-                <li className="whitespace-nowrap"><Link href="#ecommerce" className="hover:text-black transition-colors">E-commerce Brands</Link></li>
-                <li className="whitespace-nowrap"><Link href="#enterprise" className="hover:text-black transition-colors">Enterprises</Link></li>
+                <li className="whitespace-nowrap"><Link href="/use-cases/saas-marketers" className="hover:text-black transition-colors">For SaaS Marketers</Link></li>
+                <li className="whitespace-nowrap"><Link href="/use-cases/content-led-companies" className="hover:text-black transition-colors">Content Companies</Link></li>
+                <li className="whitespace-nowrap"><Link href="/use-cases/growth-agencies" className="hover:text-black transition-colors">Growth Agencies</Link></li>
+                <li className="whitespace-nowrap"><Link href="/use-cases/ecommerce-brands" className="hover:text-black transition-colors">E-commerce Brands</Link></li>
               </ul>
             </div>
 

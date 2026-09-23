@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Check, Sparkles, ExternalLink, Loader2, Gift, Zap, Shield, CreditCard } from "lucide-react";
+import { Check, Award, ExternalLink, Loader2, Gift, Zap, Shield, CreditCard } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { cn } from "@/lib/utils/cn";
 import { startDynamicCheckoutAction, openPortalAction } from "./actions";
@@ -286,7 +286,7 @@ export function BillingClient({ data }: { data: CustomerBillingData }) {
                     <h3 className="text-lg font-bold text-slate-900">{plan.name}</h3>
                     {plan.badgeText && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-[#dff2ed] px-2.5 py-0.5 text-[10px] font-bold text-slate-900">
-                        <Sparkles className="h-3 w-3 text-[#1b4e42]" />
+                        <Award className="h-3 w-3 text-[#1b4e42]" />
                         {plan.badgeText}
                       </span>
                     )}

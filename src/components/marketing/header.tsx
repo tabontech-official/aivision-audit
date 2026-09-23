@@ -285,8 +285,9 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
               <div className="absolute top-full left-0 pt-2 z-50">
                 <div className="w-[640px] max-w-[90vw] rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-2xl">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-                    <a
-                      href="#product"
+                    <Link
+                      href="/use-cases/content-led-companies"
+                      onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3.5 rounded-lg transition"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-[rgb(24,30,21)] shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
@@ -314,10 +315,11 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                           Large-site audits. AI citation tracking. Content performance intel.
                         </p>
                       </div>
-                    </a>
+                    </Link>
 
-                    <a
-                      href="#product"
+                    <Link
+                      href="/use-cases/ecommerce-brands"
+                      onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3.5 rounded-lg transition"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-[rgb(24,30,21)] shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
@@ -343,10 +345,11 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                           Monitor product pages, schemas, feeds. Rank in Google and ChatGPT.
                         </p>
                       </div>
-                    </a>
+                    </Link>
 
-                    <a
-                      href="#product"
+                    <Link
+                      href="/use-cases/growth-agencies"
+                      onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3.5 rounded-lg transition"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-[rgb(24,30,21)] shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
@@ -374,10 +377,11 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                           Multi-client command center. White-label reports. AI + traditional SEO.
                         </p>
                       </div>
-                    </a>
+                    </Link>
 
-                    <a
-                      href="#product"
+                    <Link
+                      href="/use-cases/saas-marketers"
+                      onClick={() => setActiveDropdown(null)}
                       className="group flex items-start gap-3.5 rounded-lg transition"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-[#dff2ed] text-[rgb(24,30,21)] shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
@@ -403,7 +407,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                           Monitor product pages, track AI citations, prove marketing ROI fast.
                         </p>
                       </div>
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -411,32 +415,28 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           </div>
 
           {/* Free Tools */}
-          <a
-            href="#tools"
-            onClick={(e) => {
-              e.preventDefault();
-              scrollToHero();
-            }}
+          <Link
+            href="/tools"
             className="px-3 py-1.5 font-lazzer text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)] transition hover:text-black"
           >
             Free Tools
-          </a>
+          </Link>
 
           {/* Pricing */}
-          <a
-            href="#pricing"
+          <Link
+            href="/pricing"
             className="px-3 py-1.5 font-lazzer text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)] transition hover:text-black"
           >
             Pricing
-          </a>
+          </Link>
 
           {/* Articles */}
-          <a
-            href="#faq"
+          <Link
+            href="/#faq"
             className="px-3 py-1.5 font-lazzer text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)] transition hover:text-black"
           >
             Articles
-          </a>
+          </Link>
         </nav>
 
         {/* Right Action Buttons */}
@@ -503,38 +503,62 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
               <span>Features</span>
               <ChevronDown className="h-4 w-4 text-slate-400" />
             </a>
-            <a
-              href="#product"
+            <div>
+              <div className="text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)] mb-2">
+                Use Cases
+              </div>
+              <div className="pl-3 flex flex-col gap-2 border-l-2 border-[#dff2ed] text-sm text-slate-600">
+                <Link
+                  href="/use-cases/content-led-companies"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:text-black py-0.5"
+                >
+                  Content-Led Companies
+                </Link>
+                <Link
+                  href="/use-cases/ecommerce-brands"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:text-black py-0.5"
+                >
+                  E-commerce Brands
+                </Link>
+                <Link
+                  href="/use-cases/growth-agencies"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:text-black py-0.5"
+                >
+                  Growth Agencies
+                </Link>
+                <Link
+                  href="/use-cases/saas-marketers"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:text-black py-0.5"
+                >
+                  SaaS Marketers
+                </Link>
+              </div>
+            </div>
+            <Link
+              href="/tools"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)]"
-            >
-              <span>Use Cases</span>
-              <ChevronDown className="h-4 w-4 text-slate-400" />
-            </a>
-            <a
-              href="#tools"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                scrollToHero();
-              }}
               className="text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)]"
             >
               Free Tools
-            </a>
-            <a
-              href="#pricing"
+            </Link>
+            <Link
+              href="/pricing"
               onClick={() => setMobileMenuOpen(false)}
               className="text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)]"
             >
               Pricing
-            </a>
-            <a
-              href="#faq"
+            </Link>
+            <Link
+              href="/#faq"
               onClick={() => setMobileMenuOpen(false)}
               className="text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)]"
             >
               Articles
-            </a>
+            </Link>
           </nav>
 
           <div className="mt-6 flex flex-col gap-3 border-t border-slate-100 pt-5">

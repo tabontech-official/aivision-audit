@@ -12,7 +12,7 @@ import {
   Copy, 
   Check, 
   Filter,
-  Sparkles,
+  Zap,
   ExternalLink
 } from "lucide-react";
 import { KeywordIdeaItem, KeywordIntent } from "@/services/keywords/types";
@@ -236,7 +236,7 @@ export function KeywordTable({ keywords, websiteId, onTrackToggle }: KeywordTabl
                 : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100"
             )}
           >
-            <Sparkles className="w-3 h-3" />
+            <Zap className="w-3 h-3" />
             Easy KD (≤29)
           </button>
           <button
