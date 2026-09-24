@@ -12,7 +12,7 @@ import {
   checkShopifyPolicies,
 } from "@/services/inspection/aux-checks";
 import { detectPlatform } from "@/services/inspection/detect-platform";
-import { sampleAdditionalPages } from "@/services/inspection/sample-pages";
+import { sampleAdditionalPages, crawlSitePages } from "@/services/inspection/sample-pages";
 import {
   renderPage,
   checkBrowserAvailability,
@@ -405,22 +405,54 @@ export async function runAudit(reportId: string): Promise<void> {
       create: { reportId, ...rawDataPayload },
     });
 
-    /* ---- Multi-page sampling: one representative page per additional type ----
-     * The visitor pastes a homepage, so product/collection/blog checks would
-     * otherwise never fire. Discovery is sitemap-driven, bounded, and every
-     * failure is silent — an unsampled page type resolves NOT_APPLICABLE. */
+    /* ---- Multi-page crawl & discovery: crawls multiple pages across the site ---- */
     const sampleStart = Date.now();
-    const sampled = await sampleAdditionalPages(
+    const crawlResult = await crawlSitePages(
       origin,
       extracted.sitemap.childSitemapUrls ?? [],
       page.finalUrl,
-    ).catch(() => []);
+      extracted.links?.internal ?? [],
+      extracted.robots?.content ?? null,
+    ).catch(() => ({
+      sampledPages: [],
+      crawledPages: [],
+      sitewideStats: {
+        totalPagesCrawled: 1,
+        totalImagesMissingAlt: 0,
+        duplicateTitleH1PagesCount: 0,
+        lowTextRatioPagesCount: 0,
+        singleInternalLinkPagesCount: 0,
+        missingCanonicalPagesCount: 0,
+        missingMetaDescPagesCount: 0,
+        brokenLinksCount: 0,
+      },
+    }));
 
-    if (sampled.length > 0) {
+    // Attach full crawled pages list to extracted
+    const rootCrawledItem = {
+      id: "crawled-root",
+      url: page.finalUrl,
+      path: "/",
+      title: extracted.page.title || report.website.domain,
+      statusCode: page.httpStatus || 200,
+      type: "Root Page",
+      issuesCount: 0,
+      depth: 0,
+    };
+    extracted.crawledPages = [rootCrawledItem, ...crawlResult.crawledPages];
+
+    if (crawlResult.sampledPages.length > 0) {
       await db.sampledPage.deleteMany({ where: { reportId } });
-      for (const sample of sampled) {
-        await db.sampledPage.create({
-          data: {
+      for (const sample of crawlResult.sampledPages) {
+        await db.sampledPage.upsert({
+          where: { reportId_pageType: { reportId, pageType: sample.pageType } },
+          update: {
+            url: sample.url,
+            httpStatus: sample.httpStatus,
+            extracted: sample.extracted as unknown as Prisma.InputJsonValue,
+            html: sample.html,
+          },
+          create: {
             reportId,
             pageType: sample.pageType,
             url: sample.url,
@@ -432,17 +464,25 @@ export async function runAudit(reportId: string): Promise<void> {
       }
     }
 
+    // Update rawData with enriched multi-page crawl data
+    await db.websiteRawData.update({
+      where: { reportId },
+      data: {
+        extracted: extracted as unknown as Prisma.InputJsonValue,
+      },
+    });
+
     await logExecution({
       level: "INFO",
       category: "AUDIT_PIPELINE",
-      message:
-        sampled.length > 0
-          ? `Sampled ${sampled.length} additional page(s): ${sampled.map((s) => `${s.pageType} ${s.url}`).join(", ")}`
-          : `No additional pages sampled (no usable sitemap children) — page-type checks will report Not Applicable`,
+      message: `Crawled ${extracted.crawledPages.length} page(s) across the website (${crawlResult.sampledPages.length} representative types sampled)`,
       reportId,
       websiteUrl: page.finalUrl,
       durationMs: Date.now() - sampleStart,
-      meta: { sampledTypes: sampled.map((s) => s.pageType) },
+      meta: {
+        crawledCount: extracted.crawledPages.length,
+        sampledTypes: crawlResult.sampledPages.map((s) => s.pageType),
+      },
     });
 
     await db.website.update({

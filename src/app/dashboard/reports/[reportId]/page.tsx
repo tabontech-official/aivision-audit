@@ -104,6 +104,9 @@ export default async function ReportDetailPage({
     : mobileRes?.performanceScore !== null && mobileRes?.performanceScore !== undefined
     ? Math.round(mobileRes.performanceScore > 1 ? mobileRes.performanceScore : mobileRes.performanceScore * 100)
     : 92;
+  const rawExtracted = (report.rawData?.extracted as Record<string, unknown>) || {};
+  const crawledPages = Array.isArray(rawExtracted.crawledPages) ? rawExtracted.crawledPages : [];
+  const pagesCrawledCount = crawledPages.length > 0 ? crawledPages.length : Math.max(1, report.passedCount + report.failedCount + report.warningCount || 1);
 
   return (
     <ReportView
@@ -122,6 +125,7 @@ export default async function ReportDetailPage({
       failedCount={report.failedCount}
       warningCount={report.warningCount}
       criticalIssueCount={report.criticalIssueCount}
+      pagesCrawledCount={pagesCrawledCount}
       auditedAt={report.completedAt?.toISOString() ?? report.createdAt.toISOString()}
       viewerPlan={viewerPlan}
       projected={projected}

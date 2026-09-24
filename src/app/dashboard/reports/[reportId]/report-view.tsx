@@ -296,6 +296,7 @@ export function ReportView(props: {
   failedCount: number;
   warningCount: number;
   criticalIssueCount: number;
+  pagesCrawledCount?: number;
   auditedAt: string;
   viewerPlan: "FREE" | "PREMIUM";
   projected: ProjectedReport;
@@ -650,9 +651,8 @@ export function ReportView(props: {
               <Laptop className="h-3.5 w-3.5 text-slate-400" />
               <span>Desktop</span>
             </span>
-            <span>JS rendering: <strong className="font-semibold text-slate-700">Enabled</strong></span>
             <span>
-              Pages crawled: <strong className="font-semibold text-slate-700">{props.passedCount + props.failedCount + props.warningCount || 1}/200</strong>
+              Pages crawled: <strong className="font-semibold text-slate-700">{props.pagesCrawledCount ?? (props.passedCount + props.failedCount + props.warningCount || 1)}/200</strong>
             </span>
           </div>
         </div>

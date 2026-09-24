@@ -186,16 +186,23 @@ export default async function DashboardPage({
   // Extracted Data
   const rawExtracted = (activeReport?.rawData?.extracted as Record<string, unknown>) || {};
   const sitemapData = (rawExtracted.sitemap as Record<string, unknown>) || {};
+  const rawCrawledPages = Array.isArray(rawExtracted.crawledPages) ? rawExtracted.crawledPages : [];
+  const rawLinksObj = (rawExtracted.links as Record<string, unknown>) || {};
+  const rawInternalLinks = Array.isArray(rawLinksObj.internal) ? rawLinksObj.internal : [];
 
-  const totalPages = hasReport
-    ? (typeof sitemapData.totalUrlCount === "number" && sitemapData.totalUrlCount > 0
-        ? sitemapData.totalUrlCount
-        : Math.max(1, (passedCount + failedCount + warningCount) || 1))
+  const totalPages = typeof sitemapData.urlCount === "number" && sitemapData.urlCount > 0
+    ? sitemapData.urlCount
+    : typeof sitemapData.totalUrlCount === "number" && sitemapData.totalUrlCount > 0
+    ? sitemapData.totalUrlCount
     : 200;
 
   const pagesCrawled = hasReport
-    ? (passedCount + failedCount + warningCount > 0 ? passedCount + failedCount + warningCount : 1)
-    : 160;
+    ? (rawCrawledPages.length > 0
+        ? rawCrawledPages.length
+        : rawInternalLinks.length > 0
+        ? Math.min(rawInternalLinks.length + 1, totalPages)
+        : 1)
+    : 1;
 
   // Format last updated date
   const lastUpdated = activeReport?.createdAt
@@ -397,37 +404,41 @@ export default async function DashboardPage({
 
   // Construct Real Crawled Pages list from audit report
   const crawledPagesList: CrawledPageItem[] = [];
-  const visitedUrls = new Set<string>();
 
-  // 1. Root audited page
-  const rootUrl = activeReport?.rawData?.finalUrl || (activeWebsite?.url ?? `https://${domainName}`);
-  const rootTitle = (rawExtracted.page as Record<string, unknown>)?.title as string || domainName;
-  const rootStatus = (activeReport?.rawData?.httpStatus as number) || 200;
+  if (Array.isArray(rawExtracted.crawledPages) && rawExtracted.crawledPages.length > 0) {
+    crawledPagesList.push(...(rawExtracted.crawledPages as CrawledPageItem[]));
+  } else {
+    const visitedUrls = new Set<string>();
 
-  let rootPath = "/";
-  try {
-    const parsed = new URL(rootUrl);
-    rootPath = parsed.pathname || "/";
-  } catch {
-    rootPath = "/";
-  }
+    // 1. Root audited page
+    const rootUrl = activeReport?.rawData?.finalUrl || (activeWebsite?.url ?? `https://${domainName}`);
+    const rootTitle = (rawExtracted.page as Record<string, unknown>)?.title as string || domainName;
+    const rootStatus = (activeReport?.rawData?.httpStatus as number) || 200;
 
-  crawledPagesList.push({
-    id: "page-root",
-    url: rootUrl,
-    path: rootPath,
-    title: rootTitle,
-    statusCode: rootStatus,
-    type: "Root Page",
-    issuesCount: topIssues.length,
-  });
-  visitedUrls.add(rootUrl.toLowerCase().replace(/\/$/, ""));
+    let rootPath = "/";
+    try {
+      const parsed = new URL(rootUrl);
+      rootPath = parsed.pathname || "/";
+    } catch {
+      rootPath = "/";
+    }
 
-  // 2. Internal links discovered during crawl
-  const rawLinks = (rawExtracted.links as Record<string, unknown>) || {};
-  const internalLinks = Array.isArray(rawLinks.internal)
-    ? (rawLinks.internal as Array<{ href: string; text?: string; rel?: string | null }>)
-    : [];
+    crawledPagesList.push({
+      id: "page-root",
+      url: rootUrl,
+      path: rootPath,
+      title: rootTitle,
+      statusCode: rootStatus,
+      type: "Root Page",
+      issuesCount: topIssues.length,
+    });
+    visitedUrls.add(rootUrl.toLowerCase().replace(/\/$/, ""));
+
+    // 2. Internal links discovered during crawl
+    const rawLinks = (rawExtracted.links as Record<string, unknown>) || {};
+    const internalLinks = Array.isArray(rawLinks.internal)
+      ? (rawLinks.internal as Array<{ href: string; text?: string; rel?: string | null }>)
+      : [];
 
   const rawBrokenLinks = Array.isArray(activeReport?.rawData?.brokenLinks)
     ? (activeReport?.rawData?.brokenLinks as Array<{ url: string; status?: number; reason?: string }>)
@@ -529,6 +540,7 @@ export default async function DashboardPage({
       type: "Sitemap",
       issuesCount: 0,
     });
+  }
   }
 
   // Construct Real Statistics Metrics from audit report & crawl data

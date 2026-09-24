@@ -1044,7 +1044,6 @@ export function SiteAuditDashboard({
                 </>
               )}
             </span>
-            <span>JS rendering: <strong className="font-semibold text-slate-700">{jsRendering ? "Enabled" : "Disabled"}</strong></span>
             <span>Pages crawled: <strong className="font-semibold text-slate-700">{pagesCrawled}/{maxPages}</strong></span>
           </div>
         </div>

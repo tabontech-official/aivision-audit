@@ -182,6 +182,16 @@ export type ExtractedData = {
     brokenCount: number;
     broken: Array<{ url: string; status: number | null }>;
   };
+  crawledPages?: Array<{
+    id: string;
+    url: string;
+    path: string;
+    title: string | null;
+    statusCode: number;
+    type: string;
+    issuesCount: number;
+    depth: number;
+  }>;
   /**
    * Shopify-specific extraction (Part E). `urls` comes from static HTML on
    * every audit; `policies` is fetched only when the site is Shopify;
