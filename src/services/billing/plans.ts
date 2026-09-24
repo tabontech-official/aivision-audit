@@ -72,6 +72,8 @@ export type PlanInput = {
   priceYearlyCents: number;
   currency?: string;
   auditLimitPerMonth: number;
+  pageAuditLimit?: number;
+  initialSampleSize?: number;
   auditLimitType?: string;
   auditResetPeriod?: string;
   concurrentAuditsLimit?: number;
@@ -123,6 +125,8 @@ export async function createPlan(input: PlanInput, actorId: string) {
         priceYearlyCents: input.priceYearlyCents ?? 0,
         currency: (input.currency || "usd").toLowerCase(),
         auditLimitPerMonth: input.auditLimitPerMonth ?? 10,
+        pageAuditLimit: input.pageAuditLimit ?? 100,
+        initialSampleSize: input.initialSampleSize ?? 30,
         auditLimitType: input.auditLimitType || "MONTHLY",
         auditResetPeriod: input.auditResetPeriod || "MONTHLY",
         concurrentAuditsLimit: input.concurrentAuditsLimit ?? 1,
@@ -236,6 +240,8 @@ export async function updatePlan(id: string, input: Partial<PlanInput>, actorId:
     if (input.priceYearlyCents !== undefined) updateData.priceYearlyCents = input.priceYearlyCents;
     if (input.currency !== undefined) updateData.currency = input.currency.toLowerCase();
     if (input.auditLimitPerMonth !== undefined) updateData.auditLimitPerMonth = input.auditLimitPerMonth;
+    if (input.pageAuditLimit !== undefined) updateData.pageAuditLimit = input.pageAuditLimit;
+    if (input.initialSampleSize !== undefined) updateData.initialSampleSize = input.initialSampleSize;
     if (input.auditLimitType !== undefined) updateData.auditLimitType = input.auditLimitType;
     if (input.auditResetPeriod !== undefined) updateData.auditResetPeriod = input.auditResetPeriod;
     if (input.concurrentAuditsLimit !== undefined) updateData.concurrentAuditsLimit = input.concurrentAuditsLimit;
@@ -335,6 +341,8 @@ export async function duplicatePlan(id: string, actorId: string) {
         priceYearlyCents: original.priceYearlyCents,
         currency: original.currency,
         auditLimitPerMonth: original.auditLimitPerMonth,
+        pageAuditLimit: original.pageAuditLimit,
+        initialSampleSize: original.initialSampleSize,
         auditLimitType: original.auditLimitType,
         auditResetPeriod: original.auditResetPeriod,
         concurrentAuditsLimit: original.concurrentAuditsLimit,

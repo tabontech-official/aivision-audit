@@ -320,7 +320,7 @@ export function Features() {
 
         {/* Feature Blocks Stack */}
         <div className="mt-14 sm:mt-16 space-y-16 lg:space-y-24">
-          {/* Feature 1: Deep Technical SEO Audits */}
+          {/* Feature 1: Complete Audit Reports */}
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
             {/* Left Content */}
             <div className="flex flex-col items-start text-left lg:col-span-5">
@@ -329,10 +329,10 @@ export function Features() {
                 <span>Available Now</span>
               </div>
               <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight font-lazzer">
-                Deep Technical SEO &amp; Crawl Diagnostics
+                Complete 70+ Factor SEO &amp; Speed Audit Reports
               </h3>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
-                Eliminate the guesswork from search optimization. We crawl your pages to identify broken metadata, canonical conflicts, robots.txt blocks, missing sitemaps, and indexing barriers with prioritized action steps.
+                Eliminate the guesswork from search optimization. We crawl your pages to identify broken metadata, Core Web Vitals bottlenecks, mobile UX flaws, missing sitemaps, and indexing barriers with prioritized action steps.
               </p>
 
               {/* Bullet Checklist */}
@@ -343,7 +343,7 @@ export function Features() {
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Prioritized fix roadmap with copy-paste code snippets</span>
+                  <span>Site Health, desktop, and mobile performance benchmarks</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
@@ -371,8 +371,8 @@ export function Features() {
             <div className="lg:col-span-7">
               <div className="relative rounded-sm border border-slate-200/90 bg-white p-1.5 shadow-sm overflow-hidden">
                 <img
-                  src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/859bd674-2772-4e3b-aa58-38735ce25c78.webp"
-                  alt="Deep Domain Analysis Dashboard Preview"
+                  src="https://cdn.shopify.com/s/files/1/0928/7421/1691/files/24.png?v=1790252647"
+                  alt="Complete Audit Reports Dashboard Preview"
                   className="w-full h-auto object-cover rounded-xs block"
                   loading="lazy"
                 />
@@ -380,14 +380,14 @@ export function Features() {
             </div>
           </div>
 
-          {/* Feature 2: Schema Markup & Structured Data Suite */}
+          {/* Feature 2: Automated Issue Detection & Prioritized Fixes */}
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
             {/* Left Image */}
             <div className="order-2 lg:order-1 lg:col-span-7">
               <div className="relative rounded-sm border border-slate-200/90 bg-white p-1.5 shadow-sm overflow-hidden">
                 <img
-                  src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/72e5d272-688e-4864-862c-c3a325a11c97.webp"
-                  alt="Schema Markup Suite Preview"
+                  src="https://cdn.shopify.com/s/files/1/0928/7421/1691/files/23.png?v=1790252646"
+                  alt="Automated Issues and Actionable Fixes Preview"
                   className="w-full h-auto object-cover rounded-xs block"
                   loading="lazy"
                 />
@@ -401,154 +401,34 @@ export function Features() {
                 <span>Available Now</span>
               </div>
               <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight font-lazzer">
-                Schema Markup &amp; Structured Data Suite
+                Automated Issue Detection &amp; Prioritized Fixes
               </h3>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
-                Help Google and AI search bots understand your entities, products, FAQs, and brand hierarchy. Generate error-free JSON-LD markup and preview rich snippets before publishing.
+                Resolve critical errors before they impact rankings. View exact error locations, impact severities, historical trends, and step-by-step developer instructions to fix issues with precision.
               </p>
 
               {/* Bullet Checklist */}
               <ul className="mt-6 space-y-3">
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>10+ Google schema types (Organization, Product, FAQ, Article, Local)</span>
+                  <span>Categorized Errors, Warnings, and Notices with impact grading</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Real-time syntax testing and schema validation</span>
+                  <span>Instant fix recommendations with developer-ready snippets</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Instant Google Rich Results SERP visualizer</span>
+                  <span>Issue tracking and historical trend analysis across crawls</span>
                 </li>
               </ul>
 
               {/* Action Buttons */}
               <div className="mt-8 flex flex-wrap items-center gap-3.5">
-                <Link
-                  href="/dashboard/schema"
-                  className="inline-flex items-center justify-center rounded-full bg-[#181818] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black cursor-pointer shadow-xs font-lazzer"
-                >
-                  Open Schema Suite
-                </Link>
                 <AuthActionButton
-                  className="inline-flex items-center justify-center rounded-full border border-slate-700/60 bg-transparent px-6 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-900/5 cursor-pointer font-lazzer"
-                >
-                  Get Started Free
-                </AuthActionButton>
-              </div>
-            </div>
-          </div>
-
-          {/* Feature 3: Page Speed & Core Web Vitals */}
-          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
-            {/* Left Content */}
-            <div className="flex flex-col items-start text-left lg:col-span-5">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1 text-[11px] font-bold uppercase tracking-wider mb-3">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                <span>Available Now</span>
-              </div>
-              <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight font-lazzer">
-                Page Speed &amp; Core Web Vitals Lab
-              </h3>
-              <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
-                Powered by direct Google PageSpeed Insights data. Measure mobile and desktop performance, Largest Contentful Paint (LCP), Cumulative Layout Shift (CLS), and Total Blocking Time (TBT).
-              </p>
-
-              {/* Bullet Checklist */}
-              <ul className="mt-6 space-y-3">
-                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Real Google PageSpeed data for mobile &amp; desktop</span>
-                </li>
-                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>LCP, CLS, FCP, and TBT metric breakdowns</span>
-                </li>
-                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Practical asset compression and script reduction recommendations</span>
-                </li>
-              </ul>
-
-              {/* Action Buttons */}
-              <div className="mt-8 flex flex-wrap items-center gap-3.5">
-                <Link
-                  href="/tools/speed-core-vitals"
                   className="inline-flex items-center justify-center rounded-full bg-[#181818] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black cursor-pointer shadow-xs font-lazzer"
-                >
-                  Test Site Speed
-                </Link>
-                <AuthActionButton
-                  className="inline-flex items-center justify-center rounded-full border border-slate-700/60 bg-transparent px-6 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-900/5 cursor-pointer font-lazzer"
                 >
                   Run Free Audit
-                </AuthActionButton>
-              </div>
-            </div>
-
-            {/* Right Image */}
-            <div className="lg:col-span-7">
-              <div className="relative rounded-sm border border-slate-200/90 bg-white p-1.5 shadow-sm overflow-hidden">
-                <img
-                  src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/72e5d272-688e-4864-862c-c3a325a11c97.webp"
-                  alt="Page Speed Dashboard Preview"
-                  className="w-full h-auto object-cover rounded-xs block"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Feature 4: AI & Answer Engine Readiness */}
-          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
-            {/* Left Image */}
-            <div className="order-2 lg:order-1 lg:col-span-7">
-              <div className="relative rounded-sm border border-slate-200/90 bg-white p-1.5 shadow-sm overflow-hidden">
-                <img
-                  src="https://media.adaptocms.com/60659756-4e49-4975-8fd0-de59ae94dd96/images/859bd674-2772-4e3b-aa58-38735ce25c78.webp"
-                  alt="AI Search Readiness Preview"
-                  className="w-full h-auto object-cover rounded-xs block"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-
-            {/* Right Content */}
-            <div className="order-1 lg:order-2 flex flex-col items-start text-left lg:col-span-5">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1 text-[11px] font-bold uppercase tracking-wider mb-3">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                <span>Available Now</span>
-              </div>
-              <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#111827] tracking-tight font-lazzer">
-                AI &amp; Answer Engine Search Readiness
-              </h3>
-              <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600">
-                Search is shifting towards AI answers in ChatGPT, Claude, Gemini, and Perplexity. Audit your content clarity, entity citations, and schema depth so AI bots can reference your brand.
-              </p>
-
-              {/* Bullet Checklist */}
-              <ul className="mt-6 space-y-3">
-                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Entity clarity &amp; semantic content evaluation</span>
-                </li>
-                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Structured data readiness for LLM web crawlers</span>
-                </li>
-                <li className="flex items-center gap-2.5 text-sm sm:text-base font-medium text-slate-800">
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                  <span>Trust signals &amp; brand authority validation</span>
-                </li>
-              </ul>
-
-              {/* Action Buttons */}
-              <div className="mt-8 flex flex-wrap items-center gap-3.5">
-                <AuthActionButton
-                  className="inline-flex items-center justify-center rounded-full bg-[#181818] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black cursor-pointer shadow-xs font-lazzer"
-                >
-                  Audit AI Readiness
                 </AuthActionButton>
                 <Link
                   href="#how-it-works"

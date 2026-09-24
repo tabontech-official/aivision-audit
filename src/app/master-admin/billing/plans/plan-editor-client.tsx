@@ -65,9 +65,15 @@ export function PlanEditorClient({
     initialPlan?.setupFeeCents ? initialPlan.setupFeeCents / 100 : 0,
   );
 
-  // Limits
+  // Limits & Audit Coverage
   const [auditLimitPerMonth, setAuditLimitPerMonth] = useState<number>(
     initialPlan?.auditLimitPerMonth ?? 10,
+  );
+  const [pageAuditLimit, setPageAuditLimit] = useState<number>(
+    initialPlan?.pageAuditLimit ?? 100,
+  );
+  const [initialSampleSize, setInitialSampleSize] = useState<number>(
+    initialPlan?.initialSampleSize ?? 30,
   );
   const [auditLimitType, setAuditLimitType] = useState(initialPlan?.auditLimitType || "MONTHLY");
   const [auditResetPeriod, setAuditResetPeriod] = useState(initialPlan?.auditResetPeriod || "MONTHLY");
@@ -157,6 +163,8 @@ export function PlanEditorClient({
       trialDays,
       setupFeeCents: Math.round(setupFeeDollars * 100),
       auditLimitPerMonth,
+      pageAuditLimit,
+      initialSampleSize,
       auditLimitType,
       auditResetPeriod,
       concurrentAuditsLimit,
@@ -513,9 +521,53 @@ export function PlanEditorClient({
       {/* TAB 3: Usage & Limits */}
       {activeTab === "limits" && (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
+          {/* Crawl Credit & Page Audit Coverage Settings */}
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-600" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-950">
+                Audit Coverage &amp; Initial Sample Limits
+              </h4>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-900">
+                  Total Page Coverage Limit (Audit Scope)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={pageAuditLimit}
+                  onChange={(e) => setPageAuditLimit(parseInt(e.target.value) || 0)}
+                  className="mt-1.5 w-full text-sm font-bold rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none"
+                />
+                <p className="mt-1 text-[11px] text-slate-600">
+                  Maximum pages covered under this plan (e.g. 10 for Free, 100 for Starter, 1,000 for Pro, 3,000 for Agency).
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-900">
+                  Initial Sample Size (First Audit Run)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={initialSampleSize}
+                  onChange={(e) => setInitialSampleSize(parseInt(e.target.value) || 0)}
+                  className="mt-1.5 w-full text-sm font-bold rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none"
+                />
+                <p className="mt-1 text-[11px] text-slate-600">
+                  Pages analyzed on first audit without exhausting plan limit (e.g. 10 for Free, 30 for Starter, 50 for Pro, 100 for Agency).
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-bold text-slate-700">Audits Limit (Credits)</label>
+              <label className="block text-xs font-bold text-slate-700">Audits Limit (Campaigns / Month)</label>
               <input
                 type="number"
                 value={auditLimitPerMonth}

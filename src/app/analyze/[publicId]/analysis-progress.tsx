@@ -18,6 +18,10 @@ import {
   Loader2,
   AlertCircle,
   XCircle,
+  Sparkles,
+  ArrowRight,
+  LayoutDashboard,
+  KeyRound,
 } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
 import { cn } from "@/lib/utils/cn";
@@ -251,19 +255,61 @@ export function AnalysisProgress({
           })}
         </ol>
 
-        {/* Bottom Message & Stop Audit Button */}
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <p className="text-center text-xs text-slate-500 font-medium">
-            This usually takes one to three minutes. Keep this tab open.
-          </p>
+        {/* Run in Background & Browse Platform Card */}
+        <div className="mt-6 rounded-2xl border border-emerald-200/90 bg-[#f0fdf9] p-4 shadow-sm text-left">
+          <div className="flex items-start gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 mt-0.5">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+                You can browse the platform while this runs
+              </h3>
+              <p className="mt-0.5 text-xs text-slate-600 leading-relaxed">
+                This audit continues automatically in the background. Feel free to explore other tools or analyze another site—we&apos;ll notify you in real-time the moment this report is ready.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3.5 pt-3 border-t border-emerald-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold transition-all shadow-xs"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" />
+              <span>Continue to Dashboard</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+
+            <div className="flex items-center justify-center gap-2">
+              <Link
+                href="/dashboard/keywords"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-slate-900 bg-white/80 border border-slate-200 px-2.5 py-1.5 rounded-lg shadow-2xs transition-colors"
+              >
+                <KeyRound className="h-3 w-3 text-slate-500" />
+                <span>Keyword Tools</span>
+              </Link>
+              <Link
+                href="/dashboard/websites"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-slate-900 bg-white/80 border border-slate-200 px-2.5 py-1.5 rounded-lg shadow-2xs transition-colors"
+              >
+                <Globe className="h-3 w-3 text-slate-500" />
+                <span>Websites</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Stop Audit Button */}
+        <div className="mt-4 flex flex-col items-center gap-2">
           <button
             type="button"
             onClick={handleStopAudit}
             disabled={cancelling || finishing}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/80 bg-white/90 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 px-4 py-1.5 text-xs font-semibold text-slate-600 shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/60 bg-white/70 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 px-3.5 py-1 text-[11px] font-semibold text-slate-500 shadow-2xs transition-all cursor-pointer disabled:opacity-50"
           >
-            <XCircle className="h-3.5 w-3.5" />
-            <span>{cancelling ? "Stopping audit..." : "Stop Audit"}</span>
+            <XCircle className="h-3 w-3" />
+            <span>{cancelling ? "Stopping audit..." : "Cancel / Stop this audit"}</span>
           </button>
         </div>
       </div>

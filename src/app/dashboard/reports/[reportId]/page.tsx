@@ -9,6 +9,7 @@ import type { UserPlan } from "@prisma/client";
 
 export const metadata: Metadata = { title: "Report" };
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function ReportDetailPage({
   params,
@@ -132,6 +133,13 @@ export default async function ReportDetailPage({
       scoreBasis={(snapshotRow?.scoreBasis as ScoreBasis | null) ?? null}
       findingStates={findingStates}
       targetSection={targetSection}
+      reportId={report.id}
+      totalDetectedUrls={report.totalDetectedUrls ?? undefined}
+      coverageUsed={report.coverageUsed ?? undefined}
+      coverageRemaining={report.coverageRemaining ?? undefined}
+      coverageLimit={report.coverageLimit ?? undefined}
+      coverageCompleted={report.coverageCompleted ?? undefined}
+      currentPlanKey={report.currentPlanKey ?? undefined}
     />
   );
 }

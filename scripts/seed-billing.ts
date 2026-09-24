@@ -16,6 +16,8 @@ async function main() {
       priceMonthlyCents: 0,
       priceYearlyCents: 0,
       auditLimitPerMonth: 3,
+      pageAuditLimit: 10,
+      initialSampleSize: 10,
       auditLimitType: "MONTHLY",
       auditResetPeriod: "MONTHLY",
       concurrentAuditsLimit: 1,
@@ -32,6 +34,8 @@ async function main() {
       priceMonthlyCents: 0,
       priceYearlyCents: 0,
       auditLimitPerMonth: 3,
+      pageAuditLimit: 10,
+      initialSampleSize: 10,
       auditLimitType: "MONTHLY",
       auditResetPeriod: "MONTHLY",
       concurrentAuditsLimit: 1,
@@ -48,11 +52,11 @@ async function main() {
   await db.planPublicFeature.createMany({
     data: [
       { planId: freePlan.id, label: "3 Full Website Audits / month", isIncluded: true, displayOrder: 1 },
-      { planId: freePlan.id, label: "Core Technical SEO & Foundations", isIncluded: true, displayOrder: 2 },
-      { planId: freePlan.id, label: "Google Page Speed & Vitals overview", isIncluded: true, displayOrder: 3 },
-      { planId: freePlan.id, label: "On-Page Content & Heading Checks", isIncluded: true, displayOrder: 4 },
-      { planId: freePlan.id, label: "Public shareable audit link", isIncluded: true, displayOrder: 5 },
-      { planId: freePlan.id, label: "Advanced Backlink Intelligence", isIncluded: false, displayOrder: 6 },
+      { planId: freePlan.id, label: "10 Page Audit Coverage", isIncluded: true, displayOrder: 2 },
+      { planId: freePlan.id, label: "Core Technical SEO & Foundations", isIncluded: true, displayOrder: 3 },
+      { planId: freePlan.id, label: "Google Page Speed & Vitals overview", isIncluded: true, displayOrder: 4 },
+      { planId: freePlan.id, label: "On-Page Content & Heading Checks", isIncluded: true, displayOrder: 5 },
+      { planId: freePlan.id, label: "Public shareable audit link", isIncluded: true, displayOrder: 6 },
       { planId: freePlan.id, label: "Exportable White-label PDF Reports", isIncluded: false, displayOrder: 7 },
     ],
   });
@@ -76,6 +80,8 @@ async function main() {
       priceMonthlyCents: 1900,
       priceYearlyCents: 18000,
       auditLimitPerMonth: 25,
+      pageAuditLimit: 100,
+      initialSampleSize: 30,
       auditLimitType: "MONTHLY",
       auditResetPeriod: "MONTHLY",
       concurrentAuditsLimit: 2,
@@ -93,6 +99,8 @@ async function main() {
       priceMonthlyCents: 1900,
       priceYearlyCents: 18000,
       auditLimitPerMonth: 25,
+      pageAuditLimit: 100,
+      initialSampleSize: 30,
       auditLimitType: "MONTHLY",
       auditResetPeriod: "MONTHLY",
       concurrentAuditsLimit: 2,
@@ -119,11 +127,12 @@ async function main() {
   await db.planPublicFeature.createMany({
     data: [
       { planId: starterPlan.id, label: "25 In-Depth Audits / month", isIncluded: true, displayOrder: 1 },
-      { planId: starterPlan.id, label: "Full Technical SEO & Code Inspection", isIncluded: true, displayOrder: 2 },
-      { planId: starterPlan.id, label: "Complete Page Speed & Diagnostic Metrics", isIncluded: true, displayOrder: 3 },
-      { planId: starterPlan.id, label: "Schema Markup & JSON-LD Suite", isIncluded: true, displayOrder: 4 },
-      { planId: starterPlan.id, label: "AI Search & Answer Engine Optimization", isIncluded: true, displayOrder: 5 },
-      { planId: starterPlan.id, label: "Branded PDF Export", isIncluded: true, displayOrder: 6 },
+      { planId: starterPlan.id, label: "100 Page Audit Coverage (30 Initial Sample)", isIncluded: true, displayOrder: 2 },
+      { planId: starterPlan.id, label: "Full Technical SEO & Code Inspection", isIncluded: true, displayOrder: 3 },
+      { planId: starterPlan.id, label: "Complete Page Speed & Diagnostic Metrics", isIncluded: true, displayOrder: 4 },
+      { planId: starterPlan.id, label: "Schema Markup & JSON-LD Suite", isIncluded: true, displayOrder: 5 },
+      { planId: starterPlan.id, label: "AI Search & Answer Engine Optimization", isIncluded: true, displayOrder: 6 },
+      { planId: starterPlan.id, label: "Branded PDF Export", isIncluded: true, displayOrder: 7 },
     ],
   });
 
@@ -137,7 +146,7 @@ async function main() {
     });
   }
 
-  // 3. PREMIUM PLAN (Most Popular)
+  // 3. PREMIUM / PRO PLAN (Most Popular)
   const premiumPlan = await db.plan.upsert({
     where: { key: "PREMIUM" },
     update: {
@@ -146,6 +155,8 @@ async function main() {
       priceMonthlyCents: 4900,
       priceYearlyCents: 47000,
       auditLimitPerMonth: 100,
+      pageAuditLimit: 1000,
+      initialSampleSize: 50,
       auditLimitType: "MONTHLY",
       auditResetPeriod: "MONTHLY",
       concurrentAuditsLimit: 3,
@@ -163,6 +174,8 @@ async function main() {
       priceMonthlyCents: 4900,
       priceYearlyCents: 47000,
       auditLimitPerMonth: 100,
+      pageAuditLimit: 1000,
+      initialSampleSize: 50,
       auditLimitType: "MONTHLY",
       auditResetPeriod: "MONTHLY",
       concurrentAuditsLimit: 3,
@@ -189,12 +202,13 @@ async function main() {
   await db.planPublicFeature.createMany({
     data: [
       { planId: premiumPlan.id, label: "100 High-Speed Audits / month", isIncluded: true, displayOrder: 1 },
-      { planId: premiumPlan.id, label: "Unlimited Historical Report Comparison", isIncluded: true, displayOrder: 2 },
-      { planId: premiumPlan.id, label: "Full Core Web Vitals & Real-device Metrics", isIncluded: true, displayOrder: 3 },
-      { planId: premiumPlan.id, label: "AI Search & Answer Engine Optimization", isIncluded: true, displayOrder: 4 },
-      { planId: premiumPlan.id, label: "Automated Weekly Scheduled Scans", isIncluded: true, displayOrder: 5 },
-      { planId: premiumPlan.id, label: "Downloadable Client-Ready PDF Reports", isIncluded: true, displayOrder: 6 },
-      { planId: premiumPlan.id, label: "Priority Fast Processing Queue", isIncluded: true, displayOrder: 7 },
+      { planId: premiumPlan.id, label: "1,000 Page Audit Coverage (50 Initial Sample)", isIncluded: true, displayOrder: 2 },
+      { planId: premiumPlan.id, label: "Unlimited Historical Report Comparison", isIncluded: true, displayOrder: 3 },
+      { planId: premiumPlan.id, label: "Full Core Web Vitals & Real-device Metrics", isIncluded: true, displayOrder: 4 },
+      { planId: premiumPlan.id, label: "AI Search & Answer Engine Optimization", isIncluded: true, displayOrder: 5 },
+      { planId: premiumPlan.id, label: "Automated Weekly Scheduled Scans", isIncluded: true, displayOrder: 6 },
+      { planId: premiumPlan.id, label: "Downloadable Client-Ready PDF Reports", isIncluded: true, displayOrder: 7 },
+      { planId: premiumPlan.id, label: "Priority Fast Processing Queue", isIncluded: true, displayOrder: 8 },
     ],
   });
 
@@ -216,6 +230,8 @@ async function main() {
       priceMonthlyCents: 14900,
       priceYearlyCents: 140000,
       auditLimitPerMonth: 500,
+      pageAuditLimit: 3000,
+      initialSampleSize: 100,
       auditLimitType: "MONTHLY",
       auditResetPeriod: "MONTHLY",
       concurrentAuditsLimit: 5,
@@ -233,6 +249,8 @@ async function main() {
       priceMonthlyCents: 14900,
       priceYearlyCents: 140000,
       auditLimitPerMonth: 500,
+      pageAuditLimit: 3000,
+      initialSampleSize: 100,
       auditLimitType: "MONTHLY",
       auditResetPeriod: "MONTHLY",
       concurrentAuditsLimit: 5,

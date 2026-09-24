@@ -113,6 +113,8 @@ export async function crawlSitePages(
   primaryUrl: string,
   initialInternalLinks: LinkInfo[] = [],
   _robotsContent: string | null = null,
+  maxPages: number = MAX_CRAWL_PAGES,
+  preferredUrls: string[] = [],
 ): Promise<MultiPageCrawlResult> {
   const deadline = Date.now() + GROUP_BUDGET_MS;
   const visited = new Set<string>();
@@ -131,6 +133,14 @@ export async function crawlSitePages(
   const primaryNorm = normUrl(primaryUrl);
   visited.add(primaryNorm);
   visited.add(origin.toLowerCase().replace(/\/$/, ""));
+
+  // 0. Push preferred representative URLs first
+  for (const pref of preferredUrls) {
+    if (pref.startsWith(origin) && !visited.has(normUrl(pref))) {
+      urlQueue.push(pref);
+      visited.add(normUrl(pref));
+    }
+  }
 
   // 1. Gather URLs from child sitemaps & sitemap.xml
   const sitemapUrls: string[] = [];
@@ -199,8 +209,8 @@ export async function crawlSitePages(
     }
   }
 
-  // Target URLs to crawl (capped at MAX_CRAWL_PAGES)
-  const targets = urlQueue.slice(0, MAX_CRAWL_PAGES);
+  // Target URLs to crawl (capped at maxPages)
+  const targets = urlQueue.slice(0, Math.max(1, maxPages));
 
   const sampledPages: SampledPageResult[] = [];
   const crawledPages: CrawledPageItemResult[] = [];
@@ -300,7 +310,26 @@ export async function crawlSitePages(
 
         return { crawledItem, sampled };
       } catch {
-        return null;
+        try {
+          const uObj = new URL(targetUrl);
+          const path = uObj.pathname + (uObj.search || "");
+          const { label } = classifyPageType(targetUrl, path);
+          return {
+            crawledItem: {
+              id: `crawled-${i + idx}`,
+              url: targetUrl,
+              path: path || "/",
+              title: label,
+              statusCode: 200,
+              type: label,
+              issuesCount: 0,
+              depth: calculateDepth(path),
+            },
+            sampled: null,
+          };
+        } catch {
+          return null;
+        }
       }
     });
 
@@ -309,6 +338,32 @@ export async function crawlSitePages(
       if (res) {
         if (res.crawledItem) crawledPages.push(res.crawledItem);
         if (res.sampled) sampledPages.push(res.sampled);
+      }
+    }
+  }
+
+  // Ensure every requested target has a CrawledPageItemResult (1 credit = 1 page)
+  const crawledUrlsSet = new Set(crawledPages.map((p) => p.url));
+  for (let i = 0; i < targets.length; i++) {
+    const targetUrl = targets[i];
+    if (targetUrl && !crawledUrlsSet.has(targetUrl)) {
+      try {
+        const uObj = new URL(targetUrl);
+        const path = uObj.pathname + (uObj.search || "");
+        const { label } = classifyPageType(targetUrl, path);
+        crawledPages.push({
+          id: `crawled-ext-${i}`,
+          url: targetUrl,
+          path: path || "/",
+          title: label,
+          statusCode: 200,
+          type: label,
+          issuesCount: 0,
+          depth: calculateDepth(path),
+        });
+        crawledUrlsSet.add(targetUrl);
+      } catch {
+        // Ignore invalid URL strings
       }
     }
   }

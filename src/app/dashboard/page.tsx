@@ -9,6 +9,8 @@ import {
 } from "@/components/dashboard/site-audit-dashboard";
 
 export const metadata: Metadata = { title: "Site Audit Dashboard" };
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function DashboardPage({
   searchParams,
@@ -674,6 +676,12 @@ export default async function DashboardPage({
       }}
       crawledPagesList={crawledPagesList}
       statistics={statistics}
+      totalDetectedUrls={activeReport?.totalDetectedUrls ?? undefined}
+      coverageUsed={activeReport?.coverageUsed ?? undefined}
+      coverageRemaining={activeReport?.coverageRemaining ?? undefined}
+      coverageLimit={activeReport?.coverageLimit ?? undefined}
+      coverageCompleted={activeReport?.coverageCompleted ?? undefined}
+      currentPlanKey={activeReport?.currentPlanKey ?? undefined}
     />
   );
 }

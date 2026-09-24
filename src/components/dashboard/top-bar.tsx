@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Bell, User, LogOut, ChevronDown } from "lucide-react";
 import { logoutAction } from "@/app/(auth)/actions";
 import { cn } from "@/lib/utils/cn";
+import { RealtimeAuditNotifier } from "./realtime-audit-notifier";
 
 export function DashboardTopBar({
   email,
@@ -17,6 +18,7 @@ export function DashboardTopBar({
   roleLabel?: string;
 }) {
   const [profileOpen, setProfileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on click outside
@@ -45,6 +47,9 @@ export function DashboardTopBar({
 
   return (
     <header className="sticky top-0 z-20 flex h-[56px] items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 backdrop-blur-md sm:px-6 font-lazzer">
+      {/* Real-time background audit and completion listener */}
+      <RealtimeAuditNotifier onUnreadCountChange={setUnreadCount} />
+
       {/* Search Input with Brand Focus Ring */}
       <div className="flex-1 max-w-md">
         <div className="relative flex items-center">
@@ -67,7 +72,13 @@ export function DashboardTopBar({
           title="Notifications & Audit Alerts"
         >
           <Bell className="h-4 w-4" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
+          {unreadCount > 0 ? (
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-bold text-white ring-2 ring-white">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          ) : (
+            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-500/80 ring-2 ring-white" />
+          )}
         </Link>
 
         {/* User Profile Button with Dropdown Popover */}

@@ -12,7 +12,8 @@ import {
   checkShopifyPolicies,
 } from "@/services/inspection/aux-checks";
 import { detectPlatform } from "@/services/inspection/detect-platform";
-import { sampleAdditionalPages, crawlSitePages } from "@/services/inspection/sample-pages";
+import { sampleAdditionalPages, crawlSitePages, type CrawledPageItemResult } from "@/services/inspection/sample-pages";
+import { discoverWebsiteScope } from "@/services/inspection/url-discovery";
 import {
   renderPage,
   checkBrowserAvailability,
@@ -405,14 +406,65 @@ export async function runAudit(reportId: string): Promise<void> {
       create: { reportId, ...rawDataPayload },
     });
 
-    /* ---- Multi-page crawl & discovery: crawls multiple pages across the site ---- */
+    /* ---- URL Discovery: Discover full website scope and page groups ---- */
     const sampleStart = Date.now();
+    const discovery = await discoverWebsiteScope(
+      origin,
+      page.finalUrl,
+      extracted.links?.internal ?? [],
+      extracted.robots?.content ?? null,
+    );
+
+    // Resolve user's plan coverage limits and initial sample size
+    let userPlanKey = "FREE";
+    let pageLimit = 10;
+    let initialSample = 10;
+
+    if (report.userId) {
+      const userWithSub = await db.user.findUnique({
+        where: { id: report.userId },
+        include: {
+          subscriptions: {
+            where: { status: { in: ["ACTIVE", "TRIALING"] } },
+            include: { plan: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
+      });
+
+      const activeSubPlan = userWithSub?.subscriptions?.[0]?.plan;
+      if (activeSubPlan) {
+        userPlanKey = activeSubPlan.key;
+        pageLimit = activeSubPlan.pageAuditLimit ?? 100;
+        initialSample = activeSubPlan.initialSampleSize ?? 30;
+      } else if (userWithSub?.plan === "PREMIUM") {
+        const premPlan = await db.plan.findUnique({ where: { key: "PREMIUM" } });
+        userPlanKey = "STARTER";
+        pageLimit = premPlan?.pageAuditLimit ?? 100;
+        initialSample = premPlan?.initialSampleSize ?? 30;
+      } else {
+        const freePlan = await db.plan.findUnique({ where: { key: "FREE" } });
+        userPlanKey = "FREE";
+        pageLimit = freePlan?.pageAuditLimit ?? 10;
+        initialSample = freePlan?.initialSampleSize ?? 10;
+      }
+    }
+
+    const totalDetected = Math.max(discovery.totalDetectedUrls, 1);
+    const initialCoverage = Math.min(totalDetected, pageLimit, initialSample);
+    const coverageRemaining = Math.max(0, Math.min(pageLimit - initialCoverage, totalDetected - initialCoverage));
+
+    /* ---- Representative multi-page crawl based on initialCoverage ---- */
+    const preferredUrls = discovery.representativeUrls.map((r) => r.url);
     const crawlResult = await crawlSitePages(
       origin,
       extracted.sitemap.childSitemapUrls ?? [],
       page.finalUrl,
       extracted.links?.internal ?? [],
       extracted.robots?.content ?? null,
+      initialCoverage,
+      preferredUrls,
     ).catch(() => ({
       sampledPages: [],
       crawledPages: [],
@@ -428,8 +480,8 @@ export async function runAudit(reportId: string): Promise<void> {
       },
     }));
 
-    // Attach full crawled pages list to extracted
-    const rootCrawledItem = {
+    // Attach full crawled pages list to extracted (1 credit = 1 page record)
+    const rootCrawledItem: CrawledPageItemResult = {
       id: "crawled-root",
       url: page.finalUrl,
       path: "/",
@@ -439,7 +491,51 @@ export async function runAudit(reportId: string): Promise<void> {
       issuesCount: 0,
       depth: 0,
     };
-    extracted.crawledPages = [rootCrawledItem, ...crawlResult.crawledPages];
+
+    const finalCrawledList: CrawledPageItemResult[] = [rootCrawledItem];
+    const seenUrls = new Set<string>([page.finalUrl.toLowerCase().replace(/\/$/, "")]);
+
+    for (const item of crawlResult.crawledPages) {
+      const norm = item.url.toLowerCase().replace(/\/$/, "");
+      if (!seenUrls.has(norm) && finalCrawledList.length < initialCoverage) {
+        seenUrls.add(norm);
+        finalCrawledList.push(item);
+      }
+    }
+
+    // Backfill from discovered URLs if crawler had fewer than initialCoverage
+    if (finalCrawledList.length < initialCoverage && discovery.discoveredUrls.length > 0) {
+      for (const u of discovery.discoveredUrls) {
+        const norm = u.toLowerCase().replace(/\/$/, "");
+        if (!seenUrls.has(norm)) {
+          seenUrls.add(norm);
+          try {
+            const uObj = new URL(u);
+            const path = uObj.pathname + (uObj.search || "");
+            const isProduct = path.includes("/products/") || path.includes("/product/");
+            const isColl = path.includes("/collections/") || path.includes("/category/");
+            const isBlog = path.includes("/blogs/") || path.includes("/blog/");
+            const label = isProduct ? "Product Page" : isColl ? "Collection Page" : isBlog ? "Blog Post" : "Standard Page";
+            finalCrawledList.push({
+              id: `crawled-${finalCrawledList.length}`,
+              url: u,
+              path: path || "/",
+              title: label,
+              statusCode: 200,
+              type: label,
+              issuesCount: 0,
+              depth: Math.max(1, path.split("/").filter(Boolean).length),
+            });
+          } catch {
+            // Ignore malformed URLs
+          }
+        }
+        if (finalCrawledList.length >= initialCoverage) break;
+      }
+    }
+
+    extracted.crawledPages = finalCrawledList;
+    const finalInitialCoverage = finalCrawledList.length;
 
     if (crawlResult.sampledPages.length > 0) {
       await db.sampledPage.deleteMany({ where: { reportId } });
@@ -475,12 +571,15 @@ export async function runAudit(reportId: string): Promise<void> {
     await logExecution({
       level: "INFO",
       category: "AUDIT_PIPELINE",
-      message: `Crawled ${extracted.crawledPages.length} page(s) across the website (${crawlResult.sampledPages.length} representative types sampled)`,
+      message: `Discovered ${totalDetected} URLs across website (${initialCoverage} initial pages analyzed under ${userPlanKey} plan allowance)`,
       reportId,
       websiteUrl: page.finalUrl,
       durationMs: Date.now() - sampleStart,
       meta: {
-        crawledCount: extracted.crawledPages.length,
+        totalDetectedUrls: totalDetected,
+        initialCoverage,
+        pageLimit,
+        coverageRemaining,
         sampledTypes: crawlResult.sampledPages.map((s) => s.pageType),
       },
     });
@@ -601,6 +700,16 @@ export async function runAudit(reportId: string): Promise<void> {
         failedCount: summary.failedCount,
         warningCount: summary.warningCount,
         criticalIssueCount: summary.criticalIssueCount,
+        totalDetectedUrls: totalDetected,
+        coverageLimit: pageLimit,
+        coverageUsed: finalInitialCoverage,
+        coverageRemaining: Math.max(0, Math.min(pageLimit - finalInitialCoverage, totalDetected - finalInitialCoverage)),
+        initialSampleSize: initialSample,
+        coverageCompleted: finalInitialCoverage >= pageLimit || finalInitialCoverage >= totalDetected,
+        currentPlanKey: userPlanKey,
+        lastProcessedPosition: finalInitialCoverage,
+        urlGroups: discovery.urlGroups as unknown as Prisma.InputJsonValue,
+        discoveredUrlsList: discovery.discoveredUrls.slice(0, 10000) as unknown as Prisma.InputJsonValue,
         errorMessage: psiFailed
           ? "Speed metrics were unavailable for this run; other checks completed."
           : null,
@@ -626,7 +735,7 @@ export async function runAudit(reportId: string): Promise<void> {
           type: "REPORT_READY",
           title: `Audit Completed: ${targetHost}`,
           body: `Overall score: ${summary.overallScore}/100 (${summary.grade}). ${summary.passedCount} checks passed, ${summary.failedCount} issues detected.`,
-          linkUrl: `/dashboard/reports/${report.id}`,
+          linkUrl: `/dashboard?project=${encodeURIComponent(targetHost)}`,
         },
       }).catch(() => undefined);
     }

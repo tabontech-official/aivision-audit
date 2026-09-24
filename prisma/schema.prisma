@@ -635,6 +635,18 @@ model Report {
   previousReportId      String?   @map("previous_report_id") @db.Uuid
   scoreDelta            Float?    @map("score_delta")
   findingsReconciledAt  DateTime? @map("findings_reconciled_at") @db.Timestamptz
+  // Audit Coverage & Scope tracking
+  totalDetectedUrls     Int?          @default(0) @map("total_detected_urls")
+  coverageLimit         Int?          @default(100) @map("coverage_limit")
+  coverageUsed          Int?          @default(0) @map("coverage_used")
+  coverageRemaining     Int?          @default(0) @map("coverage_remaining")
+  initialSampleSize     Int?          @default(30) @map("initial_sample_size")
+  coverageCompleted     Boolean       @default(false) @map("coverage_completed")
+  currentPlanKey        String?       @map("current_plan_key")
+  lastProcessedPosition Int?          @default(0) @map("last_processed_position")
+  urlGroups             Json?         @map("url_groups")
+  discoveredUrlsList    Json?         @map("discovered_urls_list")
+
   startedAt          DateTime?     @map("started_at") @db.Timestamptz
   completedAt        DateTime?     @map("completed_at") @db.Timestamptz
   expiresAt          DateTime?     @map("expires_at") @db.Timestamptz // anonymous reports expire
@@ -828,6 +840,8 @@ model Plan {
   stripePriceMonthlyId  String?             @map("stripe_price_monthly_id")
   stripePriceYearlyId   String?             @map("stripe_price_yearly_id")
   auditLimitPerMonth    Int                 @default(3) @map("audit_limit_per_month")
+  pageAuditLimit        Int                 @default(100) @map("page_audit_limit") // Total page coverage limit (10, 100, 1000, 3000, etc.)
+  initialSampleSize     Int                 @default(30) @map("initial_sample_size") // Initial sample size per audit (10, 30, 50, 100, etc.)
   auditLimitType        String              @default("MONTHLY") @map("audit_limit_type") // MONTHLY, BILLING_CYCLE, LIFETIME, UNLIMITED
   auditResetPeriod      String              @default("MONTHLY") @map("audit_reset_period") // MONTHLY, BILLING_CYCLE, NEVER
   concurrentAuditsLimit Int                 @default(1) @map("concurrent_audits_limit")

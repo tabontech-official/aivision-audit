@@ -138,3 +138,42 @@ export async function cancelAuditAction(identifier: string): Promise<ReportActio
     return { ok: false, error: err instanceof Error ? err.message : "Failed to cancel audit." };
   }
 }
+
+/** Continue an existing audit to analyze remaining pages under plan allowance. */
+export async function continueAuditAction(reportPublicId: string): Promise<{
+  ok: boolean;
+  error?: string;
+  pagesAdded?: number;
+  coverageUsed?: number;
+  coverageRemaining?: number;
+  totalDetectedUrls?: number;
+  upgradeRequired?: boolean;
+}> {
+  try {
+    const session = await auth();
+    if (!session?.user) return { ok: false, error: "Not authorized." };
+    if (!reportPublicId || !reportPublicId.trim()) return { ok: false, error: "Invalid report identifier." };
+
+    const { continueAuditScope } = await import("@/services/jobs/continue-audit");
+    const res = await continueAuditScope(reportPublicId, session.user.id);
+
+    if (!res.ok) {
+      return { ok: false, error: res.error, upgradeRequired: res.upgradeRequired };
+    }
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/reports");
+    revalidatePath(`/dashboard/reports/${reportPublicId}`);
+
+    return {
+      ok: true,
+      pagesAdded: res.pagesAdded,
+      coverageUsed: res.coverageUsed,
+      coverageRemaining: res.coverageRemaining,
+      totalDetectedUrls: res.totalDetectedUrls,
+    };
+  } catch (err: unknown) {
+    console.error("continueAuditAction error:", err);
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to continue audit." };
+  }
+}

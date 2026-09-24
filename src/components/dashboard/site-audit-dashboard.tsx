@@ -31,7 +31,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { rerunAuditAction, rescanWebsiteAction } from "@/app/dashboard/reports/actions";
+import { rerunAuditAction, rescanWebsiteAction, continueAuditAction } from "@/app/dashboard/reports/actions";
 import { StopAuditButton } from "@/components/dashboard/stop-audit-button";
 
 export interface IssueItem {
@@ -153,6 +153,12 @@ export interface SiteAuditDashboardProps {
   thematic?: ThematicMetrics;
   crawledPagesList?: CrawledPageItem[];
   statistics?: StatisticsMetrics;
+  totalDetectedUrls?: number;
+  coverageUsed?: number;
+  coverageRemaining?: number;
+  coverageLimit?: number;
+  coverageCompleted?: boolean;
+  currentPlanKey?: string;
 }
 
 function SemiCircleGauge({
@@ -548,6 +554,11 @@ export function SiteAuditDashboard({
   thematic,
   crawledPagesList = [],
   statistics,
+  totalDetectedUrls,
+  coverageUsed: coverageUsedProp,
+  coverageRemaining: coverageRemainingProp,
+  coverageLimit: coverageLimitProp,
+  coverageCompleted = false,
 }: SiteAuditDashboardProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>(
@@ -576,6 +587,46 @@ export function SiteAuditDashboard({
   const [sendToIssue, setSendToIssue] = useState<IssueItem | null>(null);
   const [hiddenIssueIds, setHiddenIssueIds] = useState<Set<string>>(new Set());
   const [actionCopied, setActionCopied] = useState(false);
+  const [isContinuing, setIsContinuing] = useState(false);
+  const [continueNotice, setContinueNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [rerunNotice, setRerunNotice] = useState<{ message: string; upgradeRequired?: boolean } | null>(null);
+
+  const totalDetected = totalDetectedUrls || maxPages || 200;
+  const coverageUsed = coverageUsedProp ?? pagesCrawled;
+  const coverageLimit = coverageLimitProp ?? maxPages;
+  const planCreditsRemaining = Math.max(0, coverageLimit - coverageUsed);
+  const siteRemaining = Math.max(0, totalDetected - coverageUsed);
+  const additionalPossible = Math.min(planCreditsRemaining, siteRemaining);
+  const hasMoreAvailableUnderPlan = !coverageCompleted && planCreditsRemaining > 0 && siteRemaining > 0;
+  const planLimitReached = !hasMoreAvailableUnderPlan && siteRemaining > 0 && planCreditsRemaining <= 0;
+
+  const handleContinueAudit = async () => {
+    if (!reportPublicId || isContinuing) return;
+    setIsContinuing(true);
+    setContinueNotice(null);
+    try {
+      const res = await continueAuditAction(reportPublicId);
+      if (res.ok) {
+        setContinueNotice({
+          type: "success",
+          message: `Successfully analyzed ${res.pagesAdded ?? 0} additional pages! Updating audit...`,
+        });
+        router.refresh();
+      } else {
+        setContinueNotice({
+          type: "error",
+          message: res.error || "Failed to continue audit under plan.",
+        });
+      }
+    } catch {
+      setContinueNotice({
+        type: "error",
+        message: "An unexpected error occurred while continuing audit.",
+      });
+    } finally {
+      setIsContinuing(false);
+    }
+  };
 
   const isRunning = reportStatus === "PROCESSING" || reportStatus === "QUEUED";
 
@@ -771,6 +822,7 @@ export function SiteAuditDashboard({
 
   const handleRerun = () => {
     if (!domain && !reportId) return;
+    setRerunNotice(null);
     startTransition(async () => {
       try {
         let res;
@@ -781,9 +833,17 @@ export function SiteAuditDashboard({
         }
         if (res?.ok && res.redirectTo) {
           router.push(res.redirectTo);
+        } else if (res && !res.ok) {
+          setRerunNotice({
+            message: res.error || "Could not re-run audit. Your monthly allowance may have been reached.",
+            upgradeRequired: res.error?.toLowerCase().includes("limit") || res.error?.toLowerCase().includes("upgrade"),
+          });
         }
       } catch (e) {
         console.error("Rerun error:", e);
+        setRerunNotice({
+          message: "An unexpected error occurred while re-running the campaign.",
+        });
       }
     });
   };
@@ -1044,7 +1104,21 @@ export function SiteAuditDashboard({
                 </>
               )}
             </span>
-            <span>Pages crawled: <strong className="font-semibold text-slate-700">{pagesCrawled}/{Math.max(pagesCrawled, maxPages)}</strong></span>
+            <span>
+              Pages crawled: <strong className="font-semibold text-slate-800">{coverageUsed.toLocaleString()} / {totalDetected.toLocaleString()}</strong>
+            </span>
+            <span>
+              Usage: <strong className="font-semibold text-slate-800">{coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used</strong>
+            </span>
+            {planCreditsRemaining > 0 ? (
+              <span>
+                Remaining: <strong className="font-semibold text-slate-800">{planCreditsRemaining.toLocaleString()} credits</strong>
+              </span>
+            ) : (
+              <span className="text-amber-600 font-semibold">
+                Remaining: 0 credits
+              </span>
+            )}
           </div>
         </div>
 
@@ -1112,6 +1186,116 @@ export function SiteAuditDashboard({
           </button>
         </div>
       </div>
+
+      {/* AUDIT SCOPE & COVERAGE BANNER */}
+      {hasMoreAvailableUnderPlan ? (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-emerald-200/90 bg-[#f0fdf9] p-4 shadow-2xs animate-in fade-in-50 duration-200">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 mt-0.5">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-slate-900 text-sm sm:text-base">
+                  Total Crawled: {coverageUsed.toLocaleString()} · {coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used
+                </span>
+                <span className="rounded-full bg-emerald-100/80 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold">
+                  {planCreditsRemaining.toLocaleString()} plan credits remaining
+                </span>
+                <span className="rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 text-[11px] font-medium">
+                  {siteRemaining.toLocaleString()} uncrawled pages
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-slate-600">
+                Initial crawl completed. Your plan has <strong>{planCreditsRemaining.toLocaleString()}</strong> remaining credits to crawl {additionalPossible.toLocaleString()} more unique pages on this website.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleContinueAudit}
+            disabled={isContinuing}
+            className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 disabled:opacity-60 outline-none focus:outline-none focus:ring-0"
+          >
+            <RotateCw className={cn("h-3.5 w-3.5", isContinuing && "animate-spin")} />
+            <span>{isContinuing ? "Crawling Pages..." : `Continue Crawl: Analyse ${additionalPossible.toLocaleString()} More Pages`}</span>
+          </button>
+        </div>
+      ) : planLimitReached ? (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-amber-200/90 bg-amber-50/70 p-4 shadow-2xs animate-in fade-in-50 duration-200">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 mt-0.5">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-slate-900 text-sm sm:text-base">
+                  Plan limit reached ({coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used)
+                </span>
+                <span className="rounded-full bg-amber-100 text-amber-900 border border-amber-200 px-2.5 py-0.5 text-[11px] font-bold">
+                  {siteRemaining.toLocaleString()} pages remaining
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-slate-600">
+                You have reached your monthly crawl limit. Upgrade your plan to crawl more pages.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/pricing"
+            className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 outline-none focus:outline-none focus:ring-0"
+          >
+            <span>Upgrade Plan</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      ) : null}
+
+      {rerunNotice && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900 animate-in fade-in-50 duration-200">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+            <div>
+              <div className="font-bold text-amber-950">Audit Limit Reached</div>
+              <p className="mt-0.5 text-amber-800">{rerunNotice.message}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {rerunNotice.upgradeRequired && (
+              <Link
+                href="/pricing"
+                className="rounded-lg bg-amber-900 hover:bg-black px-3 py-1.5 text-xs font-bold text-white shadow-xs transition-colors"
+              >
+                Upgrade Plan
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={() => setRerunNotice(null)}
+              className="rounded-lg p-1 text-amber-700 hover:bg-amber-100 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {continueNotice && (
+        <div
+          className={`rounded-xl p-3.5 text-xs font-medium flex items-center justify-between animate-in fade-in-50 duration-150 ${
+            continueNotice.type === "success"
+              ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
+              : "bg-red-50 border border-red-200 text-red-800"
+          }`}
+        >
+          <span>{continueNotice.message}</span>
+          <button type="button" onClick={() => setContinueNotice(null)} className="text-slate-400 hover:text-slate-700">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* 2. SUB-NAVIGATION TABS (Overview, Issues, Crawled Pages, Statistics) */}
       <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto custom-scrollbar">
