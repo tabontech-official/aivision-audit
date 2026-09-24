@@ -2,12 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-
-const AuthGateModal = dynamic(
-  () => import("@/components/marketing/auth-gate-modal").then((m) => m.AuthGateModal),
-  { ssr: false },
-);
+import { AuthGateModal } from "@/components/marketing/auth-gate-modal";
 
 export function HeroSearchForm() {
   const router = useRouter();

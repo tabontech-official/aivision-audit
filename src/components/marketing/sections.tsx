@@ -44,7 +44,7 @@ export function Hero() {
       {/* Background ambient lighting and soft radial wash */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,rgba(195,242,231,0.65),transparent_80%)] pointer-events-none" />
 
-      <div className="relative mx-auto max-w-5xl px-4 sm:px-8 lg:px-12 text-center">
+      <div className="relative mx-auto max-w-5xl px-4 sm:px-8 lg:px-12 xl:px-16 text-center">
         {/* Main Headline */}
         <h1 className="font-display font-semibold text-5xl sm:text-6xl md:text-7xl lg:text-[76px] xl:text-[80px] tracking-[-0.035em] text-[#111827] leading-[1.06] max-w-4xl mx-auto font-lazzer">
           AI Website Audit
@@ -70,13 +70,10 @@ export function Hero() {
 /* Second Section: AI & Search Opportunities Feature Cards            */
 /* ------------------------------------------------------------------ */
 
-/* Second Section: AI & Search Opportunities Feature Cards            */
-/* ------------------------------------------------------------------ */
-
 export function CredibilityStrip() {
   return (
     <section className="bg-[#dff2ed] pt-0 pb-10 sm:pb-14 lg:pb-16">
-      <div className="w-full px-4 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
           {/* Left Card - Feature Card (col-span-8) with rounded-sm and compact padding */}
           <div className="lg:col-span-8 relative overflow-hidden rounded-sm bg-[#b482fc] p-5 sm:p-6 lg:p-7 flex flex-col justify-between shadow-xs">
@@ -300,7 +297,7 @@ const FEATURES = [
 export function Features() {
   return (
     <section id="features" className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer">
-      <div className="w-full px-4 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 xl:px-16">
         {/* Section Header (Centered) */}
         <div className="mx-auto max-w-3xl text-center">
           {/* Eyebrow Tag */}
@@ -662,7 +659,7 @@ const OTHER_FEATURES = [
 export function OtherFeatures() {
   return (
     <section className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer">
-      <div className="w-full px-4 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 xl:px-16">
         {/* Title */}
         <div className="flex flex-col items-start text-left mb-8 sm:mb-10">
           <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer mb-2">
@@ -780,7 +777,7 @@ export function OtherFeatures() {
 export function AiShiftSection() {
   return (
     <section className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer">
-      <div className="w-full px-4 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 xl:px-16">
         {/* Top Header Area */}
         <div className="flex flex-col items-start text-left max-w-3xl">
           {/* Eyebrow Tag */}
@@ -914,7 +911,7 @@ export function HowItWorks() {
       id="how-it-works"
       className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer"
     >
-      <div className="w-full px-4 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="grid items-center gap-14 md:grid-cols-2">
           {/* Left */}
           <div>
@@ -1016,7 +1013,7 @@ export function HowItWorks() {
 export function ReportPreview() {
   return (
     <section className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer">
-      <div className="w-full px-4 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="grid items-center gap-14 lg:grid-cols-2">
           {/* Left Content */}
           <div>
@@ -1160,7 +1157,7 @@ export function Pricing() {
       id="pricing"
       className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer"
     >
-      <div className="w-full px-4 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 xl:px-16">
         {/* Header */}
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer inline-flex items-center gap-2 justify-center">
@@ -1334,7 +1331,7 @@ export function Faq() {
       id="faq"
       className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer"
     >
-      <div className="w-full px-4 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 xl:px-16">
         {/* Heading */}
         <div className="text-center">
           <div className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer inline-flex items-center gap-2 justify-center">
@@ -1429,7 +1426,7 @@ const ARTICLES = [
 export function LatestWritings() {
   return (
     <section className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer">
-      <div className="w-full px-4 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 xl:px-16">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-10">
           <div>
@@ -1496,7 +1493,7 @@ export function LatestWritings() {
 export function FinalCta() {
   return (
     <section className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer">
-      <div className="w-full px-4 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="relative overflow-hidden rounded-sm bg-[#111827] p-8 sm:p-12 lg:p-16 text-white shadow-xl">
           {/* Subtle Background Glow */}
           <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#c084fc]/15 blur-3xl" />
@@ -1556,7 +1553,7 @@ export function FinalCta() {
 export function MarketingFooter() {
   return (
     <footer className="bg-[#dff2ed] border-t border-slate-300/40 pt-16 pb-12 text-slate-600 font-lazzer">
-      <div className="w-full px-4 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
           {/* Left Brand Column */}
           <div className="lg:col-span-3 xl:col-span-4 flex flex-col items-start text-left space-y-6">

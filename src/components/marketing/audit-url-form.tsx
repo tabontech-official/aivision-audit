@@ -4,13 +4,8 @@ import { useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, Gauge, Smartphone, ShieldCheck } from "lucide-react";
-import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils/cn";
-
-const AuthGateModal = dynamic(
-  () => import("@/components/marketing/auth-gate-modal").then((m) => m.AuthGateModal),
-  { ssr: false },
-);
+import { AuthGateModal } from "@/components/marketing/auth-gate-modal";
 
 /**
  * The primary conversion element: one URL field, one button — and an account

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   BarChart3,
-  FileText,
   Key,
   ChevronDown,
   ChevronsUpDown,
@@ -204,7 +203,6 @@ export function DashboardSidebar({
   };
 
   const isDashboardActive = pathname === "/dashboard";
-  const isReportsActive = pathname.startsWith("/dashboard/reports") && !currentSectionParam;
   const isSchemaActive = pathname.startsWith("/dashboard/schema");
   const isBillingActive = pathname.startsWith("/dashboard/billing");
 
@@ -302,8 +300,8 @@ export function DashboardSidebar({
           )}
         </div>
 
-        {/* 2. NAVIGATION LIST (Overview, Schema & Growth Fixed; AI Automation Fixes with dedicated Scroller) */}
-        <div className="flex-1 overflow-hidden px-3 py-2 flex flex-col space-y-1">
+        {/* 2. NAVIGATION LIST (Overview, Schema & Growth Fixed; AI Automation Fixes fills available space with dedicated scrollbar) */}
+        <div className="flex-1 min-h-0 overflow-hidden px-3 py-2 flex flex-col space-y-1">
           {/* SECTION 1: Overview (Fixed) */}
           <div className="shrink-0">
             <div className="py-1.5 px-2 text-[13px] font-semibold text-slate-800">
@@ -331,34 +329,12 @@ export function DashboardSidebar({
                 )}
                 <span className="truncate">Performance</span>
               </Link>
-
-              {/* Page Audit */}
-              <Link
-                href={selectedProject ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}` : "/dashboard/reports"}
-                prefetch={true}
-                onClick={(e) => handleSidebarItemClick(e)}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
-                  isReportsActive
-                    ? "bg-slate-100/90 text-slate-950 font-semibold"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                )}
-              >
-                {isReportsActive ? (
-                  <div className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-white shrink-0">
-                    <FileText className="h-3 w-3" />
-                  </div>
-                ) : (
-                  <FileText className="h-4 w-4 text-slate-500 shrink-0" />
-                )}
-                <span className="truncate">Page Audit</span>
-              </Link>
             </div>
           </div>
 
           <div className="my-1.5 border-t border-slate-100 shrink-0" />
 
-          {/* SECTION 2: Optimization (Fixed Schema Markup + Scrollable AI Automation Fixes) */}
+          {/* SECTION 2: Optimization (Fills available space, AI Automation Fixes scrolls internally when needed) */}
           <div className="flex-1 min-h-0 flex flex-col">
             <div className="py-1.5 px-2 text-[13px] font-semibold text-slate-800 shrink-0">
               Optimization
@@ -405,9 +381,9 @@ export function DashboardSidebar({
                 />
               </button>
 
-              {/* AI Automation Fixes Scroller */}
+              {/* AI Automation Fixes List (Expands to fill vertical empty space, only scrolls if list exceeds available height) */}
               {aiFixesOpen && (
-                <div className="flex-1 min-h-0 max-h-48 sm:max-h-56 overflow-y-auto custom-scrollbar space-y-0.5 pl-3.5 pr-1 border-l border-slate-200 my-1 ml-2.5">
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar space-y-0.5 pl-3.5 pr-1 border-l border-slate-200 my-1 ml-2.5">
                   {activeSections.map((item, idx) => {
                     const isSelected = currentSectionParam === item.slug;
                     const rawScore = selectedProject ? projectSectionScores[selectedProject]?.[item.slug] : null;

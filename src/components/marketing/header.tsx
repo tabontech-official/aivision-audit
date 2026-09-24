@@ -19,13 +19,8 @@ import {
   ArrowRight,
   ArrowUpRight,
 } from "lucide-react";
-import dynamic from "next/dynamic";
 import { BrandIcon } from "@/components/ui/brand-icon";
-
-const AuthGateModal = dynamic(
-  () => import("@/components/marketing/auth-gate-modal").then((m) => m.AuthGateModal),
-  { ssr: false },
-);
+import { AuthGateModal } from "@/components/marketing/auth-gate-modal";
 
 export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
   const router = useRouter();
@@ -87,7 +82,7 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           : "bg-[#dff2ed] border-b border-transparent shadow-none"
       }`}
     >
-      <div className="w-full flex h-[70px] sm:h-[74px] items-center justify-between px-4 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl flex h-[70px] sm:h-[74px] items-center justify-between px-4 sm:px-8 lg:px-12 xl:px-16">
         {/* Left: Brand Logo & Title */}
         <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
           <BrandIcon className="h-8 w-8 text-[rgb(24,30,21)] shrink-0" />
