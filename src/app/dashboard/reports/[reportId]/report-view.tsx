@@ -4,6 +4,7 @@ import { useState, useTransition, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  ArrowLeft,
   RotateCw,
   FileDown,
   Share2,
@@ -594,6 +595,16 @@ export function ReportView(props: {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between border-b border-slate-200/70 pb-4">
         {/* Left Title & Meta Line */}
         <div>
+          <div className="mb-1.5">
+            <Link
+              href={`/dashboard?project=${encodeURIComponent(domain)}`}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to Dashboard</span>
+            </Link>
+          </div>
+
           <div className="relative inline-block">
             <button
               type="button"
@@ -652,7 +663,7 @@ export function ReportView(props: {
               <span>Desktop</span>
             </span>
             <span>
-              Pages crawled: <strong className="font-semibold text-slate-700">{props.pagesCrawledCount ?? (props.passedCount + props.failedCount + props.warningCount || 1)}/200</strong>
+              Pages crawled: <strong className="font-semibold text-slate-700">{props.pagesCrawledCount ?? (props.passedCount + props.failedCount + props.warningCount || 1)}/{props.pagesCrawledCount ?? (props.passedCount + props.failedCount + props.warningCount || 1)}</strong>
             </span>
           </div>
         </div>

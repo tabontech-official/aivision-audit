@@ -1044,7 +1044,7 @@ export function SiteAuditDashboard({
                 </>
               )}
             </span>
-            <span>Pages crawled: <strong className="font-semibold text-slate-700">{pagesCrawled}/{maxPages}</strong></span>
+            <span>Pages crawled: <strong className="font-semibold text-slate-700">{pagesCrawled}/{Math.max(pagesCrawled, maxPages)}</strong></span>
           </div>
         </div>
 

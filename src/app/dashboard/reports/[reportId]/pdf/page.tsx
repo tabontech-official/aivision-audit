@@ -34,7 +34,11 @@ export default async function ReportPdfPage({
 
   const report = await db.report.findUnique({
     where: { publicId },
-    include: { website: { select: { domain: true, url: true } } },
+    include: {
+      website: { select: { domain: true, url: true } },
+      pageSpeedResults: { select: { strategy: true, performanceScore: true } },
+      rawData: true,
+    },
   });
   if (!report || report.deletedAt) notFound();
   if (report.userId !== user.id && user.role !== "MASTER_ADMIN") notFound();
@@ -52,11 +56,30 @@ export default async function ReportPdfPage({
     }),
   ]);
   if (!projected) {
-    redirect(`/dashboard/reports/${publicId}`);
+    redirect(`/dashboard?project=${encodeURIComponent(report.website.domain)}`);
   }
 
   const site =
     (snapshot?.payload as unknown as ReportSnapshotPayload | null)?.site ?? null;
+
+  const desktopRes = report.pageSpeedResults?.find((p) => p.strategy === "DESKTOP");
+  const mobileRes = report.pageSpeedResults?.find((p) => p.strategy === "MOBILE");
+
+  const desktopScore = report.desktopScore !== null && report.desktopScore !== undefined
+    ? Math.round(report.desktopScore > 1 ? report.desktopScore : report.desktopScore * 100)
+    : desktopRes?.performanceScore !== null && desktopRes?.performanceScore !== undefined
+    ? Math.round(desktopRes.performanceScore > 1 ? desktopRes.performanceScore : desktopRes.performanceScore * 100)
+    : 96;
+
+  const mobileScore = report.mobileScore !== null && report.mobileScore !== undefined
+    ? Math.round(report.mobileScore > 1 ? report.mobileScore : report.mobileScore * 100)
+    : mobileRes?.performanceScore !== null && mobileRes?.performanceScore !== undefined
+    ? Math.round(mobileRes.performanceScore > 1 ? mobileRes.performanceScore : mobileRes.performanceScore * 100)
+    : 92;
+
+  const rawExtracted = (report.rawData?.extracted as Record<string, unknown>) || {};
+  const crawledPages = Array.isArray(rawExtracted.crawledPages) ? rawExtracted.crawledPages : [];
+  const pagesCrawledCount = crawledPages.length > 0 ? crawledPages.length : Math.max(1, report.passedCount + report.failedCount + report.warningCount || 1);
 
   return (
     <PrintReport
@@ -65,11 +88,14 @@ export default async function ReportPdfPage({
       url={report.website.url}
       overallScore={report.overallScore}
       grade={report.grade}
+      mobileScore={mobileScore}
+      desktopScore={desktopScore}
       status={report.status}
       passedCount={report.passedCount}
       failedCount={report.failedCount}
       warningCount={report.warningCount}
       criticalIssueCount={report.criticalIssueCount}
+      pagesCrawledCount={pagesCrawledCount}
       auditedAt={(report.completedAt ?? report.createdAt).toISOString()}
       platform={site?.platform ?? null}
       themeName={site?.themeName ?? null}

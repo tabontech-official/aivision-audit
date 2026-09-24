@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Globe, ExternalLink, RefreshCw } from "lucide-react";
 import { SerpPositionResult } from "@/services/keywords/types";
 
@@ -10,9 +11,22 @@ interface KeywordSerpModalProps {
 }
 
 export function KeywordSerpModal({ keyword, onClose }: KeywordSerpModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [serp, setSerp] = useState<SerpPositionResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   useEffect(() => {
     async function loadSerp() {
@@ -37,8 +51,10 @@ export function KeywordSerpModal({ keyword, onClose }: KeywordSerpModalProps) {
     loadSerp();
   }, [keyword]);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6 animate-in fade-in duration-150 font-sans">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6 animate-in fade-in duration-150 font-sans">
       <div className="bg-white border border-slate-200 rounded-[8px] w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/70">
@@ -146,6 +162,7 @@ export function KeywordSerpModal({ keyword, onClose }: KeywordSerpModalProps) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -26,10 +27,15 @@ export function AuthGateModal({
   onAuthenticated?: (redirectTo: string) => void;
 }) {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   /** null = email step; true = existing user login; false = new user signup */
   const [returning, setReturning] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const {
     register,
@@ -50,6 +56,17 @@ export function AuthGateModal({
       reset();
     }
   }, [open, reset]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [open]);
 
   const onEmailStep = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,10 +110,10 @@ export function AuthGateModal({
 
   const email = getValues("email");
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 font-lazzer">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 font-lazzer">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
@@ -303,7 +320,8 @@ export function AuthGateModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

@@ -196,11 +196,11 @@ export default async function DashboardPage({
     ? sitemapData.totalUrlCount
     : 200;
 
-  const pagesCrawled = hasReport
+  let pagesCrawled = hasReport
     ? (rawCrawledPages.length > 0
         ? rawCrawledPages.length
         : rawInternalLinks.length > 0
-        ? Math.min(rawInternalLinks.length + 1, totalPages)
+        ? rawInternalLinks.length + 1
         : 1)
     : 1;
 
@@ -643,6 +643,8 @@ export default async function DashboardPage({
   };
 
   const initialTab = resolvedParams.tab || "overview";
+  const actualCrawledPagesCount = Math.max(1, crawledPagesList.length);
+  const effectiveMaxPages = Math.max(actualCrawledPagesCount, totalPages);
 
   return (
     <SiteAuditDashboard
@@ -651,8 +653,8 @@ export default async function DashboardPage({
       lastUpdated={lastUpdated}
       isMobileStrategy={true}
       jsRendering={activeReport?.rawData?.renderedWithBrowser ?? false}
-      pagesCrawled={pagesCrawled}
-      maxPages={totalPages}
+      pagesCrawled={actualCrawledPagesCount}
+      maxPages={effectiveMaxPages}
       overallScore={overallScore}
       desktopScore={desktopScore}
       mobileScore={mobileScore}

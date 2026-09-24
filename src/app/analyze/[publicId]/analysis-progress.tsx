@@ -103,7 +103,7 @@ export function AnalysisProgress({
           setProgress(100);
           setStageIndex(STAGES.length);
           setTimeout(() => {
-            if (!cancelled) router.push(`/report/${publicId}`);
+            if (!cancelled) router.push(`/dashboard?project=${encodeURIComponent(domain)}`);
           }, 900);
           return;
         }

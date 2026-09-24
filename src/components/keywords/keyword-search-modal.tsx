@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Search,
@@ -59,10 +60,26 @@ export function KeywordSearchModal({
   onClose,
   onTrackChanged,
 }: KeywordSearchModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("US");
   const [language, setLanguage] = useState("en");
   const [activeTab, setActiveTab] = useState<"related" | "questions" | "autocomplete">("related");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +94,7 @@ export function KeywordSearchModal({
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [tableFilter, setTableFilter] = useState("");
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleSearch = async (overrideQuery?: string) => {
     const q = (overrideQuery || query).trim();
@@ -278,8 +295,8 @@ export function KeywordSearchModal({
     document.body.removeChild(link);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6 animate-in fade-in duration-150 font-sans">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6 animate-in fade-in duration-150 font-sans">
       <div className="bg-white border border-slate-200 rounded-[8px] w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/70">
@@ -655,6 +672,7 @@ export function KeywordSearchModal({
           onClose={() => setSelectedSerpKeyword(null)}
         />
       )}
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth/auth";
+import { db } from "@/lib/db/client";
 import { getReportForViewer } from "@/services/reports/access";
 
 export const metadata: Metadata = { title: "Your store audit" };
@@ -37,6 +38,15 @@ export default async function ReportGatePage({
 
   if (report.status === "QUEUED" || report.status === "PROCESSING") {
     redirect(`/analyze/${publicId}`);
+  }
+
+  const website = await db.website.findUnique({
+    where: { id: report.websiteId },
+    select: { domain: true },
+  });
+
+  if (website?.domain) {
+    redirect(`/dashboard?project=${encodeURIComponent(website.domain)}`);
   }
 
   redirect(`/dashboard/reports/${publicId}`);
