@@ -195,15 +195,6 @@ export default async function DashboardPage({
     : typeof sitemapData.totalUrlCount === "number" && sitemapData.totalUrlCount > 0
     ? sitemapData.totalUrlCount
     : 200;
-
-  let pagesCrawled = hasReport
-    ? (rawCrawledPages.length > 0
-        ? rawCrawledPages.length
-        : rawInternalLinks.length > 0
-        ? rawInternalLinks.length + 1
-        : 1)
-    : 1;
-
   // Format last updated date
   const lastUpdated = activeReport?.createdAt
     ? new Date(activeReport.createdAt).toLocaleDateString("en-US", {
