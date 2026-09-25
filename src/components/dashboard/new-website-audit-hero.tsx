@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
 import { claimWelcomeRewardAndRunAuditAction, rescanWebsiteAction } from "@/app/dashboard/reports/actions";
-import { Sparkles, Gift } from "lucide-react";
+import { Gift } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface NewWebsiteAuditHeroProps {
@@ -123,7 +123,7 @@ export function NewWebsiteAuditHero({
           {/* Congratulation Success Alert */}
           {congratulation && (
             <div className="w-full mt-5 flex items-center gap-3 rounded-2xl border border-emerald-300 bg-emerald-50/95 p-4 text-emerald-950 shadow-xs animate-in fade-in-50 duration-200">
-              <Sparkles className="w-5 h-5 text-emerald-600 shrink-0" />
+              <Gift className="w-5 h-5 text-emerald-600 shrink-0" />
               <div className="text-xs sm:text-sm font-bold">
                 {congratulation}
               </div>
@@ -167,7 +167,7 @@ export function NewWebsiteAuditHero({
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4 text-slate-950" />
+                      <Gift className="w-4 h-4 text-slate-950" />
                       <span>Claim 10 Credits &amp; Run Free Audit</span>
                       <ArrowRight className="w-4 h-4" />
                     </>

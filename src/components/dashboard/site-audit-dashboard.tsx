@@ -30,7 +30,6 @@ import {
   UserPlus,
   GitCompare,
   Gift,
-  Sparkles,
   CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -1089,7 +1088,7 @@ export function SiteAuditDashboard({
                           href={`/dashboard/schema?url=${encodeURIComponent(issue.fixUrl || domain)}`}
                           className="inline-flex items-center gap-1.5 rounded-[8px] bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 text-xs font-bold transition-colors shadow-2xs"
                         >
-                          <Sparkles className="h-3.5 w-3.5" />
+                          <FileCode className="h-3.5 w-3.5" />
                           <span>Generate Schema Fix</span>
                         </Link>
                       )}
@@ -1215,7 +1214,7 @@ export function SiteAuditDashboard({
               </>
             ) : (
               <>
-                <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                <Gift className="w-3.5 h-3.5 text-slate-950" />
                 <span>Claim 10 Credits &amp; Run Free Audit</span>
               </>
             )}
@@ -1228,7 +1227,7 @@ export function SiteAuditDashboard({
         <div className="rounded-2xl border border-emerald-300 bg-emerald-50/95 p-4 shadow-xs font-lazzer flex items-center justify-between gap-3 animate-in fade-in-50 duration-200">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-              <Sparkles className="h-5 w-5" />
+              <Gift className="h-5 w-5" />
             </div>
             <div>
               <div className="text-sm font-extrabold text-emerald-950">
@@ -1796,7 +1795,7 @@ export function SiteAuditDashboard({
                                         href={`/dashboard/schema?url=${encodeURIComponent(issue.fixUrl || domain)}`}
                                         className="inline-flex items-center gap-1.5 rounded-[8px] bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1 text-xs font-bold transition-colors shadow-2xs"
                                       >
-                                        <Sparkles className="h-3.5 w-3.5" />
+                                        <FileCode className="h-3.5 w-3.5" />
                                         <span>Generate Schema Fix</span>
                                       </Link>
                                     )}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/auth";
 import { getPublicPlans } from "@/services/billing/plans";
 import { PricingTable, PublicPricingPlan } from "@/components/pricing/pricing-table";
@@ -29,6 +30,10 @@ export const dynamic = "force-dynamic";
 
 export default async function PricingPage() {
   const session = await auth();
+  if (session?.user) {
+    redirect("/dashboard/billing");
+  }
+
   const dbPlans = await getPublicPlans();
 
   // Dynamic Plans from Master Admin DB with recurring positioning

@@ -11,7 +11,7 @@ import {
   Globe,
   Loader2,
   Layers,
-  Sparkles,
+  Activity,
   AlertTriangle,
 } from "lucide-react";
 import {
@@ -137,7 +137,7 @@ export function UpgradePlanModal({ isOpen, onClose, reason, auditSummary }: Upgr
           {/* Header */}
           <div className="flex items-center gap-2 mb-2">
             <div className="p-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/60">
-              <Sparkles className="h-4 w-4" />
+              <Activity className="h-4 w-4" />
             </div>
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-amber-800">
@@ -373,11 +373,11 @@ export function UpgradePlanModal({ isOpen, onClose, reason, auditSummary }: Upgr
               {/* Bottom Footer */}
               <div className="mt-4 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
                 <Link
-                  href="/pricing"
+                  href="/dashboard/billing"
                   onClick={onClose}
                   className="hover:text-slate-900 underline font-semibold"
                 >
-                  View Plans
+                  View All Plans &amp; Billing
                 </Link>
 
                 <button

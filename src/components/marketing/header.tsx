@@ -426,13 +426,13 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
             Free Tools
           </Link>
 
-          {/* Pricing */}
+          {/* Pricing / Billing */}
           <Link
-            href="/pricing"
+            href={isLoggedIn ? "/dashboard/billing" : "/pricing"}
             prefetch={true}
             className="px-3 py-1.5 font-lazzer text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)] transition hover:text-black"
           >
-            Pricing
+            {isLoggedIn ? "Billing & Plans" : "Pricing"}
           </Link>
 
           {/* Articles */}
@@ -553,11 +553,11 @@ export function MarketingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
               Free Tools
             </Link>
             <Link
-              href="/pricing"
+              href={isLoggedIn ? "/dashboard/billing" : "/pricing"}
               onClick={() => setMobileMenuOpen(false)}
               className="text-[16px] font-[600] leading-[19.2px] text-[rgb(24,30,21)]"
             >
-              Pricing
+              {isLoggedIn ? "Billing & Plans" : "Pricing"}
             </Link>
             <Link
               href="/articles"
