@@ -8,6 +8,7 @@ import { validateAndNormalizeUrl } from "@/lib/security/url";
 import { assertPublicHost } from "@/lib/security/ssrf";
 import { getSetting } from "@/services/settings/get";
 import { getAllowance } from "@/services/audits/allowance";
+import { getUserUsageSummary } from "@/services/billing/entitlements";
 import { enqueueAuditJob } from "@/services/jobs/enqueue";
 import type { UserPlan } from "@prisma/client";
 
@@ -66,9 +67,21 @@ export async function createAudit(
   let plan: UserPlan = "FREE";
   let reportExpiresAt: Date | null = null;
 
+  let usageSummary = null;
   if (requester.kind === "user") {
     userId = requester.userId;
     plan = requester.plan;
+
+    usageSummary = await getUserUsageSummary(userId);
+
+    // Enforce Monthly Page Allowance (1 credit = 1 page)
+    if (usageSummary.pages.isLimitReached) {
+      return {
+        ok: false,
+        status: 429,
+        error: `You've reached your monthly audit allowance of ${usageSummary.pages.limit.toLocaleString()} pages. Upgrade your plan to analyze more pages.`,
+      };
+    }
 
     // Monthly allowance (shared with the dashboard so displayed = enforced)
     const allowance = await getAllowance(userId, plan);
@@ -150,6 +163,15 @@ export async function createAudit(
     where: { url, userId, deletedAt: null },
   });
   if (!website) {
+    // Enforce Website / Project limit for authenticated users
+    if (userId && usageSummary && usageSummary.websites.isLimitReached) {
+      return {
+        ok: false,
+        status: 403,
+        error: `You've reached your website limit of ${usageSummary.websites.limit} project${usageSummary.websites.limit === 1 ? "" : "s"}. Upgrade your plan to add more websites.`,
+      };
+    }
+
     website = await db.website.create({
       data: { url, domain, userId },
     });

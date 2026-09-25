@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Sparkles,
   CheckCircle2,
   ExternalLink,
   X,
@@ -43,6 +43,7 @@ export function RealtimeAuditNotifier({
   onUnreadCountChange?: (count: number) => void;
 }) {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [activeAudits, setActiveAudits] = useState<LiveAudit[]>([]);
   const [liveToast, setLiveToast] = useState<{
     id: string;
@@ -55,6 +56,10 @@ export function RealtimeAuditNotifier({
   const prevActiveIdsRef = useRef<Set<string>>(new Set());
   const seenNotifIdsRef = useRef<Set<string>>(new Set());
   const initialLoadDoneRef = useRef(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;
@@ -147,16 +152,18 @@ export function RealtimeAuditNotifier({
     };
   }, [activeAudits.length, onUnreadCountChange]);
 
-  return (
+  if (!mounted || typeof document === "undefined") return null;
+
+  return createPortal(
     <>
       {/* 1. REAL-TIME COMPLETION TOAST (Top-Right Floating Alert) */}
       {liveToast && (
-        <div className="fixed top-5 right-5 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="rounded-2xl border-2 border-emerald-500/80 bg-slate-950 p-4 text-white shadow-2xl backdrop-blur-xl">
+        <div className="fixed top-6 right-6 z-[9999] max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300 font-lazzer">
+          <div className="rounded-2xl border border-emerald-500/80 bg-slate-950 p-4 text-white shadow-2xl backdrop-blur-xl">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 mt-0.5">
-                  <Sparkles className="h-5 w-5" />
+                  <CheckCircle2 className="h-5 w-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -207,19 +214,19 @@ export function RealtimeAuditNotifier({
 
       {/* 2. FLOATING BACKGROUND AUDIT MONITOR PILL (Bottom-Right) */}
       {activeAudits.length > 0 && activeAudits[0] && (
-        <div className="fixed bottom-5 right-5 z-40 animate-in fade-in slide-in-from-bottom-3 duration-200 font-lazzer">
-          <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-3.5 shadow-xl backdrop-blur-md max-w-xs sm:max-w-sm flex items-center gap-3">
-            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-              <RotateCw className="h-4 w-4 animate-spin text-indigo-600" />
+        <div className="fixed bottom-6 right-6 z-[9999] animate-in fade-in slide-in-from-bottom-4 duration-300 font-lazzer pointer-events-auto">
+          <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-3.5 shadow-2xl backdrop-blur-md w-80 sm:w-96 flex items-center gap-3">
+            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+              <RotateCw className="h-4.5 w-4.5 animate-spin text-emerald-600" />
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center justify-between gap-1 mb-0.5">
                 <span className="text-xs font-bold text-slate-900 truncate">
-                  Auditing: {activeAudits[0].domain}
+                  Auditing {activeAudits[0].domain}
                 </span>
-                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-full shrink-0">
-                  {Math.round(activeAudits[0].progressPercent)}%
+                <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full shrink-0">
+                  {Math.round(activeAudits[0].progressPercent || 15)}%
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 truncate">
@@ -229,7 +236,7 @@ export function RealtimeAuditNotifier({
 
             <Link
               href={`/analyze/${activeAudits[0].publicId}`}
-              className="inline-flex items-center justify-center rounded-lg bg-slate-900 hover:bg-black text-white px-2.5 py-1.5 text-xs font-semibold shrink-0 transition-colors shadow-2xs"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-900 hover:bg-black text-white px-3 py-1.5 text-xs font-bold shrink-0 transition-colors shadow-2xs font-lazzer cursor-pointer"
               title="View live progress screen"
             >
               <span>View</span>
@@ -237,6 +244,7 @@ export function RealtimeAuditNotifier({
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body
   );
 }

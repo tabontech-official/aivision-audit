@@ -23,11 +23,11 @@ export function SchemaScoreCard({
   opportunityCount,
   richResultsEligible,
 }: SchemaScoreCardProps) {
-  // Score color
+  // Score color styling
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-emerald-600 bg-emerald-50 border-emerald-200";
-    if (score >= 50) return "text-amber-600 bg-amber-50 border-amber-200";
-    return "text-rose-600 bg-rose-50 border-rose-200";
+    if (score >= 80) return "text-emerald-700 bg-emerald-50 border-emerald-200/80";
+    if (score >= 50) return "text-amber-700 bg-amber-50 border-amber-200/80";
+    return "text-rose-700 bg-rose-50 border-rose-200/80";
   };
 
   const getScoreGrade = (score: number) => {
@@ -39,114 +39,128 @@ export function SchemaScoreCard({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 font-sans">
-      {/* Overall Score Card */}
-      <div className="md:col-span-4 bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-between shadow-xs">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-sans">
-            Schema Health Score
-          </span>
-          <Award className="w-5 h-5 text-slate-900" />
-        </div>
-
-        <div className="my-4 flex items-baseline gap-3">
-          <div
-            className={cn(
-              "font-display text-4xl font-extrabold tracking-tight px-3.5 py-1.5 rounded-xl border",
-              getScoreColor(overallScore)
-            )}
-          >
-            {overallScore}
-            <span className="text-lg font-normal text-slate-400">/100</span>
-          </div>
-          <div>
-            <div className="font-bold text-slate-900 text-sm font-display">
-              {getScoreGrade(overallScore)}
-            </div>
-            <div className="text-xs text-slate-500 font-sans">
-              {totalSchemas} schema blocks evaluated
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 font-lazzer">
+      {/* Overall Score Card (Compact Height) */}
+      <div className="md:col-span-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs flex flex-col justify-between">
+        <div>
+          {/* Header Row */}
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              Schema Health Score
+            </span>
+            <div className="p-1 rounded-lg bg-slate-100 text-slate-700">
+              <Award className="w-3.5 h-3.5" />
             </div>
           </div>
+
+          {/* Score & Grade */}
+          <div className="flex items-center gap-3">
+            <div
+              className={cn(
+                "text-2xl sm:text-3xl font-extrabold tracking-tight px-3 py-1 rounded-xl border shrink-0",
+                getScoreColor(overallScore)
+              )}
+            >
+              {overallScore}
+              <span className="text-sm font-normal text-slate-400">/100</span>
+            </div>
+            <div className="min-w-0">
+              <div className="font-bold text-slate-900 text-xs sm:text-sm truncate">
+                {getScoreGrade(overallScore)}
+              </div>
+              <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                {totalSchemas} schema blocks evaluated
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Rich Results Eligible Pills */}
-        <div className="pt-3 border-t border-slate-100">
-          <div className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5 font-sans">
-            <ShieldCheck className="w-3.5 h-3.5 text-slate-900" />
-            <span>Rich Result Types Active ({richResultsEligible.length})</span>
+        {/* Rich Results Active Types */}
+        <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+          <div className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+            <ShieldCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+            <span>Active Rich Results ({richResultsEligible.length}):</span>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex items-center gap-1 flex-wrap">
             {richResultsEligible.length > 0 ? (
               richResultsEligible.map((type) => (
                 <span
                   key={type}
-                  className="px-2 py-0.5 text-[11px] font-bold rounded-md bg-[#dff2ed] text-emerald-900 border border-emerald-300"
+                  className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-[#dff2ed] text-emerald-900 border border-emerald-300/80"
                 >
                   {type}
                 </span>
               ))
             ) : (
-              <span className="text-xs text-slate-400 italic font-sans">None detected</span>
+              <span className="text-[11px] text-slate-400 italic">None detected</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* KPI Metrics Grid */}
+      {/* 4 Compact Metric Cards */}
       <div className="md:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* Valid Schemas */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider font-sans">Valid Schemas</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            <span className="text-[11px] font-bold uppercase tracking-wider">Valid</span>
+            <div className="p-1 rounded-lg bg-emerald-50 text-emerald-600">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="mt-3">
-            <div className="font-display text-3xl font-extrabold text-slate-900">{validCount}</div>
-            <div className="text-xs text-emerald-600 font-medium font-sans mt-0.5">
+          <div className="mt-2">
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">{validCount}</div>
+            <div className="text-[11px] text-emerald-600 font-bold mt-0.5">
               {totalSchemas > 0 ? `${Math.round((validCount / totalSchemas) * 100)}% passing` : "0%"}
             </div>
           </div>
         </div>
 
         {/* Errors */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider font-sans">Errors</span>
-            <AlertOctagon className="w-4 h-4 text-rose-500" />
+            <span className="text-[11px] font-bold uppercase tracking-wider">Errors</span>
+            <div className="p-1 rounded-lg bg-rose-50 text-rose-600">
+              <AlertOctagon className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="mt-3">
-            <div className="font-display text-3xl font-extrabold text-rose-600">{errorCount}</div>
-            <div className="text-xs text-slate-500 font-medium font-sans mt-0.5">
+          <div className="mt-2">
+            <div className="text-2xl sm:text-3xl font-extrabold text-rose-600">{errorCount}</div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">
               {errorCount > 0 ? "Requires fix" : "Clean"}
             </div>
           </div>
         </div>
 
         {/* Warnings */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider font-sans">Warnings</span>
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            <span className="text-[11px] font-bold uppercase tracking-wider">Warnings</span>
+            <div className="p-1 rounded-lg bg-amber-50 text-amber-600">
+              <AlertTriangle className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="mt-3">
-            <div className="font-display text-3xl font-extrabold text-amber-600">{warningCount}</div>
-            <div className="text-xs text-slate-500 font-medium font-sans mt-0.5">
+          <div className="mt-2">
+            <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">{warningCount}</div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">
               {warningCount > 0 ? "Minor issues" : "None"}
             </div>
           </div>
         </div>
 
-        {/* Opportunities */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between shadow-xs">
+        {/* Enhance / Opportunities */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase tracking-wider font-sans">Enhance</span>
-            <Layers className="w-4 h-4 text-indigo-500" />
+            <span className="text-[11px] font-bold uppercase tracking-wider">Enhance</span>
+            <div className="p-1 rounded-lg bg-indigo-50 text-indigo-600">
+              <Layers className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="mt-3">
-            <div className="font-display text-3xl font-extrabold text-indigo-600">
+          <div className="mt-2">
+            <div className="text-2xl sm:text-3xl font-extrabold text-indigo-600">
               {opportunityCount}
             </div>
-            <div className="text-xs text-slate-500 font-medium font-sans mt-0.5">
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">
               Recommended fields
             </div>
           </div>

@@ -28,6 +28,7 @@ import {
 } from "@/services/inspection/render-decision";
 import { storeScreenshot } from "@/services/inspection/screenshot-store";
 import { fetchPsiBoth, type PsiMetrics } from "@/services/pagespeed/client";
+import { recordAuditPageUsage } from "@/services/billing/entitlements";
 import { evaluateReport } from "@/services/reports/evaluate-report";
 import { buildAndStoreSnapshot } from "@/services/reports/snapshot";
 import { logExecution } from "@/services/system-log/log";
@@ -725,6 +726,17 @@ export async function runAudit(reportId: string): Promise<void> {
       durationMs: totalDuration,
       meta: { overallScore: summary.overallScore, grade: summary.grade, status: psiFailed ? "PARTIAL" : "COMPLETED" },
     });
+
+    // Record audit page consumption in usage ledger
+    if (report.userId) {
+      await recordAuditPageUsage({
+        userId: report.userId,
+        websiteId: report.websiteId,
+        reportId: report.id,
+        pagesCount: finalInitialCoverage,
+        description: `Initial audit crawl of ${finalInitialCoverage} pages for ${page.finalUrl}`,
+      }).catch((err) => console.error("Failed to record audit page usage ledger:", err));
+    }
 
     // In-app user notification when audit completes
     if (report.userId) {

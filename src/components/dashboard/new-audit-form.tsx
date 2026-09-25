@@ -39,7 +39,9 @@ export function NewAuditForm({ disabled = false }: { disabled?: boolean }) {
           setError(data.error ?? "Something went wrong. Please try again.");
           return;
         }
-        router.push(`/analyze/${data.reportPublicId}`);
+        const domain = (trimmed.replace(/^https?:\/\//i, "").split("/")[0]) || "";
+        router.push(`/dashboard?project=${encodeURIComponent(domain)}`);
+        router.refresh();
       } catch {
         setError("We couldn't reach the server. Try again.");
       }

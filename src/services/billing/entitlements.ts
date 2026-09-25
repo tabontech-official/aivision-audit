@@ -130,12 +130,315 @@ export async function getUserAuditAllowance(userId: string): Promise<AllowanceSu
   };
 }
 
+export type PlanConfig = {
+  planId: string;
+  planKey: string;
+  planName: string;
+  priceMonthlyCents: number;
+  priceYearlyCents: number;
+  currency: string;
+  pageAuditLimit: number;
+  initialSampleSize: number;
+  websiteLimit: number;
+  schemaMonthlyLimit: number;
+  schemaBuilderEnabled: boolean;
+  auditHistoryRetentionDays: number;
+  scheduledAuditsEnabled: boolean;
+  scheduledAuditFrequency: string;
+  reAuditEnabled: boolean;
+  auditComparisonEnabled: boolean;
+  auditLimitPerMonth: number;
+  auditLimitType: string;
+  auditResetPeriod: string;
+  periodStart: Date;
+  periodEnd: Date | null;
+  subscriptionId: string | null;
+};
+
+export type FullUserUsageSummary = {
+  plan: PlanConfig;
+  periodStart: Date;
+  periodEnd: Date | null;
+  pages: {
+    limit: number;
+    used: number;
+    remaining: number;
+    initialSampleSize: number;
+    isLimitReached: boolean;
+    isUnlimited: boolean;
+  };
+  schemas: {
+    limit: number;
+    used: number;
+    remaining: number;
+    isUnlimited: boolean;
+    enabled: boolean;
+    isLimitReached: boolean;
+  };
+  websites: {
+    limit: number;
+    used: number;
+    remaining: number;
+    isUnlimited: boolean;
+    isLimitReached: boolean;
+  };
+  audits: {
+    limit: number;
+    used: number;
+    remaining: number;
+    isUnlimited: boolean;
+  };
+  features: {
+    scheduledAuditsEnabled: boolean;
+    scheduledAuditFrequency: string;
+    reAuditEnabled: boolean;
+    auditComparisonEnabled: boolean;
+    auditHistoryRetentionDays: number;
+  };
+};
+
+/** Get the resolved active Plan config and billing cycle for a user */
+export async function getUserPlanConfig(userId: string): Promise<PlanConfig> {
+  const activeSub = await db.subscription.findFirst({
+    where: {
+      userId,
+      status: { in: ["ACTIVE", "TRIALING"] },
+    },
+    include: {
+      plan: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const now = new Date();
+  let periodStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+  let periodEnd: Date | null = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
+  let subscriptionId: string | null = null;
+
+  if (activeSub && activeSub.plan) {
+    subscriptionId = activeSub.id;
+    if (activeSub.plan.auditResetPeriod === "BILLING_CYCLE" && activeSub.currentPeriodStart && activeSub.currentPeriodEnd) {
+      periodStart = new Date(activeSub.currentPeriodStart);
+      periodEnd = new Date(activeSub.currentPeriodEnd);
+    }
+    const plan = activeSub.plan;
+    return {
+      planId: plan.id,
+      planKey: plan.key,
+      planName: plan.name,
+      priceMonthlyCents: plan.priceMonthlyCents,
+      priceYearlyCents: plan.priceYearlyCents,
+      currency: plan.currency,
+      pageAuditLimit: plan.pageAuditLimit ?? 100,
+      initialSampleSize: plan.initialSampleSize ?? 30,
+      websiteLimit: plan.websiteLimit ?? 1,
+      schemaMonthlyLimit: plan.schemaMonthlyLimit ?? 25,
+      schemaBuilderEnabled: plan.schemaBuilderEnabled ?? true,
+      auditHistoryRetentionDays: plan.auditHistoryRetentionDays ?? 30,
+      scheduledAuditsEnabled: plan.scheduledAuditsEnabled ?? true,
+      scheduledAuditFrequency: plan.scheduledAuditFrequency || "MONTHLY",
+      reAuditEnabled: plan.reAuditEnabled ?? true,
+      auditComparisonEnabled: plan.auditComparisonEnabled ?? true,
+      auditLimitPerMonth: plan.auditLimitPerMonth,
+      auditLimitType: plan.auditLimitType,
+      auditResetPeriod: plan.auditResetPeriod,
+      periodStart,
+      periodEnd,
+      subscriptionId,
+    };
+  }
+
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { plan: true },
+  });
+
+  const planKey = user?.plan === "PREMIUM" ? "PRO" : "FREE";
+  let plan = await db.plan.findUnique({ where: { key: planKey } });
+  if (!plan && planKey === "PRO") {
+    plan = await db.plan.findUnique({ where: { key: "PREMIUM" } });
+  }
+  if (!plan) {
+    plan = await db.plan.findUnique({ where: { key: "FREE" } });
+  }
+
+  return {
+    planId: plan?.id || "default-free",
+    planKey: plan?.key || "FREE",
+    planName: plan?.name || "Free",
+    priceMonthlyCents: plan?.priceMonthlyCents ?? 0,
+    priceYearlyCents: plan?.priceYearlyCents ?? 0,
+    currency: plan?.currency || "usd",
+    pageAuditLimit: plan?.pageAuditLimit ?? (planKey === "FREE" ? 10 : 1000),
+    initialSampleSize: plan?.initialSampleSize ?? (planKey === "FREE" ? 10 : 50),
+    websiteLimit: plan?.websiteLimit ?? (planKey === "FREE" ? 1 : 5),
+    schemaMonthlyLimit: plan?.schemaMonthlyLimit ?? (planKey === "FREE" ? 3 : 100),
+    schemaBuilderEnabled: plan?.schemaBuilderEnabled ?? true,
+    auditHistoryRetentionDays: plan?.auditHistoryRetentionDays ?? (planKey === "FREE" ? 7 : 90),
+    scheduledAuditsEnabled: plan?.scheduledAuditsEnabled ?? (planKey !== "FREE"),
+    scheduledAuditFrequency: plan?.scheduledAuditFrequency || (planKey === "FREE" ? "DISABLED" : "WEEKLY"),
+    reAuditEnabled: plan?.reAuditEnabled ?? true,
+    auditComparisonEnabled: plan?.auditComparisonEnabled ?? (planKey !== "FREE"),
+    auditLimitPerMonth: plan?.auditLimitPerMonth ?? (planKey === "FREE" ? 3 : 50),
+    auditLimitType: plan?.auditLimitType || "MONTHLY",
+    auditResetPeriod: plan?.auditResetPeriod || "MONTHLY",
+    periodStart,
+    periodEnd,
+    subscriptionId: null,
+  };
+}
+
+/** Complete user usage summary across all 3 key monthly resources: Pages, Schemas, Websites */
+export async function getUserUsageSummary(userId: string): Promise<FullUserUsageSummary> {
+  const plan = await getUserPlanConfig(userId);
+
+  // 1. Pages Usage: Sum of AUDIT_PAGE units in current period or reports coverage
+  const pageEvents = await db.usageEvent.aggregate({
+    where: {
+      userId,
+      type: { in: ["AUDIT_PAGE", "AUDIT_RUN"] },
+      createdAt: { gte: plan.periodStart },
+    },
+    _sum: { units: true },
+  });
+
+  const pageUsed = pageEvents._sum.units ?? 0;
+  const pageLimit = plan.pageAuditLimit;
+  const pageRemaining = Math.max(0, pageLimit - pageUsed);
+
+  // 2. Schema Usage: Count of SCHEMA_GENERATION events or GeneratedSchemas in current period
+  const schemaUsed = await db.usageEvent.count({
+    where: {
+      userId,
+      type: "SCHEMA_GENERATION",
+      createdAt: { gte: plan.periodStart },
+    },
+  });
+
+  const schemaLimit = plan.schemaMonthlyLimit;
+  const isSchemaUnlimited = schemaLimit === -1;
+  const schemaRemaining = isSchemaUnlimited ? 999999 : Math.max(0, schemaLimit - schemaUsed);
+
+  // 3. Websites Usage: Active Website count
+  const websiteCount = await db.website.count({
+    where: {
+      userId,
+      deletedAt: null,
+    },
+  });
+
+  const websiteLimit = plan.websiteLimit;
+  const isWebsiteUnlimited = websiteLimit === -1;
+  const websiteRemaining = isWebsiteUnlimited ? 999999 : Math.max(0, websiteLimit - websiteCount);
+
+  return {
+    plan,
+    periodStart: plan.periodStart,
+    periodEnd: plan.periodEnd,
+    pages: {
+      limit: pageLimit,
+      used: pageUsed,
+      remaining: pageRemaining,
+      initialSampleSize: plan.initialSampleSize,
+      isLimitReached: pageRemaining <= 0,
+      isUnlimited: pageLimit === -1,
+    },
+    schemas: {
+      limit: schemaLimit,
+      used: schemaUsed,
+      remaining: schemaRemaining,
+      isUnlimited: isSchemaUnlimited,
+      enabled: plan.schemaBuilderEnabled,
+      isLimitReached: !isSchemaUnlimited && schemaRemaining <= 0,
+    },
+    websites: {
+      limit: websiteLimit,
+      used: websiteCount,
+      remaining: websiteRemaining,
+      isUnlimited: isWebsiteUnlimited,
+      isLimitReached: !isWebsiteUnlimited && websiteRemaining <= 0,
+    },
+    audits: {
+      limit: plan.auditLimitPerMonth,
+      used: pageUsed > 0 ? 1 : 0,
+      remaining: Math.max(0, plan.auditLimitPerMonth - (pageUsed > 0 ? 1 : 0)),
+      isUnlimited: plan.auditLimitType === "UNLIMITED",
+    },
+    features: {
+      scheduledAuditsEnabled: plan.scheduledAuditsEnabled,
+      scheduledAuditFrequency: plan.scheduledAuditFrequency,
+      reAuditEnabled: plan.reAuditEnabled,
+      auditComparisonEnabled: plan.auditComparisonEnabled,
+      auditHistoryRetentionDays: plan.auditHistoryRetentionDays,
+    },
+  };
+}
+
+/** Record Audit Page consumption in the Usage Ledger */
+export async function recordAuditPageUsage({
+  userId,
+  subscriptionId,
+  websiteId,
+  reportId,
+  pagesCount,
+  description,
+}: {
+  userId: string;
+  subscriptionId?: string | null;
+  websiteId?: string | null;
+  reportId?: string | null;
+  pagesCount: number;
+  description?: string;
+}) {
+  if (pagesCount <= 0) return;
+  return db.usageEvent.create({
+    data: {
+      userId,
+      subscriptionId,
+      websiteId,
+      reportId,
+      type: "AUDIT_PAGE",
+      units: pagesCount,
+      featureKey: "AUDIT_PAGE",
+      description: description || `Audited ${pagesCount} website pages`,
+      metadata: { pagesCount, timestamp: new Date().toISOString() },
+    },
+  });
+}
+
+/** Record Schema Generation in the Usage Ledger */
+export async function recordSchemaUsage({
+  userId,
+  subscriptionId,
+  websiteId,
+  schemaType,
+  name,
+}: {
+  userId: string;
+  subscriptionId?: string | null;
+  websiteId?: string | null;
+  schemaType: string;
+  name?: string | null;
+}) {
+  return db.usageEvent.create({
+    data: {
+      userId,
+      subscriptionId,
+      websiteId,
+      type: "SCHEMA_GENERATION",
+      units: 1,
+      featureKey: "SCHEMA_GENERATOR",
+      description: `Generated ${schemaType} schema${name ? `: ${name}` : ""}`,
+      metadata: { schemaType, name, timestamp: new Date().toISOString() },
+    },
+  });
+}
+
 /** Check whether user has access to a specific feature flag */
 export async function checkUserFeatureAccess(
   userId: string,
   featureKey: string,
 ): Promise<{ allowed: boolean; limit?: number | null; reason?: string }> {
-  // Master Admins and Admins have full access to everything
   const user = await db.user.findUnique({
     where: { id: userId },
     select: { role: true, plan: true },
@@ -144,6 +447,21 @@ export async function checkUserFeatureAccess(
   if (!user) return { allowed: false, reason: "User not found" };
   if (user.role === "MASTER_ADMIN" || user.role === "ADMIN") {
     return { allowed: true, limit: null };
+  }
+
+  const config = await getUserPlanConfig(userId);
+
+  if (featureKey === "scheduled_audits") {
+    return { allowed: config.scheduledAuditsEnabled, reason: "Scheduled audits require an upgraded plan." };
+  }
+  if (featureKey === "audit_comparison") {
+    return { allowed: config.auditComparisonEnabled, reason: "Audit comparison requires a Starter plan or higher." };
+  }
+  if (featureKey === "re_audit") {
+    return { allowed: config.reAuditEnabled, reason: "Re-auditing is disabled on this plan." };
+  }
+  if (featureKey === "schema_builder") {
+    return { allowed: config.schemaBuilderEnabled, reason: "Schema Builder is disabled on this plan." };
   }
 
   // Find active subscription plan
@@ -169,11 +487,9 @@ export async function checkUserFeatureAccess(
         limit: entitlement.limit,
       };
     }
-    // If not specifically configured in entitlements, default standard core features to true
     return { allowed: true };
   }
 
-  // Fallback to Plan record matching user.plan or Free
   const fallbackPlan = await db.plan.findUnique({
     where: { key: user.plan },
     include: {
@@ -190,7 +506,6 @@ export async function checkUserFeatureAccess(
     }
   }
 
-  // Standard defaults for free tier
   if (featureKey === "backlinks" || featureKey === "keywords" || featureKey === "pdf_export") {
     return {
       allowed: user.plan === "PREMIUM",

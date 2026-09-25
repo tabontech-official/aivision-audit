@@ -74,6 +74,14 @@ export type PlanInput = {
   auditLimitPerMonth: number;
   pageAuditLimit?: number;
   initialSampleSize?: number;
+  websiteLimit?: number;
+  schemaMonthlyLimit?: number;
+  schemaBuilderEnabled?: boolean;
+  auditHistoryRetentionDays?: number;
+  scheduledAuditFrequency?: string;
+  scheduledAuditsEnabled?: boolean;
+  reAuditEnabled?: boolean;
+  auditComparisonEnabled?: boolean;
   auditLimitType?: string;
   auditResetPeriod?: string;
   concurrentAuditsLimit?: number;
@@ -127,6 +135,14 @@ export async function createPlan(input: PlanInput, actorId: string) {
         auditLimitPerMonth: input.auditLimitPerMonth ?? 10,
         pageAuditLimit: input.pageAuditLimit ?? 100,
         initialSampleSize: input.initialSampleSize ?? 30,
+        websiteLimit: input.websiteLimit ?? 1,
+        schemaMonthlyLimit: input.schemaMonthlyLimit ?? 25,
+        schemaBuilderEnabled: input.schemaBuilderEnabled ?? true,
+        auditHistoryRetentionDays: input.auditHistoryRetentionDays ?? 30,
+        scheduledAuditFrequency: input.scheduledAuditFrequency || "MONTHLY",
+        scheduledAuditsEnabled: input.scheduledAuditsEnabled ?? true,
+        reAuditEnabled: input.reAuditEnabled ?? true,
+        auditComparisonEnabled: input.auditComparisonEnabled ?? true,
         auditLimitType: input.auditLimitType || "MONTHLY",
         auditResetPeriod: input.auditResetPeriod || "MONTHLY",
         concurrentAuditsLimit: input.concurrentAuditsLimit ?? 1,
@@ -242,6 +258,14 @@ export async function updatePlan(id: string, input: Partial<PlanInput>, actorId:
     if (input.auditLimitPerMonth !== undefined) updateData.auditLimitPerMonth = input.auditLimitPerMonth;
     if (input.pageAuditLimit !== undefined) updateData.pageAuditLimit = input.pageAuditLimit;
     if (input.initialSampleSize !== undefined) updateData.initialSampleSize = input.initialSampleSize;
+    if (input.websiteLimit !== undefined) updateData.websiteLimit = input.websiteLimit;
+    if (input.schemaMonthlyLimit !== undefined) updateData.schemaMonthlyLimit = input.schemaMonthlyLimit;
+    if (input.schemaBuilderEnabled !== undefined) updateData.schemaBuilderEnabled = input.schemaBuilderEnabled;
+    if (input.auditHistoryRetentionDays !== undefined) updateData.auditHistoryRetentionDays = input.auditHistoryRetentionDays;
+    if (input.scheduledAuditFrequency !== undefined) updateData.scheduledAuditFrequency = input.scheduledAuditFrequency;
+    if (input.scheduledAuditsEnabled !== undefined) updateData.scheduledAuditsEnabled = input.scheduledAuditsEnabled;
+    if (input.reAuditEnabled !== undefined) updateData.reAuditEnabled = input.reAuditEnabled;
+    if (input.auditComparisonEnabled !== undefined) updateData.auditComparisonEnabled = input.auditComparisonEnabled;
     if (input.auditLimitType !== undefined) updateData.auditLimitType = input.auditLimitType;
     if (input.auditResetPeriod !== undefined) updateData.auditResetPeriod = input.auditResetPeriod;
     if (input.concurrentAuditsLimit !== undefined) updateData.concurrentAuditsLimit = input.concurrentAuditsLimit;

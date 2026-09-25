@@ -19,9 +19,13 @@ import {
   UserPlus,
   CornerUpRight,
   Layers,
-  Sparkles,
   AlertTriangle,
   ArrowRight,
+  FileText,
+  GitCompare,
+  CheckCircle2,
+  AlertOctagon,
+  Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { rerunAuditByPublicIdAction } from "./actions";
@@ -314,8 +318,26 @@ export function ReportView(props: {
   coverageLimit?: number;
   coverageCompleted?: boolean;
   currentPlanKey?: string;
+  comparisonData?: {
+    hasComparison: boolean;
+    isBaseline: boolean;
+    previousPublicId: string | null;
+    previousCompletedAt: string | null;
+    scoreNow: number | null;
+    scorePrev: number | null;
+    scoreDelta: number | null;
+    daysApart: number | null;
+    buckets: Array<{
+      key: string;
+      icon: string;
+      title: string;
+      tone: string;
+      rows: Array<{ id: string; name: string; section: string; sectionSlug: string; severity: string; note?: string | null }>;
+    }>;
+  } | null;
 }) {
   const router = useRouter();
+  const [activeReportTab, setActiveReportTab] = useState<"CURRENT" | "COMPARE">("CURRENT");
   const [isPending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -460,8 +482,9 @@ export function ReportView(props: {
     startTransition(async () => {
       try {
         const r = await rerunAuditByPublicIdAction(publicId);
-        if (r.ok && r.redirectTo) {
-          router.push(r.redirectTo);
+        if (r.ok) {
+          router.push(`/dashboard?project=${encodeURIComponent(domain)}`);
+          router.refresh();
         } else if (!r.ok) {
           setRerunNotice({
             message: r.error || "Could not re-run audit. Your monthly allowance may have been reached.",
@@ -657,6 +680,139 @@ export function ReportView(props: {
     );
   };
 
+  const fixedBucket = useMemo(() => {
+    return props.comparisonData?.buckets?.find((b) => b.key === "fixed")?.rows || [];
+  }, [props.comparisonData]);
+
+  const newBucket = useMemo(() => {
+    return [
+      ...(props.comparisonData?.buckets?.find((b) => b.key === "new")?.rows || []),
+      ...(props.comparisonData?.buckets?.find((b) => b.key === "regressed")?.rows || []),
+    ];
+  }, [props.comparisonData]);
+
+  const pendingBucket = useMemo(() => {
+    return [
+      ...(props.comparisonData?.buckets?.find((b) => b.key === "open")?.rows || []),
+      ...(props.comparisonData?.buckets?.find((b) => b.key === "still")?.rows || []),
+    ];
+  }, [props.comparisonData]);
+
+  const renderCompareIssueRow = (
+    item: { id: string; name: string; section: string; sectionSlug: string; severity: string; note?: string | null },
+    badgeType: "fixed" | "new" | "pending"
+  ) => {
+    const isExpanded = selectedFixIssue?.id === item.id;
+    const fakeIssue: IssueItem = {
+      id: item.id,
+      title: item.name,
+      category: item.section,
+      sectionSlug: item.sectionSlug,
+      type: item.severity.toLowerCase() === "error" ? "error" : "warning",
+      pagesCount: 1,
+      message: item.note || `Evaluated under ${item.section}`,
+      suggestion: `Review and update ${item.name} in your CMS or site templates.`,
+      isNew: badgeType === "new",
+    };
+
+    return (
+      <div key={item.id} className="transition-colors hover:bg-slate-50/40">
+        <div className="px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            {badgeType === "fixed" && (
+              <span className="rounded-full bg-emerald-600 text-white px-2 py-0.5 text-[10px] font-bold shrink-0 flex items-center gap-1">
+                <Check className="w-2.5 h-2.5" />
+                fixed
+              </span>
+            )}
+            {badgeType === "new" && (
+              <span className="rounded-full bg-[#6366f1] text-white px-2 py-0.5 text-[10px] font-bold shrink-0">
+                new
+              </span>
+            )}
+            {badgeType === "pending" && (
+              <span className="rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 text-[10px] font-bold shrink-0">
+                pending
+              </span>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setSelectedFixIssue(isExpanded ? null : fakeIssue)}
+              className="text-xs sm:text-[13px] font-medium text-[#2563eb] hover:underline cursor-pointer text-left shrink-0 outline-none focus:outline-none focus:ring-0"
+            >
+              1 page
+            </button>
+            <span className="text-xs sm:text-[13px] text-slate-800 font-normal">
+              has {item.name.toLowerCase().startsWith("have ") || item.name.toLowerCase().startsWith("has ") ? item.name : `${item.name}`}
+            </span>
+            <span className="text-[11px] text-slate-400 font-medium">
+              ({item.section})
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedFixIssue(isExpanded ? null : fakeIssue)}
+              className="text-xs text-slate-400 hover:text-slate-700 underline decoration-dotted ml-1 cursor-pointer shrink-0 outline-none focus:outline-none focus:ring-0"
+            >
+              How to fix
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+            <span
+              className={cn(
+                "text-[10px] font-bold uppercase px-2 py-0.5 rounded",
+                item.severity.toLowerCase() === "error"
+                  ? "bg-rose-100 text-rose-800"
+                  : "bg-amber-100 text-amber-800"
+              )}
+            >
+              {item.severity}
+            </span>
+          </div>
+        </div>
+
+        {/* Inline Explanation Drawer */}
+        {isExpanded && (
+          <div className="px-5 pb-4 pt-1 animate-in fade-in-50 slide-in-from-top-1 duration-150">
+            <div className="relative w-full max-w-[660px] rounded-[14px] border-2 border-[#818cf8]/80 bg-white shadow-xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setSelectedFixIssue(null)}
+                className="absolute top-3.5 right-3.5 z-10 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer outline-none focus:outline-none focus:ring-0"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 min-h-[180px]">
+                <div className="md:col-span-7 p-5 bg-white flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900 mb-1.5">About the check</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {item.note || `This check evaluated ${item.name} under ${item.section} against technical SEO specifications.`}
+                    </p>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-slate-100 text-xs text-slate-500">
+                    <span className="font-bold text-slate-900">Category:</span> {item.section}
+                  </div>
+                </div>
+
+                <div className="md:col-span-5 p-5 bg-[#f0fdf9] border-t md:border-t-0 md:border-l border-emerald-100/60 flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900 mb-1.5">How to fix</h4>
+                    <p className="text-xs text-slate-700 leading-relaxed">
+                      Review the flagged page templates in your site settings or CMS and update the configuration for {item.name}.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-5 pb-12 font-lazzer text-slate-800">
       {/* 1. TOP HEADER & METADATA BAR (Semrush Style) */}
@@ -793,12 +949,357 @@ export function ReportView(props: {
         </div>
       </div>
 
+      {/* 2. REPORT TABS: Current Report vs Compare Report */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+        <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
+          <button
+            type="button"
+            onClick={() => setActiveReportTab("CURRENT")}
+            className={cn(
+              "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer",
+              activeReportTab === "CURRENT"
+                ? "bg-white text-slate-900 shadow-2xs"
+                : "text-slate-600 hover:text-slate-900"
+            )}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Current Report</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveReportTab("COMPARE")}
+            className={cn(
+              "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer",
+              activeReportTab === "COMPARE"
+                ? "bg-white text-slate-900 shadow-2xs"
+                : "text-slate-600 hover:text-slate-900"
+            )}
+          >
+            <GitCompare className="w-3.5 h-3.5" />
+            <span>Compare Report</span>
+            {props.comparisonData?.scoreDelta !== null && props.comparisonData?.scoreDelta !== undefined && props.comparisonData?.scoreDelta !== 0 && (
+              <span
+                className={cn(
+                  "px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold",
+                  props.comparisonData.scoreDelta > 0
+                    ? "bg-emerald-100 text-emerald-800"
+                    : "bg-rose-100 text-rose-800"
+                )}
+              >
+                {props.comparisonData.scoreDelta > 0 ? `+${props.comparisonData.scoreDelta}` : props.comparisonData.scoreDelta}%
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* TAB CONTENT: COMPARE REPORT VIEW */}
+      {activeReportTab === "COMPARE" ? (
+        <div className="space-y-6 animate-in fade-in-50 duration-200">
+          {props.comparisonData?.isBaseline || !props.comparisonData?.hasComparison ? (
+            <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center shadow-xs">
+              <GitCompare className="w-10 h-10 text-indigo-500 mx-auto mb-3 opacity-80" />
+              <h3 className="text-base font-bold text-slate-900">This is your Baseline Audit</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4">
+                Tracking started with this audit run. Re-run your campaign after making technical fixes, and this tab will automatically show exactly what got fixed, what&apos;s new, and what regressed.
+              </p>
+              <button
+                type="button"
+                onClick={handleRerun}
+                disabled={isPending}
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              >
+                <RotateCw className={cn("h-3.5 w-3.5", isPending && "animate-spin")} />
+                <span>Rerun Campaign Now</span>
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* 3 TOP CARDS: Score Progress, Fixed Issues, Still Pending */}
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+                {/* CARD 1: Score Progress */}
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-900">
+                        <span>Score Progress</span>
+                        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-400">
+                          i
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex justify-center">
+                      <SemiCircleGauge
+                        score={props.comparisonData?.scoreNow ?? activeScore}
+                        label={
+                          props.comparisonData?.scoreDelta !== null && props.comparisonData?.scoreDelta !== undefined
+                            ? props.comparisonData.scoreDelta > 0
+                              ? `+${props.comparisonData.scoreDelta}% vs last`
+                              : props.comparisonData.scoreDelta < 0
+                              ? `${props.comparisonData.scoreDelta}% vs last`
+                              : "no changes"
+                            : "current score"
+                        }
+                        gradientId="compareScoreGradReports"
+                        startColor={
+                          (props.comparisonData?.scoreNow ?? activeScore) >= 80
+                            ? "#10b981"
+                            : (props.comparisonData?.scoreNow ?? activeScore) >= 50
+                            ? "#f59e0b"
+                            : "#ef4444"
+                        }
+                        endColor={
+                          (props.comparisonData?.scoreNow ?? activeScore) >= 80
+                            ? "#059669"
+                            : (props.comparisonData?.scoreNow ?? activeScore) >= 50
+                            ? "#d97706"
+                            : "#dc2626"
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 space-y-2 border-t border-slate-100 pt-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-medium text-slate-700">
+                        <span className="h-2 w-2 rounded-full bg-slate-400" />
+                        <span>Previous Audit</span>
+                      </div>
+                      <span className="font-bold text-slate-500 font-mono">
+                        {props.comparisonData?.scorePrev ?? "--"}%
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-medium text-slate-700">
+                        <span className="h-2 w-2 rounded-full bg-indigo-600" />
+                        <span>Current Audit</span>
+                      </div>
+                      <span className="font-bold text-slate-900 font-mono">
+                        {props.comparisonData?.scoreNow ?? activeScore}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CARD 2: Fixed Issues */}
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-900">
+                        <span>Fixed Issues</span>
+                        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-400">
+                          i
+                        </span>
+                      </div>
+                      <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2.5 py-0.5 text-[11px] font-bold">
+                        Resolved
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex flex-col items-center justify-center py-2">
+                      <span className="text-4xl sm:text-5xl font-black text-emerald-600 font-mono tracking-tight">
+                        {fixedBucket.length}
+                      </span>
+                      <span className="text-xs text-slate-500 font-medium mt-1">
+                        {fixedBucket.length === 1 ? "Issue resolved" : "Issues resolved"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 space-y-2 border-t border-slate-100 pt-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-medium text-slate-700">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span>Fix Result</span>
+                      </div>
+                      <span className="font-bold text-emerald-700">
+                        {props.comparisonData?.scoreDelta && props.comparisonData.scoreDelta > 0
+                          ? `+${props.comparisonData.scoreDelta}% score gain`
+                          : "Verified resolved"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-slate-500">
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Status</span>
+                      </div>
+                      <span className="font-semibold text-slate-700">
+                        {fixedBucket.length > 0 ? "Resolved since previous" : "No issues fixed yet"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CARD 3: Still Pending */}
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-900">
+                        <span>Still Pending</span>
+                        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-400">
+                          i
+                        </span>
+                      </div>
+                      <span className="rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 px-2.5 py-0.5 text-[11px] font-bold">
+                        Action Needed
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex flex-col items-center justify-center py-2">
+                      <span className="text-4xl sm:text-5xl font-black text-slate-900 font-mono tracking-tight">
+                        {pendingBucket.length}
+                      </span>
+                      <span className="text-xs text-slate-500 font-medium mt-1">
+                        {pendingBucket.length === 1 ? "Open issue remaining" : "Open issues remaining"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 space-y-2 border-t border-slate-100 pt-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-medium text-slate-700">
+                        <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                        <span>New Detected</span>
+                      </div>
+                      <span className="font-bold text-indigo-600 font-mono">{newBucket.length}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-slate-500">
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <span className="h-2 w-2 rounded-full bg-rose-500" />
+                        <span>Remaining Priority</span>
+                      </div>
+                      <span className="font-semibold text-slate-700">
+                        {pendingBucket.length > 0 ? "Pending resolution" : "Zero open issues"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ISSUES SECTIONS: 1st Fixed, 2nd New, 3rd Still Pending */}
+              <div className="space-y-4 animate-in fade-in-50 duration-200">
+                <div className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden divide-y divide-slate-100">
+                  {/* 1ST: FIXED & VERIFIED ISSUES */}
+                  <div>
+                    <div className="px-5 pt-3.5 pb-2.5 bg-white flex items-center gap-1.5">
+                      <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+                        Fixed Issues
+                      </h3>
+                      <span className="text-xs sm:text-sm font-normal text-slate-500">
+                        ({fixedBucket.length})
+                      </span>
+                      <span className="inline-flex items-center justify-center text-slate-400 font-serif italic text-xs ml-0.5" title="Fixed Issues">
+                        i
+                      </span>
+                    </div>
+                    {/* Green horizontal accent bar */}
+                    <div className="h-[3px] w-full bg-[#10b981]" />
+
+                    <div className="divide-y divide-slate-100">
+                      {fixedBucket.length === 0 ? (
+                        <div className="px-5 py-6 text-center text-xs text-slate-400">
+                          No fixed issues detected between these audit runs.
+                        </div>
+                      ) : (
+                        fixedBucket.map((item) => renderCompareIssueRow(item, "fixed"))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 2ND: NEW ISSUES DETECTED */}
+                  <div>
+                    <div className="px-5 pt-3.5 pb-2.5 bg-white flex items-center gap-1.5">
+                      <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+                        New Issues
+                      </h3>
+                      <span className="text-xs sm:text-sm font-normal text-slate-500">
+                        ({newBucket.length})
+                      </span>
+                      <span className="inline-flex items-center justify-center text-slate-400 font-serif italic text-xs ml-0.5" title="New Issues">
+                        i
+                      </span>
+                    </div>
+                    {/* Red horizontal accent bar */}
+                    <div className="h-[3px] w-full bg-[#ef4444]" />
+
+                    <div className="divide-y divide-slate-100">
+                      {newBucket.length === 0 ? (
+                        <div className="px-5 py-6 text-center text-xs text-slate-400">
+                          No new issues detected in this audit run.
+                        </div>
+                      ) : (
+                        newBucket.map((item) => renderCompareIssueRow(item, "new"))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 3RD: STILL PENDING ISSUES */}
+                  <div>
+                    <div className="px-5 pt-3.5 pb-2.5 bg-white flex items-center gap-1.5">
+                      <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+                        Still Pending Issues
+                      </h3>
+                      <span className="text-xs sm:text-sm font-normal text-slate-500">
+                        ({pendingBucket.length})
+                      </span>
+                      <span className="inline-flex items-center justify-center text-slate-400 font-serif italic text-xs ml-0.5" title="Still Pending Issues">
+                        i
+                      </span>
+                    </div>
+                    {/* Blue horizontal accent bar */}
+                    <div className="h-[3px] w-full bg-[#3b82f6]" />
+
+                    <div className="divide-y divide-slate-100">
+                      {pendingBucket.length === 0 ? (
+                        <div className="px-5 py-6 text-center text-xs text-slate-400">
+                          No pending issues remaining! All clear.
+                        </div>
+                      ) : (
+                        pendingBucket.map((item) => renderCompareIssueRow(item, "pending"))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {props.comparisonData?.previousCompletedAt && (
+                <p className="text-center text-xs text-slate-400 font-sans">
+                  Comparing against audit completed on{" "}
+                  {new Date(props.comparisonData.previousCompletedAt).toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                  {props.comparisonData.previousPublicId && (
+                    <>
+                      {" · "}
+                      <Link
+                        href={`/dashboard/reports/${props.comparisonData.previousPublicId}`}
+                        className="underline hover:text-slate-900 font-semibold"
+                      >
+                        View Previous Audit
+                      </Link>
+                    </>
+                  )}
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      ) : (
+        /* TAB CONTENT: CURRENT REPORT VIEW */
+        <>
       {/* AUDIT SCOPE & COVERAGE BANNER */}
       {hasMoreAvailableUnderPlan ? (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-emerald-200/90 bg-[#f0fdf9] p-4 shadow-2xs animate-in fade-in-50 duration-200">
           <div className="flex items-start gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 mt-0.5">
-              <Sparkles className="h-5 w-5" />
+              <Layers className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -921,42 +1422,12 @@ export function ReportView(props: {
               setActiveSectionSlug(null);
               router.push(`/dashboard/reports/${publicId}`);
             }}
-            className="text-xs font-bold text-slate-900 hover:text-slate-700 underline shrink-0 outline-none focus:outline-none focus:ring-0 text-left"
+            className="text-xs font-bold text-slate-900 hover:text-slate-700 underline shrink-0 outline-none focus:outline-none focus:ring-0 text-left cursor-pointer"
           >
             View all section issues →
           </button>
         </div>
-      ) : (
-        <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto custom-scrollbar pb-1">
-          <button
-            type="button"
-            onClick={() => setActiveSectionSlug(null)}
-            className={cn(
-              "px-3 py-1.5 text-xs font-semibold rounded-[8px] transition-all whitespace-nowrap cursor-pointer outline-none focus:outline-none focus:ring-0",
-              !activeSectionSlug
-                ? "bg-slate-900 text-white font-bold"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            )}
-          >
-            All Issues ({allIssues.length})
-          </button>
-          {projected.sections.filter((s) => !s.locked).map((sec) => (
-            <button
-              key={sec.slug}
-              type="button"
-              onClick={() => setActiveSectionSlug(sec.slug)}
-              className={cn(
-                "px-3 py-1.5 text-xs font-semibold rounded-[8px] transition-all whitespace-nowrap cursor-pointer outline-none focus:outline-none focus:ring-0",
-                activeSectionSlug === sec.slug
-                  ? "bg-slate-900 text-white font-bold"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              )}
-            >
-              {sec.name}
-            </button>
-          ))}
-        </div>
-      )}
+      ) : null}
 
       {/* 3. TOP 3 GAUGE CARDS (Identical to Dashboard Layout) */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -1215,6 +1686,8 @@ export function ReportView(props: {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

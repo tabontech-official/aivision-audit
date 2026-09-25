@@ -13,7 +13,29 @@ export type CustomerBillingData = {
   planName: string;
   isPaidUser: boolean;
   stripeConfigured: boolean;
-  allowance: {
+  usage?: {
+    pages: { limit: number; used: number; remaining: number; isLimitReached: boolean; isUnlimited: boolean };
+    websites: { limit: number; used: number; remaining: number; isLimitReached: boolean; isUnlimited: boolean };
+    schemas: { limit: number; used: number; remaining: number; isLimitReached: boolean; isUnlimited: boolean; enabled: boolean };
+    audits: { limit: number; used: number; remaining: number; isUnlimited: boolean };
+    periodStart: string;
+    periodEnd: string | null;
+    plan: {
+      key: string;
+      name: string;
+      pageAuditLimit: number;
+      initialSampleSize: number;
+      websiteLimit: number;
+      schemaMonthlyLimit: number;
+      schemaBuilderEnabled: boolean;
+      auditHistoryRetentionDays: number;
+      scheduledAuditFrequency: string;
+      scheduledAuditsEnabled: boolean;
+      reAuditEnabled: boolean;
+      auditComparisonEnabled: boolean;
+    };
+  };
+  allowance?: {
     limit: number;
     used: number;
     bonusCredits: number;
@@ -105,16 +127,29 @@ export function BillingClient({ data }: { data: CustomerBillingData }) {
     });
   };
 
-  const percentUsed = data.allowance.isUnlimited
-    ? 0
-    : Math.min(100, Math.round((data.allowance.used / (data.allowance.limit || 1)) * 100));
+  const pagesUsed = data.usage?.pages.used ?? data.allowance?.used ?? 0;
+  const pagesLimit = data.usage?.pages.limit ?? data.allowance?.limit ?? 10;
+  const isPagesUnlimited = data.usage?.pages.isUnlimited ?? data.allowance?.isUnlimited ?? false;
+  const pagesPercent = isPagesUnlimited ? 0 : Math.min(100, Math.round((pagesUsed / (pagesLimit || 1)) * 100));
+
+  const schemasUsed = data.usage?.schemas.used ?? 0;
+  const schemasLimit = data.usage?.schemas.limit ?? 25;
+  const isSchemasUnlimited = data.usage?.schemas.isUnlimited ?? false;
+  const schemasPercent = isSchemasUnlimited ? 0 : Math.min(100, Math.round((schemasUsed / (schemasLimit || 1)) * 100));
+
+  const websitesUsed = data.usage?.websites.used ?? 1;
+  const websitesLimit = data.usage?.websites.limit ?? 1;
+  const isWebsitesUnlimited = data.usage?.websites.isUnlimited ?? false;
+  const websitesPercent = isWebsitesUnlimited ? 0 : Math.min(100, Math.round((websitesUsed / (websitesLimit || 1)) * 100));
+
+  const resetDate = data.usage?.periodEnd ?? data.allowance?.periodResetsAt;
 
   return (
     <div className="space-y-8 font-lazzer text-slate-800">
       <div>
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Billing & Plans</h1>
         <p className="mt-1 text-xs sm:text-sm text-slate-500">
-          Manage your subscription tier, view credit allowances, and review receipts.
+          Manage your monthly subscription, page crawl allowances, schema quotas, and website limits.
         </p>
       </div>
 
@@ -134,98 +169,161 @@ export function BillingClient({ data }: { data: CustomerBillingData }) {
       )}
       {error && <Alert variant="error">{error}</Alert>}
 
-      {/* Current plan & live usage meter */}
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="text-xs font-semibold text-slate-500">Active Tier</div>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="text-xl font-bold text-slate-900">{data.planName}</span>
-              <span
-                className={cn(
-                  "rounded-md px-2.5 py-0.5 text-xs font-bold border",
-                  data.isPaidUser
-                    ? "bg-[#dff2ed] text-slate-900 border-[#2f7a68]/30"
-                    : "bg-slate-100 text-slate-700 border-slate-200",
-                )}
-              >
-                {data.isPaidUser ? "Active Subscription" : "Free Plan"}
-              </span>
+      {/* Active Tier Summary Bar */}
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div className="text-xs font-semibold text-slate-500">Current Plan &amp; Billing Cycle</div>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="text-xl font-bold text-slate-900">{data.planName}</span>
+            <span
+              className={cn(
+                "rounded-md px-2.5 py-0.5 text-xs font-bold border",
+                data.isPaidUser
+                  ? "bg-[#dff2ed] text-slate-900 border-[#2f7a68]/30"
+                  : "bg-slate-100 text-slate-700 border-slate-200",
+              )}
+            >
+              {data.isPaidUser ? "Active Subscription" : "Free Plan"}
+            </span>
+          </div>
+          {resetDate && (
+            <div className="mt-1 text-xs text-slate-500">
+              Monthly allowances reset on <strong>{formatDate(resetDate)}</strong>
             </div>
-            {data.subscription && (
-              <div className="mt-2 text-xs text-slate-500">
-                {data.subscription.cancelAtPeriodEnd
-                  ? `Cancels on ${formatDate(data.subscription.currentPeriodEnd)}`
-                  : data.subscription.currentPeriodEnd
-                  ? `Next renewal on ${formatDate(data.subscription.currentPeriodEnd)}`
-                  : null}
-              </div>
-            )}
-          </div>
-
-          <div className="mt-5">
-            {data.isPaidUser ? (
-              <button
-                type="button"
-                onClick={manage}
-                disabled={pending || !data.stripeConfigured}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer"
-              >
-                <CreditCard className="h-3.5 w-3.5" />
-                Manage in Stripe Portal
-              </button>
-            ) : (
-              <span className="text-xs text-slate-500">
-                Upgrade to unlock higher limits and premium SEO suites.
-              </span>
-            )}
-          </div>
+          )}
+          {data.subscription?.cancelAtPeriodEnd && (
+            <div className="mt-1 text-xs font-semibold text-amber-700">
+              Cancels on {formatDate(data.subscription.currentPeriodEnd)}
+            </div>
+          )}
         </div>
 
-        {/* Audit credit usage meter */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs flex flex-col justify-between">
+        <div>
+          {data.isPaidUser ? (
+            <button
+              type="button"
+              onClick={manage}
+              disabled={pending || !data.stripeConfigured}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer shadow-2xs"
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              <span>Manage in Stripe Portal</span>
+            </button>
+          ) : (
+            <span className="text-xs text-slate-500">
+              Upgrade to higher crawl capacity &amp; multi-website limits.
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* 3 Core SaaS Usage Meters */}
+      <div className="grid gap-5 sm:grid-cols-3">
+        {/* Meter 1: Monthly Crawl / Page Audit Allowance */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">Audit Credit Allowance</span>
-              {data.allowance.periodResetsAt && (
-                <span className="text-[11px] text-slate-400">
-                  Resets {formatDate(data.allowance.periodResetsAt)}
-                </span>
-              )}
+              <span className="text-xs font-bold text-slate-700">Page Crawl Allowance</span>
+              <span className="text-[11px] font-mono text-slate-400">Monthly</span>
             </div>
 
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-2xl font-black text-slate-900">
-                {data.allowance.used}
-              </span>
+            <div className="mt-2.5 flex items-baseline gap-1.5">
+              <span className="text-2xl font-black text-slate-900">{pagesUsed}</span>
               <span className="text-xs font-semibold text-slate-500">
-                / {data.allowance.isUnlimited ? "Unlimited" : `${data.allowance.limit} credits used`}
+                / {isPagesUnlimited ? "Unlimited" : `${pagesLimit} pages`}
               </span>
             </div>
 
-            {!data.allowance.isUnlimited && (
+            {!isPagesUnlimited && (
               <div className="mt-3 h-2 w-full rounded-full bg-slate-100 overflow-hidden">
                 <div
                   className={cn(
                     "h-full rounded-full transition-all",
-                    percentUsed > 90 ? "bg-rose-500" : percentUsed > 70 ? "bg-amber-500" : "bg-slate-900",
+                    pagesPercent > 90 ? "bg-rose-500" : pagesPercent > 70 ? "bg-amber-500" : "bg-slate-900",
                   )}
-                  style={{ width: `${percentUsed}%` }}
+                  style={{ width: `${pagesPercent}%` }}
                 />
               </div>
             )}
           </div>
 
-          <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
-            <span className="text-slate-600">
-              Remaining: <strong>{data.allowance.isUnlimited ? "Unlimited" : data.allowance.remaining}</strong>
-            </span>
-            {data.allowance.bonusCredits > 0 && (
-              <span className="inline-flex items-center gap-1 text-emerald-700 font-bold text-[11px]">
-                <Gift className="h-3 w-3" />
-                +{data.allowance.bonusCredits} Bonus Credits Available
-              </span>
+          <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 flex items-center justify-between">
+            <span>Remaining: <strong>{isPagesUnlimited ? "Unlimited" : Math.max(0, pagesLimit - pagesUsed)}</strong></span>
+            {data.usage?.plan.initialSampleSize && (
+              <span className="text-[10px] text-slate-400">Sample: {data.usage.plan.initialSampleSize} pgs</span>
             )}
+          </div>
+        </div>
+
+        {/* Meter 2: Schema Builder Monthly Generations */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700">Schema Builder</span>
+              <span className="text-[11px] font-mono text-slate-400">Monthly</span>
+            </div>
+
+            <div className="mt-2.5 flex items-baseline gap-1.5">
+              <span className="text-2xl font-black text-slate-900">{schemasUsed}</span>
+              <span className="text-xs font-semibold text-slate-500">
+                / {isSchemasUnlimited ? "Unlimited" : `${schemasLimit} schemas`}
+              </span>
+            </div>
+
+            {!isSchemasUnlimited && (
+              <div className="mt-3 h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    schemasPercent > 90 ? "bg-rose-500" : schemasPercent > 70 ? "bg-amber-500" : "bg-slate-900",
+                  )}
+                  style={{ width: `${schemasPercent}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 flex items-center justify-between">
+            <span>Remaining: <strong>{isSchemasUnlimited ? "Unlimited" : Math.max(0, schemasLimit - schemasUsed)}</strong></span>
+            <a href="/dashboard/schema" className="text-[11px] font-bold text-slate-900 hover:underline">
+              Open Suite &rarr;
+            </a>
+          </div>
+        </div>
+
+        {/* Meter 3: Active Websites / Projects Limit */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700">Website Projects</span>
+              <span className="text-[11px] font-mono text-slate-400">Active</span>
+            </div>
+
+            <div className="mt-2.5 flex items-baseline gap-1.5">
+              <span className="text-2xl font-black text-slate-900">{websitesUsed}</span>
+              <span className="text-xs font-semibold text-slate-500">
+                / {isWebsitesUnlimited ? "Unlimited" : `${websitesLimit} domains`}
+              </span>
+            </div>
+
+            {!isWebsitesUnlimited && (
+              <div className="mt-3 h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    websitesPercent > 90 ? "bg-rose-500" : websitesPercent > 70 ? "bg-amber-500" : "bg-slate-900",
+                  )}
+                  style={{ width: `${websitesPercent}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 flex items-center justify-between">
+            <span>Retention: <strong>{data.usage?.plan.auditHistoryRetentionDays ?? 30} days</strong></span>
+            <span className="text-[10px] text-slate-400">
+              {data.usage?.plan.scheduledAuditsEnabled ? `${data.usage.plan.scheduledAuditFrequency} audits` : "Manual only"}
+            </span>
           </div>
         </div>
       </div>

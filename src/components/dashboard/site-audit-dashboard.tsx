@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -18,8 +18,8 @@ import {
   ExternalLink,
   Check,
   Globe,
-  Sparkles,
   Layers,
+  FileCode,
   Search,
   Settings,
   CornerUpRight,
@@ -27,12 +27,15 @@ import {
   EyeOff,
   X,
   Copy,
-  Wand2,
   UserPlus,
+  GitCompare,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { rerunAuditAction, rescanWebsiteAction, continueAuditAction } from "@/app/dashboard/reports/actions";
+import { recheckIssueAction } from "@/app/dashboard/websites/[id]/actions";
 import { StopAuditButton } from "@/components/dashboard/stop-audit-button";
+import { DashboardLiveAuditBanner } from "@/components/dashboard/dashboard-live-audit-banner";
+import { UpgradePlanModal } from "@/components/dashboard/upgrade-plan-modal";
 
 export interface IssueItem {
   id: string;
@@ -571,6 +574,21 @@ export function SiteAuditDashboard({
       : "Overview"
   );
   const [isDomainDropdownOpen, setIsDomainDropdownOpen] = useState(false);
+  const domainDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (domainDropdownRef.current && !domainDropdownRef.current.contains(event.target as Node)) {
+        setIsDomainDropdownOpen(false);
+      }
+    }
+    if (isDomainDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDomainDropdownOpen]);
   const [showAllIssues, setShowAllIssues] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
@@ -590,6 +608,31 @@ export function SiteAuditDashboard({
   const [isContinuing, setIsContinuing] = useState(false);
   const [continueNotice, setContinueNotice] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [rerunNotice, setRerunNotice] = useState<{ message: string; upgradeRequired?: boolean } | null>(null);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [recheckingId, setRecheckingId] = useState<string | null>(null);
+  const [recheckResults, setRecheckResults] = useState<Record<string, { ok: boolean; status?: string; message?: string }>>({});
+
+  const handleRecheckIssue = async (issueId: string) => {
+    setRecheckingId(issueId);
+    try {
+      const res = await recheckIssueAction(issueId);
+      setRecheckResults((prev) => ({
+        ...prev,
+        [issueId]: {
+          ok: res.ok,
+          status: res.status,
+          message: res.message || res.error,
+        },
+      }));
+    } catch {
+      setRecheckResults((prev) => ({
+        ...prev,
+        [issueId]: { ok: false, message: "Verification failed" },
+      }));
+    } finally {
+      setRecheckingId(null);
+    }
+  };
 
   const totalDetected = totalDetectedUrls || maxPages || 200;
   const coverageUsed = coverageUsedProp ?? pagesCrawled;
@@ -661,7 +704,7 @@ export function SiteAuditDashboard({
     return [
       {
         id: "page-root",
-        url: domain ? `https://${domain}` : "https://thefoldtech.com",
+        url: domain ? (domain.startsWith("http") ? domain : `https://${domain}`) : "https://example.com",
         path: "/",
         title: domain || "Audited Website",
         statusCode: 200,
@@ -831,8 +874,8 @@ export function SiteAuditDashboard({
         } else if (domain) {
           res = await rescanWebsiteAction(domain);
         }
-        if (res?.ok && res.redirectTo) {
-          router.push(res.redirectTo);
+        if (res?.ok) {
+          router.refresh();
         } else if (res && !res.ok) {
           setRerunNotice({
             message: res.error || "Could not re-run audit. Your monthly allowance may have been reached.",
@@ -1010,28 +1053,61 @@ export function SiteAuditDashboard({
                       Work on the project with co-workers and keep everything organized
                     </p>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const url = typeof window !== "undefined" ? window.location.href : "";
-                        navigator.clipboard.writeText(url);
-                        setShareCopied(true);
-                        setTimeout(() => setShareCopied(false), 2000);
-                      }}
-                      className="inline-flex items-center gap-1.5 rounded-[8px] border border-slate-300 bg-white hover:bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors shadow-2xs cursor-pointer outline-none focus:outline-none focus:ring-0"
-                    >
-                      {shareCopied ? (
-                        <>
-                          <Check className="h-3.5 w-3.5 text-emerald-600" />
-                          <span>Copied link!</span>
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="h-3.5 w-3.5 text-slate-600" />
-                          <span>Share</span>
-                        </>
-                      )}
-                    </button>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = typeof window !== "undefined" ? window.location.href : "";
+                          navigator.clipboard.writeText(url);
+                          setShareCopied(true);
+                          setTimeout(() => setShareCopied(false), 2000);
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-[8px] border border-slate-300 bg-white hover:bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors shadow-2xs cursor-pointer outline-none focus:outline-none focus:ring-0"
+                      >
+                        {shareCopied ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 text-emerald-600" />
+                            <span>Copied link!</span>
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="h-3.5 w-3.5 text-slate-600" />
+                            <span>Share</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={recheckingId === issue.id}
+                        onClick={() => handleRecheckIssue(issue.id)}
+                        className="inline-flex items-center gap-1.5 rounded-[8px] bg-slate-900 hover:bg-black text-white px-3 py-1.5 text-xs font-bold transition-colors shadow-2xs cursor-pointer disabled:opacity-50 outline-none focus:outline-none focus:ring-0"
+                      >
+                        <RotateCw className={cn("h-3.5 w-3.5", recheckingId === issue.id && "animate-spin")} />
+                        <span>{recheckingId === issue.id ? "Verifying..." : "Recheck Issue"}</span>
+                      </button>
+                    </div>
+
+                    {(() => {
+                      const result = recheckResults[issue.id];
+                      if (!result) return null;
+                      return (
+                        <div className="mt-2 text-xs font-semibold">
+                          {result.ok ? (
+                            <span className={cn(
+                              "inline-flex items-center gap-1 px-2 py-0.5 rounded-md",
+                              result.status === "Fixed"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-amber-100 text-amber-900"
+                            )}>
+                              {result.status === "Fixed" ? "✓ Issue Verified Fixed!" : "⚠ Issue Still Present"}
+                            </span>
+                          ) : (
+                            <span className="text-rose-600">{result.message}</span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -1044,11 +1120,21 @@ export function SiteAuditDashboard({
 
   return (
     <div className="space-y-5 pb-12 font-lazzer text-slate-800">
+      {/* 0. LIVE BACKGROUND AUDIT PROGRESS BANNER (When audit is actively running) */}
+      {(isRunning || reportStatus === "PROCESSING" || reportStatus === "QUEUED" || reportStatus === "PENDING") && reportPublicId && (
+        <DashboardLiveAuditBanner
+          reportPublicId={reportPublicId}
+          reportId={reportId}
+          domain={domain}
+          initialProgress={progressPercent}
+        />
+      )}
+
       {/* 1. TOP HEADER & METADATA BAR (Semrush Style) */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between border-b border-slate-200/70 pb-4">
         {/* Left Title & Meta Line */}
         <div>
-          <div className="relative inline-block">
+          <div className="relative inline-block" ref={domainDropdownRef}>
             <button
               type="button"
               onClick={() => setIsDomainDropdownOpen(!isDomainDropdownOpen)}
@@ -1060,7 +1146,7 @@ export function SiteAuditDashboard({
 
             {/* Switch Domain Popover */}
             {isDomainDropdownOpen && allDomains.length > 0 && (
-              <div className="absolute left-0 top-full mt-1 z-30 w-64 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
+              <div className="absolute left-0 top-full mt-1 z-30 w-64 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl animate-in fade-in-50 zoom-in-95 duration-100">
                 <div className="px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   Switch Audited Website
                 </div>
@@ -1074,7 +1160,7 @@ export function SiteAuditDashboard({
                         router.push(`/dashboard?project=${encodeURIComponent(d)}`);
                       }}
                       className={cn(
-                        "w-full flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-left font-medium transition-colors",
+                        "w-full flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-left font-medium transition-colors cursor-pointer",
                         d === domain ? "bg-slate-100 font-bold text-slate-950" : "text-slate-700 hover:bg-slate-50"
                       )}
                     >
@@ -1135,6 +1221,30 @@ export function SiteAuditDashboard({
             <span>{isPending || isRunning ? "Running Audit..." : "Rerun campaign"}</span>
           </button>
 
+          {/* Compare (What Changed) Button */}
+          {reportPublicId && (
+            <Link
+              href={`/dashboard/reports/${reportPublicId}/compare`}
+              className="inline-flex items-center gap-1.5 rounded-[8px] border border-indigo-200 bg-indigo-50/90 px-3.5 py-2 text-xs font-bold text-indigo-950 shadow-2xs hover:bg-indigo-100 hover:border-indigo-300 transition-colors cursor-pointer font-lazzer"
+              title="View what changed since previous audit"
+            >
+              <GitCompare className="h-3.5 w-3.5 text-indigo-700 shrink-0" />
+              <span>What changed</span>
+              {scoreDelta !== null && scoreDelta !== undefined && scoreDelta !== 0 && (
+                <span
+                  className={cn(
+                    "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full",
+                    scoreDelta > 0
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-rose-100 text-rose-800"
+                  )}
+                >
+                  {scoreDelta > 0 ? `+${scoreDelta}` : scoreDelta}%
+                </span>
+              )}
+            </Link>
+          )}
+
           {/* PDF Report Link */}
           {reportPublicId ? (
             <Link
@@ -1192,7 +1302,7 @@ export function SiteAuditDashboard({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-emerald-200/90 bg-[#f0fdf9] p-4 shadow-2xs animate-in fade-in-50 duration-200">
           <div className="flex items-start gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 mt-0.5">
-              <Sparkles className="h-5 w-5" />
+              <Layers className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -1243,13 +1353,14 @@ export function SiteAuditDashboard({
             </div>
           </div>
 
-          <Link
-            href="/pricing"
+          <button
+            type="button"
+            onClick={() => setIsUpgradeModalOpen(true)}
             className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 outline-none focus:outline-none focus:ring-0"
           >
             <span>Upgrade Plan</span>
             <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          </button>
         </div>
       ) : null}
 
@@ -1264,12 +1375,13 @@ export function SiteAuditDashboard({
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {rerunNotice.upgradeRequired && (
-              <Link
-                href="/pricing"
-                className="rounded-lg bg-amber-900 hover:bg-black px-3 py-1.5 text-xs font-bold text-white shadow-xs transition-colors"
+              <button
+                type="button"
+                onClick={() => setIsUpgradeModalOpen(true)}
+                className="rounded-lg bg-amber-900 hover:bg-black px-3 py-1.5 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer"
               >
                 Upgrade Plan
-              </Link>
+              </button>
             )}
             <button
               type="button"
@@ -1363,6 +1475,14 @@ export function SiteAuditDashboard({
                       i
                     </span>
                   </div>
+                  {reportPublicId && (
+                    <Link
+                      href={`/dashboard/reports/${reportPublicId}/compare`}
+                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+                    >
+                      What changed &rarr;
+                    </Link>
+                  )}
                 </div>
 
                 <div className="mt-4 flex justify-center">
@@ -1611,20 +1731,53 @@ export function SiteAuditDashboard({
                                   <h4 className="text-sm font-bold text-slate-900 mb-2">How to fix</h4>
                                   {getIssueExplanation(issue).howToFix}
                                 </div>
-                                <div className="mt-3">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                       const url = typeof window !== "undefined" ? window.location.href : "";
-                                      navigator.clipboard.writeText(url);
-                                      setShareCopied(true);
-                                      setTimeout(() => setShareCopied(false), 2000);
-                                    }}
-                                    className="inline-flex items-center gap-1.5 rounded-[8px] border border-slate-300 bg-white hover:bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 transition-colors shadow-2xs cursor-pointer outline-none focus:outline-none focus:ring-0"
-                                  >
-                                    {shareCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <UserPlus className="h-3.5 w-3.5 text-slate-600" />}
-                                    <span>{shareCopied ? "Copied link!" : "Share"}</span>
-                                  </button>
+                                <div className="mt-3 space-y-2">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const url = typeof window !== "undefined" ? window.location.href : "";
+                                        navigator.clipboard.writeText(url);
+                                        setShareCopied(true);
+                                        setTimeout(() => setShareCopied(false), 2000);
+                                      }}
+                                      className="inline-flex items-center gap-1.5 rounded-[8px] border border-slate-300 bg-white hover:bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 transition-colors shadow-2xs cursor-pointer outline-none focus:outline-none focus:ring-0"
+                                    >
+                                      {shareCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <UserPlus className="h-3.5 w-3.5 text-slate-600" />}
+                                      <span>{shareCopied ? "Copied link!" : "Share"}</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      disabled={recheckingId === issue.id}
+                                      onClick={() => handleRecheckIssue(issue.id)}
+                                      className="inline-flex items-center gap-1.5 rounded-[8px] bg-slate-900 hover:bg-black text-white px-2.5 py-1 text-xs font-bold transition-colors shadow-2xs cursor-pointer disabled:opacity-50 outline-none focus:outline-none focus:ring-0"
+                                    >
+                                      <RotateCw className={cn("h-3.5 w-3.5", recheckingId === issue.id && "animate-spin")} />
+                                      <span>{recheckingId === issue.id ? "Verifying..." : "Recheck"}</span>
+                                    </button>
+                                  </div>
+
+                                  {(() => {
+                                    const result = recheckResults[issue.id];
+                                    if (!result) return null;
+                                    return (
+                                      <div className="text-xs font-semibold">
+                                        {result.ok ? (
+                                          <span className={cn(
+                                            "inline-flex items-center gap-1 px-2 py-0.5 rounded-md",
+                                            result.status === "Fixed"
+                                              ? "bg-emerald-100 text-emerald-800"
+                                              : "bg-amber-100 text-amber-900"
+                                          )}>
+                                            {result.status === "Fixed" ? "✓ Verified Fixed!" : "⚠ Still Present"}
+                                          </span>
+                                        ) : (
+                                          <span className="text-rose-600">{result.message}</span>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
                                 </div>
                               </div>
                             </div>
@@ -2544,9 +2697,9 @@ export function SiteAuditDashboard({
                 className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-colors text-left cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
-                  <Wand2 className="h-4 w-4 text-indigo-600" />
+                  <FileCode className="h-4 w-4 text-indigo-600" />
                   <div>
-                    <div className="font-bold text-slate-900">Send to AI Automation Fixer</div>
+                    <div className="font-bold text-slate-900">Send to Automated Fixer</div>
                     <div className="text-[11px] text-slate-500">Auto-generate patch for this issue</div>
                   </div>
                 </div>
@@ -2566,6 +2719,13 @@ export function SiteAuditDashboard({
           </div>
         </div>
       )}
+
+      {/* UPGRADE PLAN MODAL */}
+      <UpgradePlanModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        reason={rerunNotice?.message}
+      />
     </div>
   );
 }

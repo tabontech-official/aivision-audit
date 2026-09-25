@@ -277,6 +277,7 @@ model User {
   usageEvents         UsageEvent[]
   bonusCredits        BonusCredit[]
   billingAuditLogs    BillingAuditLog[]    @relation("BillingActor")
+  generatedSchemas    GeneratedSchema[]
 
   @@index([role])
   @@index([plan])
@@ -599,6 +600,7 @@ model Website {
   schemaAudits   SchemaAudit[]
   keywordSearches KeywordSearch[]
   trackedKeywords TrackedKeyword[]
+  generatedSchemas GeneratedSchema[]
 
   @@unique([userId, url])
   @@index([userId])
@@ -829,41 +831,49 @@ model ReportSnapshot {
 // ----------------------------------------------------------------
 
 model Plan {
-  id                    String              @id @default(uuid()) @db.Uuid
-  key                   String              @unique
-  name                  String
-  description           String?
-  priceMonthlyCents     Int                 @default(0) @map("price_monthly_cents")
-  priceYearlyCents      Int                 @default(0) @map("price_yearly_cents")
-  currency              String              @default("usd")
-  stripeProductId       String?             @map("stripe_product_id")
-  stripePriceMonthlyId  String?             @map("stripe_price_monthly_id")
-  stripePriceYearlyId   String?             @map("stripe_price_yearly_id")
-  auditLimitPerMonth    Int                 @default(3) @map("audit_limit_per_month")
-  pageAuditLimit        Int                 @default(100) @map("page_audit_limit") // Total page coverage limit (10, 100, 1000, 3000, etc.)
-  initialSampleSize     Int                 @default(30) @map("initial_sample_size") // Initial sample size per audit (10, 30, 50, 100, etc.)
-  auditLimitType        String              @default("MONTHLY") @map("audit_limit_type") // MONTHLY, BILLING_CYCLE, LIFETIME, UNLIMITED
-  auditResetPeriod      String              @default("MONTHLY") @map("audit_reset_period") // MONTHLY, BILLING_CYCLE, NEVER
-  concurrentAuditsLimit Int                 @default(1) @map("concurrent_audits_limit")
-  autoRefundOnFailure   Boolean             @default(true) @map("auto_refund_on_failure")
-  trialDays             Int                 @default(0) @map("trial_days")
-  setupFeeCents         Int                 @default(0) @map("setup_fee_cents")
-  isActive              Boolean             @default(true) @map("is_active")
-  isPublic              Boolean             @default(true) @map("is_public")
-  isPopular             Boolean             @default(false) @map("is_popular")
-  badgeText             String?             @map("badge_text")
-  customCtaText         String?             @map("custom_cta_text")
-  customCtaUrl          String?             @map("custom_cta_url")
-  displayOrder          Int                 @default(0) @map("display_order")
-  adminNotes            String?             @map("admin_notes") @db.Text
-  createdAt             DateTime            @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt             DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+  id                         String              @id @default(uuid()) @db.Uuid
+  key                        String              @unique
+  name                       String
+  description                String?
+  priceMonthlyCents          Int                 @default(0) @map("price_monthly_cents")
+  priceYearlyCents           Int                 @default(0) @map("price_yearly_cents")
+  currency                   String              @default("usd")
+  stripeProductId            String?             @map("stripe_product_id")
+  stripePriceMonthlyId       String?             @map("stripe_price_monthly_id")
+  stripePriceYearlyId        String?             @map("stripe_price_yearly_id")
+  auditLimitPerMonth         Int                 @default(3) @map("audit_limit_per_month")
+  pageAuditLimit             Int                 @default(100) @map("page_audit_limit") // Total page coverage limit (10, 100, 1000, 3000, etc.)
+  initialSampleSize          Int                 @default(30) @map("initial_sample_size") // Initial sample size per audit (10, 30, 50, 100, etc.)
+  websiteLimit               Int                 @default(1) @map("website_limit") // Max active projects/websites (Free: 1, Starter: 1, Pro: 5, Agency: 20, -1 = unlimited)
+  schemaMonthlyLimit         Int                 @default(25) @map("schema_monthly_limit") // Monthly schema generations (Free: 3, Starter: 25, Pro: 100, Agency: -1 for unlimited)
+  schemaBuilderEnabled       Boolean             @default(true) @map("schema_builder_enabled")
+  auditHistoryRetentionDays  Int                 @default(30) @map("audit_history_retention_days") // Retention in days (Free: 7, Starter: 30, Pro: 90, Agency: 365, -1 = unlimited)
+  scheduledAuditFrequency    String              @default("MONTHLY") @map("scheduled_audit_frequency") // "DISABLED", "MONTHLY", "BIWEEKLY", "WEEKLY"
+  scheduledAuditsEnabled     Boolean             @default(true) @map("scheduled_audits_enabled")
+  reAuditEnabled             Boolean             @default(true) @map("re_audit_enabled")
+  auditComparisonEnabled     Boolean             @default(true) @map("audit_comparison_enabled")
+  auditLimitType             String              @default("MONTHLY") @map("audit_limit_type") // MONTHLY, BILLING_CYCLE, LIFETIME, UNLIMITED
+  auditResetPeriod           String              @default("MONTHLY") @map("audit_reset_period") // MONTHLY, BILLING_CYCLE, NEVER
+  concurrentAuditsLimit      Int                 @default(1) @map("concurrent_audits_limit")
+  autoRefundOnFailure        Boolean             @default(true) @map("auto_refund_on_failure")
+  trialDays                  Int                 @default(0) @map("trial_days")
+  setupFeeCents              Int                 @default(0) @map("setup_fee_cents")
+  isActive                   Boolean             @default(true) @map("is_active")
+  isPublic                   Boolean             @default(true) @map("is_public")
+  isPopular                  Boolean             @default(false) @map("is_popular")
+  badgeText                  String?             @map("badge_text")
+  customCtaText              String?             @map("custom_cta_text")
+  customCtaUrl               String?             @map("custom_cta_url")
+  displayOrder               Int                 @default(0) @map("display_order")
+  adminNotes                 String?             @map("admin_notes") @db.Text
+  createdAt                  DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                  DateTime            @updatedAt @map("updated_at") @db.Timestamptz
 
-  features              PlanFeature[]
-  publicFeatures        PlanPublicFeature[]
-  prices                PlanPrice[]
-  entitlements          PlanEntitlement[]
-  subscriptions         Subscription[]
+  features                   PlanFeature[]
+  publicFeatures             PlanPublicFeature[]
+  prices                     PlanPrice[]
+  entitlements               PlanEntitlement[]
+  subscriptions              Subscription[]
 
   @@map("plans")
 }
@@ -936,6 +946,8 @@ model PlanFeature {
 
 enum UsageEventType {
   AUDIT_RUN
+  AUDIT_PAGE
+  SCHEMA_GENERATION
   AUDIT_REFUNDED
   BONUS_CREDIT_GRANTED
   BONUS_CREDIT_EXPIRED
@@ -947,6 +959,7 @@ model UsageEvent {
   id             String         @id @default(uuid()) @db.Uuid
   userId         String         @map("user_id") @db.Uuid
   subscriptionId String?        @map("subscription_id") @db.Uuid
+  websiteId      String?        @map("website_id") @db.Uuid
   reportId       String?        @map("report_id") @db.Uuid
   type           UsageEventType
   units          Int            @default(1)
@@ -959,7 +972,31 @@ model UsageEvent {
 
   @@index([userId, featureKey, createdAt])
   @@index([userId, createdAt])
+  @@index([websiteId])
   @@map("usage_events")
+}
+
+model GeneratedSchema {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  websiteId   String?   @map("website_id") @db.Uuid
+  schemaType  String    @map("schema_type") // FAQPage, Organization, LocalBusiness, Product, Article, BreadcrumbList, SoftwareApplication, etc.
+  name        String?
+  pageUrl     String?   @map("page_url")
+  jsonLd      String    @db.Text
+  formData    Json?     @map("form_data")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  website     Website?  @relation(fields: [websiteId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([websiteId])
+  @@index([schemaType])
+  @@index([createdAt])
+  @@map("generated_schemas")
 }
 
 model BonusCredit {

@@ -7,6 +7,8 @@ import {
   type CrawledPageItem,
   type StatisticsMetrics,
 } from "@/components/dashboard/site-audit-dashboard";
+import { getUserUsageSummary } from "@/services/billing/entitlements";
+import { NewWebsiteAuditHero } from "@/components/dashboard/new-website-audit-hero";
 
 export const metadata: Metadata = { title: "Site Audit Dashboard" };
 export const dynamic = "force-dynamic";
@@ -126,6 +128,22 @@ export default async function DashboardPage({
     console.error("Dashboard database query error:", err);
   }
 
+  // Query user plan usage and entitlement summary
+  const usageSummary = await getUserUsageSummary(user.id);
+
+  // If user has no websites at all, show the new onboarding website audit hero
+  if (!activeWebsite && allDomains.length === 0) {
+    return (
+      <NewWebsiteAuditHero
+        userEmail={user.email ?? ""}
+        userName={user.name ?? null}
+        planKey={usageSummary.plan.planKey}
+        planName={usageSummary.plan.planName}
+        pageCreditsLimit={usageSummary.pages.limit}
+      />
+    );
+  }
+
   // Query historical reports for real sparklines
   let historicalReports: Array<{
     failedCount: number;
@@ -159,7 +177,7 @@ export default async function DashboardPage({
   }
 
   const hasReport = Boolean(activeWebsite && activeReport);
-  const domainName = activeWebsite?.domain || allDomains[0] || "thefoldtech.com";
+  const domainName = activeWebsite?.domain || allDomains[0] || "";
   const overallScore = hasReport ? Math.round(activeReport?.overallScore ?? 98) : 98;
   const passedCount = hasReport ? (activeReport?.passedCount ?? 25) : 25;
   const failedCount = hasReport ? (activeReport?.failedCount ?? 0) : 0;
@@ -196,7 +214,7 @@ export default async function DashboardPage({
     ? sitemapData.urlCount
     : typeof sitemapData.totalUrlCount === "number" && sitemapData.totalUrlCount > 0
     ? sitemapData.totalUrlCount
-    : 200;
+    : (activeReport?.totalDetectedUrls ?? usageSummary.pages.limit);
   // Format last updated date
   const lastUpdated = activeReport?.createdAt
     ? new Date(activeReport.createdAt).toLocaleDateString("en-US", {
@@ -676,12 +694,12 @@ export default async function DashboardPage({
       }}
       crawledPagesList={crawledPagesList}
       statistics={statistics}
-      totalDetectedUrls={activeReport?.totalDetectedUrls ?? undefined}
-      coverageUsed={activeReport?.coverageUsed ?? undefined}
-      coverageRemaining={activeReport?.coverageRemaining ?? undefined}
-      coverageLimit={activeReport?.coverageLimit ?? undefined}
+      totalDetectedUrls={activeReport?.totalDetectedUrls ?? (totalPages > 0 ? totalPages : usageSummary.pages.limit)}
+      coverageUsed={activeReport?.coverageUsed ?? usageSummary.pages.used}
+      coverageRemaining={activeReport?.coverageRemaining ?? usageSummary.pages.remaining}
+      coverageLimit={activeReport?.coverageLimit ?? usageSummary.pages.limit}
       coverageCompleted={activeReport?.coverageCompleted ?? undefined}
-      currentPlanKey={activeReport?.currentPlanKey ?? undefined}
+      currentPlanKey={activeReport?.currentPlanKey ?? usageSummary.plan.planKey}
     />
   );
 }

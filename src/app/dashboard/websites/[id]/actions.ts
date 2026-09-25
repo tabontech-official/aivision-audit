@@ -110,7 +110,10 @@ export async function findingActionAction(input: unknown): Promise<FixListResult
   };
 }
 
-/** Audit schedule (§2.9): FREE → monthly at most; PREMIUM → up to weekly. */
+import { getUserPlanConfig } from "@/services/billing/entitlements";
+import { verifySingleFinding } from "@/services/findings/verify-check";
+
+/** Audit schedule (§16, §17): Dynamic database-driven plan entitlement controls */
 export async function setAuditScheduleAction(
   websiteId: string,
   schedule: AuditSchedule,
@@ -126,8 +129,14 @@ export async function setAuditScheduleAction(
     return { ok: false, error: "Website not found." };
   }
 
-  if (schedule === "WEEKLY" && session.user.plan !== "PREMIUM") {
-    return { ok: false, error: "Weekly scheduled audits require Premium. Monthly is available on your plan." };
+  if (schedule !== "NONE") {
+    const planConfig = await getUserPlanConfig(session.user.id);
+    if (!planConfig.scheduledAuditsEnabled || planConfig.scheduledAuditFrequency === "DISABLED") {
+      return { ok: false, error: "Scheduled audits require an upgraded plan." };
+    }
+    if (schedule === "WEEKLY" && planConfig.scheduledAuditFrequency === "MONTHLY") {
+      return { ok: false, error: "Weekly scheduled audits require a Pro or Agency plan. Monthly auditing is available." };
+    }
   }
 
   await db.website.update({
@@ -136,4 +145,23 @@ export async function setAuditScheduleAction(
   });
   revalidatePath(`/dashboard/websites/${websiteId}`);
   return { ok: true, message: schedule === "NONE" ? "Scheduled audits turned off." : `Audits scheduled ${schedule.toLowerCase()}.` };
+}
+
+/** Lightweight Fix Verification action for an issue (§15) */
+export async function recheckIssueAction(findingId: string): Promise<{
+  ok: boolean;
+  fixed?: boolean;
+  status?: "Fixed" | "Still Present";
+  message?: string;
+  error?: string;
+}> {
+  const session = await auth();
+  if (!session?.user) return { ok: false, error: "Not signed in." };
+
+  const res = await verifySingleFinding(findingId, session.user.id);
+  if (res.ok) {
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/reports");
+  }
+  return res;
 }

@@ -109,6 +109,184 @@ export default async function ReportDetailPage({
   const crawledPages = Array.isArray(rawExtracted.crawledPages) ? rawExtracted.crawledPages : [];
   const pagesCrawledCount = crawledPages.length > 0 ? crawledPages.length : Math.max(1, report.passedCount + report.failedCount + report.warningCount || 1);
 
+  // Fetch comparison data if previous report exists
+  let comparisonPayload: {
+    hasComparison: boolean;
+    isBaseline: boolean;
+    previousPublicId: string | null;
+    previousCompletedAt: string | null;
+    scoreNow: number | null;
+    scorePrev: number | null;
+    scoreDelta: number | null;
+    daysApart: number | null;
+    buckets: Array<{
+      key: string;
+      icon: string;
+      title: string;
+      tone: string;
+      rows: Array<{ id: string; name: string; section: string; sectionSlug: string; severity: string; note?: string | null }>;
+    }>;
+  } | null = null;
+
+  if (report.previousReportId) {
+    const previous = await db.report.findUnique({
+      where: { id: report.previousReportId },
+      select: { publicId: true, overallScore: true, completedAt: true, createdAt: true, id: true },
+    });
+
+    const [events, staleFindings] = await Promise.all([
+      db.findingEvent.findMany({
+        where: { reportId: report.id },
+        include: { finding: true },
+        orderBy: { createdAt: "asc" },
+      }),
+      db.finding.findMany({
+        where: { websiteId: report.websiteId, staleSince: { not: null } },
+      }),
+    ]);
+
+    const fixed = events.filter((e) => e.stateAfter === "VERIFIED_FIXED" && e.stateBefore !== "VERIFIED_FIXED");
+    const stillFailingAfterFix = events.filter((e) => e.stateAfter === "STILL_FAILING" && e.stateBefore === "MARKED_FIXED");
+    const fresh = events.filter((e) => e.stateBefore === null);
+    const regressed = events.filter((e) => e.stateAfter === "REGRESSED" && e.stateBefore === "VERIFIED_FIXED");
+    const stillOpen = events.filter(
+      (e) =>
+        e.stateBefore === e.stateAfter &&
+        ["OPEN", "ACKNOWLEDGED", "IN_PROGRESS", "STILL_FAILING", "REGRESSED"].includes(e.stateAfter) &&
+        (e.checkStatus === "FAIL" || e.checkStatus === "WARNING"),
+    );
+    const suppressed = events.filter((e) => ["WONT_FIX", "FALSE_POSITIVE"].includes(e.stateAfter));
+
+    const scoreNow = report.overallScore !== null ? Math.round(report.overallScore) : null;
+    const scorePrev = previous?.overallScore != null ? Math.round(previous.overallScore) : null;
+    const delta = report.scoreDelta;
+    const daysApart = previous
+      ? Math.max(1, Math.round((report.createdAt.getTime() - (previous.completedAt ?? previous.createdAt).getTime()) / 86_400_000))
+      : null;
+
+    comparisonPayload = {
+      hasComparison: true,
+      isBaseline: false,
+      previousPublicId: previous?.publicId || null,
+      previousCompletedAt: previous?.completedAt?.toISOString() || previous?.createdAt.toISOString() || null,
+      scoreNow,
+      scorePrev,
+      scoreDelta: delta,
+      daysApart,
+      buckets: [
+        {
+          key: "fixed",
+          icon: "✓",
+          title: "Fixed & Verified",
+          tone: "text-emerald-700 bg-emerald-50/70 border-emerald-200",
+          rows: fixed.map((e) => ({
+            id: e.id,
+            name: e.finding.checkName,
+            section: e.finding.sectionName,
+            sectionSlug: e.finding.sectionSlug,
+            severity: e.finding.severity,
+            note: e.finding.userNote,
+          })),
+        },
+        {
+          key: "still",
+          icon: "✗",
+          title: "Marked Fixed, Still Failing",
+          tone: "text-rose-700 bg-rose-50/70 border-rose-200",
+          rows: stillFailingAfterFix.map((e) => ({
+            id: e.id,
+            name: e.finding.checkName,
+            section: e.finding.sectionName,
+            sectionSlug: e.finding.sectionSlug,
+            severity: e.finding.severity,
+            note: e.finding.userNote,
+          })),
+        },
+        {
+          key: "new",
+          icon: "⚠",
+          title: "New Issues Detected",
+          tone: "text-amber-700 bg-amber-50/70 border-amber-200",
+          rows: fresh.map((e) => ({
+            id: e.id,
+            name: e.finding.checkName,
+            section: e.finding.sectionName,
+            sectionSlug: e.finding.sectionSlug,
+            severity: e.finding.severity,
+            note: e.finding.userNote,
+          })),
+        },
+        {
+          key: "regressed",
+          icon: "↩",
+          title: "Regressed Issues",
+          tone: "text-rose-700 bg-rose-50/70 border-rose-200",
+          rows: regressed.map((e) => ({
+            id: e.id,
+            name: e.finding.checkName,
+            section: e.finding.sectionName,
+            sectionSlug: e.finding.sectionSlug,
+            severity: e.finding.severity,
+            note: e.finding.userNote,
+          })),
+        },
+        {
+          key: "open",
+          icon: "○",
+          title: "Still Open Issues",
+          tone: "text-slate-700 bg-slate-50/70 border-slate-200",
+          rows: stillOpen.map((e) => ({
+            id: e.id,
+            name: e.finding.checkName,
+            section: e.finding.sectionName,
+            sectionSlug: e.finding.sectionSlug,
+            severity: e.finding.severity,
+            note: e.finding.userNote,
+          })),
+        },
+        {
+          key: "suppressed",
+          icon: "–",
+          title: "Suppressed by User",
+          tone: "text-slate-500 bg-slate-50/70 border-slate-200",
+          rows: suppressed.map((e) => ({
+            id: e.id,
+            name: e.finding.checkName,
+            section: e.finding.sectionName,
+            sectionSlug: e.finding.sectionSlug,
+            severity: e.finding.severity,
+            note: e.finding.userNote,
+          })),
+        },
+        {
+          key: "stale",
+          icon: "…",
+          title: "Not Checked This Run",
+          tone: "text-slate-400 bg-slate-50/70 border-slate-200",
+          rows: staleFindings.map((f) => ({
+            id: f.id,
+            name: f.checkName,
+            section: f.sectionName,
+            sectionSlug: f.sectionSlug,
+            severity: f.severity,
+          })),
+        },
+      ],
+    };
+  } else {
+    comparisonPayload = {
+      hasComparison: false,
+      isBaseline: true,
+      previousPublicId: null,
+      previousCompletedAt: null,
+      scoreNow: report.overallScore !== null ? Math.round(report.overallScore) : null,
+      scorePrev: null,
+      scoreDelta: null,
+      daysApart: null,
+      buckets: [],
+    };
+  }
+
   return (
     <ReportView
       publicId={publicId}
@@ -140,6 +318,7 @@ export default async function ReportDetailPage({
       coverageLimit={report.coverageLimit ?? undefined}
       coverageCompleted={report.coverageCompleted ?? undefined}
       currentPlanKey={report.currentPlanKey ?? undefined}
+      comparisonData={comparisonPayload}
     />
   );
 }

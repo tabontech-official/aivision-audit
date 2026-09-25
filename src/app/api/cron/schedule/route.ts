@@ -3,6 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db/client";
 import { createAudit } from "@/services/audits/create";
 import { getAllowance } from "@/services/audits/allowance";
+import { getUserUsageSummary } from "@/services/billing/entitlements";
 import { logExecution } from "@/services/system-log/log";
 import type { UserPlan } from "@prisma/client";
 
@@ -63,10 +64,19 @@ async function handle(req: Request): Promise<NextResponse> {
 
   for (const website of websites) {
     const user = website.user!;
-
-    // Downgrade rule: never leave a plan-exceeding schedule running.
     let schedule = website.auditSchedule;
-    if (schedule === "WEEKLY" && user.plan !== "PREMIUM") {
+
+    // Database-driven Plan Entitlement check for scheduled audits
+    const usageSummary = await getUserUsageSummary(user.id);
+    const planConfig = usageSummary.plan;
+
+    if (!planConfig.scheduledAuditsEnabled || planConfig.scheduledAuditFrequency === "DISABLED") {
+      await db.website.update({ where: { id: website.id }, data: { auditSchedule: "NONE" } });
+      downgraded++;
+      continue;
+    }
+
+    if (schedule === "WEEKLY" && planConfig.scheduledAuditFrequency === "MONTHLY") {
       schedule = "MONTHLY";
       await db.website.update({ where: { id: website.id }, data: { auditSchedule: "MONTHLY" } });
       await db.notification.create({
@@ -74,7 +84,7 @@ async function handle(req: Request): Promise<NextResponse> {
           userId: user.id,
           type: "PLAN_DOWNGRADED",
           title: `${website.domain}: weekly audits reduced to monthly`,
-          body: "Weekly scheduled audits require Premium. Your schedule was adjusted to monthly.",
+          body: "Weekly scheduled audits require Pro or Agency. Your schedule was adjusted to monthly.",
           linkUrl: `/dashboard/websites/${website.id}`,
         },
       }).catch(() => undefined);
@@ -89,9 +99,8 @@ async function handle(req: Request): Promise<NextResponse> {
       continue;
     }
 
-    // Allowance: skip + notify once, never silently drop.
-    const allowance = await getAllowance(user.id, user.plan as UserPlan);
-    if (allowance.remaining <= 0) {
+    // Allowance: Check monthly page allowance. Skip + notify once, never silently drop (§17).
+    if (usageSummary.pages.isLimitReached || usageSummary.pages.remaining <= 0) {
       const alreadyNotifiedThisPeriod =
         website.scheduleSkipNotifiedAt &&
         website.scheduleSkipNotifiedAt.getTime() > Date.now() - MONTHLY_MS;
@@ -101,7 +110,7 @@ async function handle(req: Request): Promise<NextResponse> {
             userId: user.id,
             type: "SYSTEM",
             title: `Scheduled audit for ${website.domain} skipped`,
-            body: `Your monthly audit allowance is used up (${allowance.limit}/${allowance.limit}). The schedule resumes when it resets.`,
+            body: `Scheduled audit could not complete because the monthly page allowance has been reached (${usageSummary.pages.used}/${usageSummary.pages.limit} pages used).`,
             linkUrl: `/dashboard/websites/${website.id}`,
           },
         }).catch(() => undefined);

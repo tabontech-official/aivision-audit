@@ -18,10 +18,14 @@ import {
   Link2,
   Code2,
   Zap,
+  AlertTriangle,
+  ArrowRight,
+  FileBarChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { rescanWebsiteAction } from "@/app/dashboard/reports/actions";
 import { scoreColor } from "@/components/report/score-ring";
+import { UpgradePlanModal } from "@/components/dashboard/upgrade-plan-modal";
 
 const DEFAULT_REPORT_SECTIONS = [
   { name: "Page Speed & Core Web Vitals", slug: "page-speed", count: 10 },
@@ -115,6 +119,7 @@ export function DashboardSidebar({
     type: "new" | "existing";
     message: string;
   } | null>(null);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -185,24 +190,28 @@ export function DashboardSidebar({
 
     const res = await rescanWebsiteAction(raw);
 
-    if (res.ok && res.redirectTo) {
+    if (res.ok) {
       const extractedDomain = extractDomain(raw);
       setProjects((prev) => (prev.includes(extractedDomain) ? prev : [extractedDomain, ...prev]));
       setSelectedProject(extractedDomain);
       setIsModalOpen(false);
       setNewUrlInput("");
       setIsAnalyzing(false);
-      router.push(res.redirectTo);
+      router.push(`/dashboard?project=${encodeURIComponent(extractedDomain)}`);
+      router.refresh();
     } else {
       setIsAnalyzing(false);
       setModalFeedback({
         type: "existing",
-        message: !res.ok ? res.error : "Failed to start site audit. Check domain URL.",
+        message: res.error || "Failed to start site audit. Check domain URL.",
       });
     }
   };
 
-  const isDashboardActive = pathname === "/dashboard";
+  const isDashboardActive = pathname === "/dashboard" && !currentSectionParam;
+  const isReportsActive =
+    (pathname.startsWith("/dashboard/reports") || pathname.startsWith("/dashboard/report")) &&
+    !currentSectionParam;
   const isSchemaActive = pathname.startsWith("/dashboard/schema");
   const isBillingActive = pathname.startsWith("/dashboard/billing");
 
@@ -311,7 +320,7 @@ export function DashboardSidebar({
             <div className="space-y-0.5 mt-1">
               {/* Performance / SEO Dashboard */}
               <Link
-                href="/dashboard"
+                href={selectedProject ? `/dashboard?project=${encodeURIComponent(selectedProject)}` : "/dashboard"}
                 prefetch={true}
                 className={cn(
                   "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
@@ -328,6 +337,28 @@ export function DashboardSidebar({
                   <BarChart3 className="h-4 w-4 text-slate-500 shrink-0" />
                 )}
                 <span className="truncate">Performance</span>
+              </Link>
+
+              {/* Reports (Below Performance) */}
+              <Link
+                href={selectedProject ? `/dashboard/reports?project=${encodeURIComponent(selectedProject)}` : "/dashboard/reports"}
+                prefetch={true}
+                onClick={(e) => handleSidebarItemClick(e)}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors",
+                  isReportsActive
+                    ? "bg-slate-100/90 text-slate-950 font-semibold"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                )}
+              >
+                {isReportsActive ? (
+                  <div className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-white shrink-0">
+                    <FileBarChart className="h-3 w-3" />
+                  </div>
+                ) : (
+                  <FileBarChart className="h-4 w-4 text-slate-500 shrink-0" />
+                )}
+                <span className="truncate">Report</span>
               </Link>
             </div>
           </div>
@@ -599,9 +630,26 @@ export function DashboardSidebar({
                     </div>
 
                     {modalFeedback && (
-                      <div className="flex items-start gap-2.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 p-3 text-xs font-semibold">
-                        <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
-                        <span>{modalFeedback.message}</span>
+                      <div className={cn(
+                        "flex items-start justify-between gap-2.5 rounded-xl p-3 text-xs font-semibold border",
+                        modalFeedback.message.toLowerCase().includes("allowance") || modalFeedback.message.toLowerCase().includes("limit") || modalFeedback.message.toLowerCase().includes("upgrade")
+                          ? "bg-amber-50 text-amber-900 border-amber-200"
+                          : "bg-rose-50 text-rose-800 border-rose-200"
+                      )}>
+                        <div className="flex items-start gap-2 min-w-0">
+                          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
+                          <span className="leading-relaxed">{modalFeedback.message}</span>
+                        </div>
+                        {(modalFeedback.message.toLowerCase().includes("allowance") || modalFeedback.message.toLowerCase().includes("limit") || modalFeedback.message.toLowerCase().includes("upgrade")) && (
+                          <button
+                            type="button"
+                            onClick={() => setIsUpgradeModalOpen(true)}
+                            className="inline-flex items-center gap-1 shrink-0 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
+                          >
+                            <span>Upgrade</span>
+                            <ArrowRight className="h-3 w-3" />
+                          </button>
+                        )}
                       </div>
                     )}
 
@@ -653,9 +701,26 @@ export function DashboardSidebar({
                 </div>
 
                 {modalFeedback && (
-                  <div className="flex items-start gap-2.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 p-3 text-xs font-semibold">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
-                    <span>{modalFeedback.message}</span>
+                  <div className={cn(
+                    "flex items-start justify-between gap-2.5 rounded-xl p-3 text-xs font-semibold border",
+                    modalFeedback.message.toLowerCase().includes("allowance") || modalFeedback.message.toLowerCase().includes("limit") || modalFeedback.message.toLowerCase().includes("upgrade")
+                      ? "bg-amber-50 text-amber-900 border-amber-200"
+                      : "bg-rose-50 text-rose-800 border-rose-200"
+                  )}>
+                    <div className="flex items-start gap-2 min-w-0">
+                      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
+                      <span className="leading-relaxed">{modalFeedback.message}</span>
+                    </div>
+                    {(modalFeedback.message.toLowerCase().includes("allowance") || modalFeedback.message.toLowerCase().includes("limit") || modalFeedback.message.toLowerCase().includes("upgrade")) && (
+                      <button
+                        type="button"
+                        onClick={() => setIsUpgradeModalOpen(true)}
+                        className="inline-flex items-center gap-1 shrink-0 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
+                      >
+                        <span>Upgrade</span>
+                        <ArrowRight className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -687,6 +752,13 @@ export function DashboardSidebar({
           </div>
         </div>
       )}
+
+      {/* UPGRADE PLAN MODAL */}
+      <UpgradePlanModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        reason={modalFeedback?.message}
+      />
     </>
   );
 }

@@ -10,12 +10,22 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { deleteUserAction, updateUserAction } from "./actions";
 
+export type PlanOption = {
+  id: string;
+  key: string;
+  name: string;
+  isActive?: boolean;
+};
+
 type UserRow = {
   id: string;
   email: string;
   name: string | null;
   role: string;
   plan: string;
+  planId?: string;
+  planKey?: string;
+  planName?: string;
   verified: boolean;
   lastLoginAt: string | null;
   createdAt: string;
@@ -24,6 +34,7 @@ type UserRow = {
 
 export function UsersTable({
   currentAdminId,
+  plans = [],
   users,
   total,
   page,
@@ -31,6 +42,7 @@ export function UsersTable({
   query,
 }: {
   currentAdminId: string;
+  plans?: PlanOption[];
   users: UserRow[];
   total: number;
   page: number;
@@ -45,7 +57,7 @@ export function UsersTable({
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  const update = (userId: string, patch: { role?: string; plan?: string }) => {
+  const update = (userId: string, patch: { role?: string; planId?: string; plan?: string }) => {
     setFlash(null);
     startTransition(async () => {
       const result = await updateUserAction({ userId, ...patch });
@@ -155,16 +167,46 @@ export function UsersTable({
                   </select>
                 </td>
                 <td className="px-4 py-3">
-                  <select
-                    value={u.plan}
-                    disabled={pending}
-                    onChange={(e) => update(u.id, { plan: e.target.value })}
-                    aria-label={`Plan for ${u.email}`}
-                    className={selectCls}
-                  >
-                    <option value="FREE">Free</option>
-                    <option value="PREMIUM">Premium</option>
-                  </select>
+                  {(() => {
+                    const currentSelectedPlanVal =
+                      plans.find(
+                        (p) =>
+                          p.id === u.planId ||
+                          p.key.toUpperCase() === (u.planKey || u.plan).toUpperCase(),
+                      )?.id ||
+                      u.planId ||
+                      u.plan;
+
+                    return (
+                      <select
+                        value={currentSelectedPlanVal}
+                        disabled={pending}
+                        onChange={(e) => update(u.id, { planId: e.target.value })}
+                        aria-label={`Plan for ${u.email}`}
+                        className={selectCls}
+                      >
+                        {plans.length > 0 ? (
+                          <>
+                            {plans.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}
+                              </option>
+                            ))}
+                            {!plans.some((p) => p.id === currentSelectedPlanVal) && (
+                              <option value={currentSelectedPlanVal}>
+                                {u.planName || u.plan}
+                              </option>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <option value="FREE">Free</option>
+                            <option value="PREMIUM">Premium</option>
+                          </>
+                        )}
+                      </select>
+                    );
+                  })()}
                 </td>
                 <td className="px-4 py-3 tabular-nums text-ink-secondary">{u.reportCount}</td>
                 <td className="px-4 py-3 text-xs text-ink-muted">

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
 import { auth } from "@/lib/auth/auth";
+import { adminChangeUserPlan } from "@/services/billing/subscriptions";
 import { logAdminActivity } from "@/services/audit-log/log";
 
 export type UserAdminResult = { ok: true; message?: string } | { ok: false; error: string };
@@ -11,7 +12,8 @@ export type UserAdminResult = { ok: true; message?: string } | { ok: false; erro
 const updateSchema = z.object({
   userId: z.string().uuid(),
   role: z.enum(["MASTER_ADMIN", "ADMIN", "USER"]).optional(),
-  plan: z.enum(["FREE", "PREMIUM"]).optional(),
+  planId: z.string().optional(),
+  plan: z.string().optional(),
 });
 
 export async function updateUserAction(input: unknown): Promise<UserAdminResult> {
@@ -22,7 +24,7 @@ export async function updateUserAction(input: unknown): Promise<UserAdminResult>
 
   const parsed = updateSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input." };
-  const { userId, role, plan } = parsed.data;
+  const { userId, role, planId, plan } = parsed.data;
 
   const target = await db.user.findUnique({ where: { id: userId } });
   if (!target || target.deletedAt) return { ok: false, error: "User not found." };
@@ -40,10 +42,38 @@ export async function updateUserAction(input: unknown): Promise<UserAdminResult>
     }
   }
 
-  await db.user.update({
-    where: { id: userId },
-    data: { ...(role ? { role } : {}), ...(plan ? { plan } : {}) },
-  });
+  let planMessage = "";
+  const targetPlanIdentifier = planId || plan;
+  if (targetPlanIdentifier) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetPlanIdentifier);
+    const targetPlan = await db.plan.findFirst({
+      where: isUuid
+        ? { id: targetPlanIdentifier }
+        : { key: { equals: targetPlanIdentifier, mode: "insensitive" } },
+    });
+
+    if (targetPlan) {
+      const planRes = await adminChangeUserPlan(userId, targetPlan.id, session.user.id);
+      if (!planRes.ok) {
+        return { ok: false, error: planRes.error || "Failed to update user plan." };
+      }
+      planMessage = ` Plan updated to ${targetPlan.name}.`;
+    } else if (targetPlanIdentifier.toUpperCase() === "FREE" || targetPlanIdentifier.toUpperCase() === "PREMIUM") {
+      const userPlanEnum = targetPlanIdentifier.toUpperCase() as "FREE" | "PREMIUM";
+      await db.user.update({
+        where: { id: userId },
+        data: { plan: userPlanEnum },
+      });
+      planMessage = ` Plan updated to ${userPlanEnum}.`;
+    }
+  }
+
+  if (role && role !== target.role) {
+    await db.user.update({
+      where: { id: userId },
+      data: { role },
+    });
+  }
 
   await logAdminActivity({
     actorId: session.user.id,
@@ -51,10 +81,14 @@ export async function updateUserAction(input: unknown): Promise<UserAdminResult>
     entityType: "user",
     entityId: userId,
     before: { role: target.role, plan: target.plan },
-    after: { role: role ?? target.role, plan: plan ?? target.plan },
+    after: { role: role ?? target.role, plan: targetPlanIdentifier ?? target.plan },
   });
+
   revalidatePath("/master-admin/users");
-  return { ok: true, message: "User updated." };
+  revalidatePath("/master-admin/billing/subscriptions");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/billing");
+  return { ok: true, message: `User updated.${planMessage}` };
 }
 
 const deleteSchema = z.object({ userId: z.string().uuid() });

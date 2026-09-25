@@ -75,6 +75,30 @@ export function PlanEditorClient({
   const [initialSampleSize, setInitialSampleSize] = useState<number>(
     initialPlan?.initialSampleSize ?? 30,
   );
+  const [websiteLimit, setWebsiteLimit] = useState<number>(
+    initialPlan?.websiteLimit ?? 1,
+  );
+  const [schemaMonthlyLimit, setSchemaMonthlyLimit] = useState<number>(
+    initialPlan?.schemaMonthlyLimit ?? 25,
+  );
+  const [schemaBuilderEnabled, setSchemaBuilderEnabled] = useState<boolean>(
+    initialPlan?.schemaBuilderEnabled ?? true,
+  );
+  const [auditHistoryRetentionDays, setAuditHistoryRetentionDays] = useState<number>(
+    initialPlan?.auditHistoryRetentionDays ?? 30,
+  );
+  const [scheduledAuditsEnabled, setScheduledAuditsEnabled] = useState<boolean>(
+    initialPlan?.scheduledAuditsEnabled ?? true,
+  );
+  const [scheduledAuditFrequency, setScheduledAuditFrequency] = useState<string>(
+    initialPlan?.scheduledAuditFrequency || "MONTHLY",
+  );
+  const [reAuditEnabled, setReAuditEnabled] = useState<boolean>(
+    initialPlan?.reAuditEnabled ?? true,
+  );
+  const [auditComparisonEnabled, setAuditComparisonEnabled] = useState<boolean>(
+    initialPlan?.auditComparisonEnabled ?? true,
+  );
   const [auditLimitType, setAuditLimitType] = useState(initialPlan?.auditLimitType || "MONTHLY");
   const [auditResetPeriod, setAuditResetPeriod] = useState(initialPlan?.auditResetPeriod || "MONTHLY");
   const [concurrentAuditsLimit, setConcurrentAuditsLimit] = useState<number>(
@@ -165,6 +189,14 @@ export function PlanEditorClient({
       auditLimitPerMonth,
       pageAuditLimit,
       initialSampleSize,
+      websiteLimit,
+      schemaMonthlyLimit,
+      schemaBuilderEnabled,
+      auditHistoryRetentionDays,
+      scheduledAuditFrequency,
+      scheduledAuditsEnabled,
+      reAuditEnabled,
+      auditComparisonEnabled,
       auditLimitType,
       auditResetPeriod,
       concurrentAuditsLimit,
@@ -533,7 +565,7 @@ export function PlanEditorClient({
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <label className="block text-xs font-bold text-slate-900">
-                  Total Page Coverage Limit (Audit Scope)
+                  Monthly Page Crawl Allowance (Audit Scope)
                 </label>
                 <input
                   type="number"
@@ -543,7 +575,7 @@ export function PlanEditorClient({
                   className="mt-1.5 w-full text-sm font-bold rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none"
                 />
                 <p className="mt-1 text-[11px] text-slate-600">
-                  Maximum pages covered under this plan (e.g. 10 for Free, 100 for Starter, 1,000 for Pro, 3,000 for Agency).
+                  Total crawl credits per month (e.g. 10 for Free, 100 for Starter, 1,000 for Pro, 3,000 for Agency). Editable anytime.
                 </p>
               </div>
 
@@ -559,13 +591,148 @@ export function PlanEditorClient({
                   className="mt-1.5 w-full text-sm font-bold rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none"
                 />
                 <p className="mt-1 text-[11px] text-slate-600">
-                  Pages analyzed on first audit without exhausting plan limit (e.g. 10 for Free, 30 for Starter, 50 for Pro, 100 for Agency).
+                  Pages analyzed on first audit before user continues audit (e.g. 10 for Free, 30 for Starter, 50 for Pro, 100 for Agency).
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2">
+          {/* Website / Project & Schema Builder SaaS Limits */}
+          <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-blue-600" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-blue-950">
+                SaaS Project &amp; Schema Builder Limits
+              </h4>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-900">
+                  Website / Project Limit
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={websiteLimit}
+                  onChange={(e) => setWebsiteLimit(parseInt(e.target.value) || 1)}
+                  className="mt-1.5 w-full text-sm font-bold rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none"
+                />
+                <p className="mt-1 text-[11px] text-slate-600">
+                  Max simultaneous active domains / projects (e.g. 1 for Free/Starter, 5 for Pro, 20 for Agency).
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-900">
+                  Monthly Schema Builder Generations Limit
+                </label>
+                <input
+                  type="number"
+                  value={schemaMonthlyLimit}
+                  onChange={(e) => setSchemaMonthlyLimit(parseInt(e.target.value) || 0)}
+                  className="mt-1.5 w-full text-sm font-bold rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none"
+                />
+                <p className="mt-1 text-[11px] text-slate-600">
+                  Enter <span className="font-mono font-bold">-1</span> for unlimited (e.g. 3 for Free, 25 for Starter, 100 for Pro, -1 for Agency).
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2 pt-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-900">
+                  Audit History Retention (Days)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={auditHistoryRetentionDays}
+                  onChange={(e) => setAuditHistoryRetentionDays(parseInt(e.target.value) || 30)}
+                  className="mt-1.5 w-full text-sm font-bold rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none"
+                />
+                <p className="mt-1 text-[11px] text-slate-600">
+                  Days past audits and trend reports are retained (e.g. 7 for Free, 30 for Starter, 90 for Pro, 365 for Agency).
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-900">
+                  Scheduled Audit Frequency
+                </label>
+                <select
+                  value={scheduledAuditFrequency}
+                  onChange={(e) => setScheduledAuditFrequency(e.target.value)}
+                  className="mt-1.5 w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none"
+                >
+                  <option value="NONE">Manual Only (No automation)</option>
+                  <option value="MONTHLY">Monthly Automated Audit</option>
+                  <option value="WEEKLY">Weekly Automated Audit</option>
+                  <option value="DAILY">Daily Monitoring</option>
+                </select>
+                <p className="mt-1 text-[11px] text-slate-600">
+                  Frequency allowed for background recurring scheduled audits.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Toggle Switches for SaaS Features */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3.5">
+              <div>
+                <div className="text-xs font-bold text-slate-900">Schema Builder</div>
+                <div className="text-[11px] text-slate-500">Enable generator suite</div>
+              </div>
+              <input
+                type="checkbox"
+                checked={schemaBuilderEnabled}
+                onChange={(e) => setSchemaBuilderEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3.5">
+              <div>
+                <div className="text-xs font-bold text-slate-900">Scheduled Audits</div>
+                <div className="text-[11px] text-slate-500">Allow auto cron runs</div>
+              </div>
+              <input
+                type="checkbox"
+                checked={scheduledAuditsEnabled}
+                onChange={(e) => setScheduledAuditsEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3.5">
+              <div>
+                <div className="text-xs font-bold text-slate-900">Re-Audit Projects</div>
+                <div className="text-[11px] text-slate-500">Rerun audit under domain</div>
+              </div>
+              <input
+                type="checkbox"
+                checked={reAuditEnabled}
+                onChange={(e) => setReAuditEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3.5">
+              <div>
+                <div className="text-xs font-bold text-slate-900">Audit Compare</div>
+                <div className="text-[11px] text-slate-500">Diff & issue changes</div>
+              </div>
+              <input
+                type="checkbox"
+                checked={auditComparisonEnabled}
+                onChange={(e) => setAuditComparisonEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2 border-t border-slate-100 pt-5">
             <div>
               <label className="block text-xs font-bold text-slate-700">Audits Limit (Campaigns / Month)</label>
               <input

@@ -4,6 +4,7 @@ import { crawlSitePages } from "@/services/inspection/sample-pages";
 import { evaluateReport } from "@/services/reports/evaluate-report";
 import { buildAndStoreSnapshot } from "@/services/reports/snapshot";
 import { logExecution } from "@/services/system-log/log";
+import { recordAuditPageUsage } from "@/services/billing/entitlements";
 import type { Prisma } from "@prisma/client";
 
 export type ContinueAuditResult =
@@ -223,6 +224,14 @@ export async function continueAuditScope(
       criticalIssueCount: evaluation.criticalIssueCount,
     },
   });
+
+  await recordAuditPageUsage({
+    userId,
+    websiteId: report.website.id,
+    reportId: report.id,
+    pagesCount: actualPagesAdded,
+    description: `Continued audit crawl: added ${actualPagesAdded} pages for ${report.website.url}`,
+  }).catch((err) => console.error("Failed to record continue audit page usage:", err));
 
   await logExecution({
     level: "INFO",

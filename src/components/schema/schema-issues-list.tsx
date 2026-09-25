@@ -36,9 +36,9 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs font-lazzer">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-        <div>
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs font-lazzer">
+      <div className="mb-4 pb-3.5 border-b border-slate-100">
+        <div className="mb-3">
           <h3 className="text-sm font-bold text-slate-900 font-display flex items-center gap-2">
             <Filter className="w-4 h-4 text-slate-900" />
             Validation Findings &amp; Action Items ({issues.length})
@@ -54,7 +54,7 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
             type="button"
             onClick={() => setFilter("ALL")}
             className={cn(
-              "px-3 py-1 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+              "px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer",
               filter === "ALL"
                 ? "bg-slate-900 text-white shadow-2xs"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -66,7 +66,7 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
             type="button"
             onClick={() => setFilter("ERROR")}
             className={cn(
-              "px-3 py-1 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+              "px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer",
               filter === "ERROR"
                 ? "bg-rose-600 text-white shadow-2xs"
                 : "bg-rose-50 text-rose-700 hover:bg-rose-100"
@@ -78,7 +78,7 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
             type="button"
             onClick={() => setFilter("WARNING")}
             className={cn(
-              "px-3 py-1 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+              "px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer",
               filter === "WARNING"
                 ? "bg-amber-600 text-white shadow-2xs"
                 : "bg-amber-50 text-amber-700 hover:bg-amber-100"
@@ -90,7 +90,7 @@ export function SchemaIssuesList({ issues }: SchemaIssuesListProps) {
             type="button"
             onClick={() => setFilter("OPPORTUNITY")}
             className={cn(
-              "px-3 py-1 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+              "px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer",
               filter === "OPPORTUNITY"
                 ? "bg-teal-700 text-white shadow-2xs"
                 : "bg-teal-50 text-teal-800 hover:bg-teal-100"
