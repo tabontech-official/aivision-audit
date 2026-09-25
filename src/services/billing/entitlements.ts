@@ -295,38 +295,17 @@ export async function getUserPlanConfig(userId: string): Promise<PlanConfig> {
 export async function getUserUsageSummary(userId: string): Promise<FullUserUsageSummary> {
   const plan = await getUserPlanConfig(userId);
 
-  // 1. Pages Usage: Sum of AUDIT_PAGE units in current period or reports coverage
-  const [pageEvents, userReports] = await Promise.all([
-    db.usageEvent.aggregate({
-      where: {
-        userId,
-        type: { in: ["AUDIT_PAGE", "AUDIT_RUN"] },
-        createdAt: { gte: plan.periodStart },
-      },
-      _sum: { units: true },
-    }),
-    db.report.findMany({
-      where: {
-        userId,
-        status: { in: ["COMPLETED", "PARTIAL"] },
-        createdAt: { gte: plan.periodStart },
-      },
-      select: {
-        coverageUsed: true,
-        rawData: true,
-      },
-    }),
-  ]);
+  // 1. Pages Usage: Sum of AUDIT_PAGE units in current period
+  const pageEvents = await db.usageEvent.aggregate({
+    where: {
+      userId,
+      type: { in: ["AUDIT_PAGE", "AUDIT_RUN"] },
+      createdAt: { gte: plan.periodStart },
+    },
+    _sum: { units: true },
+  });
 
-  let reportsPagesCrawledTotal = 0;
-  for (const r of userReports) {
-    const rawExtracted = (r.rawData?.extracted as Record<string, unknown>) || {};
-    const crawledPages = Array.isArray(rawExtracted.crawledPages) ? rawExtracted.crawledPages.length : 0;
-    const reportCount = r.coverageUsed && r.coverageUsed > 0 ? r.coverageUsed : (crawledPages > 0 ? crawledPages : 0);
-    reportsPagesCrawledTotal += reportCount;
-  }
-
-  const pageUsed = Math.max(pageEvents._sum.units ?? 0, reportsPagesCrawledTotal);
+  const pageUsed = pageEvents._sum.units ?? 0;
   const pageLimit = plan.pageAuditLimit;
   const pageRemaining = Math.max(0, pageLimit - pageUsed);
 

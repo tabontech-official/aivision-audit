@@ -31,6 +31,7 @@ import {
   GitCompare,
   Gift,
   CheckCircle2,
+  Code,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { rerunAuditAction, rescanWebsiteAction, continueAuditAction, claimWelcomeRewardAndRunAuditAction } from "@/app/dashboard/reports/actions";
@@ -39,6 +40,8 @@ import { StopAuditButton } from "@/components/dashboard/stop-audit-button";
 import { DashboardLiveAuditBanner } from "@/components/dashboard/dashboard-live-audit-banner";
 import { UpgradePlanModal } from "@/components/dashboard/upgrade-plan-modal";
 import { AuditUpgradeBanner } from "@/components/dashboard/audit-upgrade-banner";
+import { IssueDetailDrawer } from "@/components/dashboard/issue-detail-drawer";
+import { generateIssueDiagnostics } from "@/services/inspection/issue-diagnostics";
 
 export interface IssueItem {
   id: string;
@@ -629,6 +632,7 @@ export function SiteAuditDashboard({
 
   // Modals & Interactive Actions
   const [selectedFixIssue, setSelectedFixIssue] = useState<IssueItem | null>(null);
+  const [drawerIssue, setDrawerIssue] = useState<IssueItem | null>(null);
   const [sendToIssue, setSendToIssue] = useState<IssueItem | null>(null);
   const [hiddenIssueIds, setHiddenIssueIds] = useState<Set<string>>(new Set());
   const [actionCopied, setActionCopied] = useState(false);
@@ -663,7 +667,7 @@ export function SiteAuditDashboard({
 
   const isFreePlan = (currentPlanKey || "").toUpperCase() === "FREE" || (!currentPlanKey && (!coverageLimitProp || coverageLimitProp <= 10));
   const effectiveCrawledCount = Math.max(pagesCrawled || 0, (crawledPagesList || []).length, 1);
-  const coverageUsed = Math.max(effectiveCrawledCount, coverageUsedProp ?? 0);
+  const coverageUsed = coverageUsedProp ?? 0;
   const totalDetected = Math.max(effectiveCrawledCount, totalDetectedUrls || maxPages || (isFreePlan ? 10 : 200));
   const rawCoverageLimit = coverageLimitProp ?? (isFreePlan ? 10 : (maxPages || 100));
   const coverageLimit = isFreePlan ? 10 : rawCoverageLimit;
@@ -1008,20 +1012,30 @@ export function SiteAuditDashboard({
             )}
             <button
               type="button"
-              onClick={() => setSelectedFixIssue(isExpanded ? null : issue)}
+              onClick={() => setDrawerIssue(issue)}
               className="text-xs sm:text-[13px] font-medium text-[#2563eb] hover:underline cursor-pointer text-left shrink-0 outline-none focus:outline-none focus:ring-0"
             >
               {unit}
             </button>
-            <span className="text-xs sm:text-[13px] text-slate-800 font-normal">
+            <span
+              onClick={() => setDrawerIssue(issue)}
+              className="text-xs sm:text-[13px] text-slate-800 font-normal hover:text-indigo-900 cursor-pointer"
+            >
               {text}
             </span>
             <button
               type="button"
-              onClick={() => setSelectedFixIssue(isExpanded ? null : issue)}
+              onClick={() => setDrawerIssue(issue)}
               className="text-xs text-slate-400 hover:text-slate-700 underline decoration-dotted ml-1.5 cursor-pointer shrink-0 outline-none focus:outline-none focus:ring-0"
             >
               How to fix
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedFixIssue(isExpanded ? null : issue)}
+              className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold ml-2 cursor-pointer shrink-0"
+            >
+              {isExpanded ? "Hide Summary" : "Quick Summary"}
             </button>
           </div>
 
@@ -1084,6 +1098,15 @@ export function SiteAuditDashboard({
                     </p>
 
                     <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setDrawerIssue(issue)}
+                        className="inline-flex items-center gap-1.5 rounded-[8px] bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 text-xs font-bold transition-colors shadow-2xs cursor-pointer"
+                      >
+                        <Code className="h-3.5 w-3.5" />
+                        <span>View Evidence &amp; Code Fix →</span>
+                      </button>
+
                       {(issue.title.toLowerCase().includes("schema") || issue.title.toLowerCase().includes("structured data") || (issue.category && issue.category.toLowerCase().includes("schema"))) && (
                         <Link
                           href={`/dashboard/schema?url=${encodeURIComponent(issue.fixUrl || domain)}`}
@@ -2805,6 +2828,18 @@ export function SiteAuditDashboard({
           </div>
         </div>
       )}
+
+      {/* ISSUE DIAGNOSTIC & CODE FIX DRAWER */}
+      <IssueDetailDrawer
+        isOpen={!!drawerIssue}
+        onClose={() => setDrawerIssue(null)}
+        issue={drawerIssue}
+        domain={domain}
+        onRecheck={handleRecheckIssue}
+        isRechecking={recheckingId === drawerIssue?.id}
+        recheckResult={drawerIssue ? recheckResults[drawerIssue.id] : null}
+        onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
+      />
 
       {/* UPGRADE PLAN MODAL */}
       <UpgradePlanModal

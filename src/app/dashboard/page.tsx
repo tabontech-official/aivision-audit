@@ -658,9 +658,9 @@ export default async function DashboardPage({
   const initialTab = resolvedParams.tab || "overview";
   const isFree = usageSummary.plan.planKey === "FREE";
   const actualCrawledPagesCount = Math.max(1, crawledPagesList.length);
-  const effectiveCoverageUsed = Math.max(actualCrawledPagesCount, usageSummary.pages.used, activeReport?.coverageUsed ?? 0);
+  const effectiveCoverageUsed = activeReport?.coverageUsed ?? usageSummary.pages.used;
   const effectiveCoverageLimit = isFree ? 10 : (activeReport?.coverageLimit ?? usageSummary.pages.limit);
-  const effectiveCoverageRemaining = Math.max(0, effectiveCoverageLimit - effectiveCoverageUsed);
+  const effectiveCoverageRemaining = activeReport?.coverageRemaining ?? (isFree ? Math.max(0, 10 - effectiveCoverageUsed) : usageSummary.pages.remaining);
   const effectiveTotalDetected = activeReport?.totalDetectedUrls ?? (totalPages > 0 ? totalPages : (isFree ? 10 : usageSummary.pages.limit));
   const effectiveMaxPages = Math.max(actualCrawledPagesCount, effectiveTotalDetected);
 

@@ -699,8 +699,8 @@ export async function runAudit(reportId: string): Promise<void> {
       isFirstAudit = prevCompleted === 0;
     }
 
-    const recordedCoverageUsed = finalInitialCoverage;
-    const recordedCoverageRemaining = Math.max(0, pageLimit - finalInitialCoverage);
+    const recordedCoverageUsed = isFirstAudit ? 0 : finalInitialCoverage;
+    const recordedCoverageRemaining = isFirstAudit ? pageLimit : Math.max(0, pageLimit - finalInitialCoverage);
 
     await db.report.update({
       where: { id: reportId },
@@ -736,15 +736,15 @@ export async function runAudit(reportId: string): Promise<void> {
     await logExecution({
       level: "INFO",
       category: "AUDIT_PIPELINE",
-      message: `Audit pipeline COMPLETED successfully in ${totalDuration}ms (Overall score: ${summary.overallScore}/100, Grade: ${summary.grade})`,
+      message: `Audit pipeline COMPLETED successfully in ${totalDuration}ms (Overall score: ${summary.overallScore}/100, Grade: ${summary.grade}${isFirstAudit ? " - FREE FIRST AUDIT" : ""})`,
       reportId,
       websiteUrl: page.finalUrl,
       durationMs: totalDuration,
       meta: { overallScore: summary.overallScore, grade: summary.grade, status: psiFailed ? "PARTIAL" : "COMPLETED" },
     });
 
-    // Record audit page consumption in usage ledger (1 crawled page = 1 credit consumed)
-    if (report.userId) {
+    // Record audit page consumption in usage ledger (First audit is 100% free: 0 credits deducted)
+    if (report.userId && !isFirstAudit) {
       await recordAuditPageUsage({
         userId: report.userId,
         websiteId: report.websiteId,

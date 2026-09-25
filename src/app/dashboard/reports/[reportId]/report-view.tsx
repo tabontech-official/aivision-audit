@@ -26,12 +26,15 @@ import {
   CheckCircle2,
   AlertOctagon,
   Info,
+  Code,
+  FileCode,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { rerunAuditByPublicIdAction } from "./actions";
 import { continueAuditAction } from "@/app/dashboard/reports/actions";
 import { UpgradePlanModal } from "@/components/dashboard/upgrade-plan-modal";
 import { AuditUpgradeBanner } from "@/components/dashboard/audit-upgrade-banner";
+import { IssueDetailDrawer } from "@/components/dashboard/issue-detail-drawer";
 import type {
   ProjectedReport,
   ProjectedSection,
@@ -346,6 +349,7 @@ export function ReportView(props: {
   const [shareCopied, setShareCopied] = useState(false);
   const [isDomainDropdownOpen, setIsDomainDropdownOpen] = useState(false);
   const [selectedFixIssue, setSelectedFixIssue] = useState<IssueItem | null>(null);
+  const [drawerIssue, setDrawerIssue] = useState<IssueItem | null>(null);
   const [sendToIssue, setSendToIssue] = useState<IssueItem | null>(null);
   const [hiddenIssueIds, setHiddenIssueIds] = useState<Set<string>>(new Set());
   const [actionCopied, setActionCopied] = useState(false);
@@ -357,8 +361,8 @@ export function ReportView(props: {
   const { projected, domain, publicId, allDomains = [] } = props;
 
   const isFreeViewer = props.viewerPlan === "FREE" || (props.currentPlanKey || "").toUpperCase() === "FREE" || (!props.currentPlanKey && (!props.coverageLimit || props.coverageLimit <= 10));
-  const pagesCrawledActual = props.pagesCrawledCount || props.coverageUsed || 1;
-  const coverageUsed = Math.max(pagesCrawledActual, props.coverageUsed ?? 0);
+  const pagesCrawledActual = props.pagesCrawledCount || 1;
+  const coverageUsed = props.coverageUsed ?? 0;
   const totalDetected = Math.max(pagesCrawledActual, props.totalDetectedUrls ?? (isFreeViewer ? 10 : 100));
   const rawCoverageLimit = props.coverageLimit ?? (isFreeViewer ? 10 : 100);
   const coverageLimit = isFreeViewer ? 10 : rawCoverageLimit;
@@ -580,20 +584,30 @@ export function ReportView(props: {
             )}
             <button
               type="button"
-              onClick={() => setSelectedFixIssue(isExpanded ? null : issue)}
+              onClick={() => setDrawerIssue(issue)}
               className="text-xs sm:text-[13px] font-medium text-[#2563eb] hover:underline cursor-pointer text-left shrink-0 outline-none focus:outline-none focus:ring-0"
             >
               {unit}
             </button>
-            <span className="text-xs sm:text-[13px] text-slate-800 font-normal">
+            <span
+              onClick={() => setDrawerIssue(issue)}
+              className="text-xs sm:text-[13px] text-slate-800 font-normal hover:text-indigo-900 cursor-pointer"
+            >
               {text}
             </span>
             <button
               type="button"
-              onClick={() => setSelectedFixIssue(isExpanded ? null : issue)}
+              onClick={() => setDrawerIssue(issue)}
               className="text-xs text-slate-400 hover:text-slate-700 underline decoration-dotted ml-1.5 cursor-pointer shrink-0 outline-none focus:outline-none focus:ring-0"
             >
               How to fix
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedFixIssue(isExpanded ? null : issue)}
+              className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold ml-2 cursor-pointer shrink-0"
+            >
+              {isExpanded ? "Hide Summary" : "Quick Summary"}
             </button>
           </div>
 
@@ -655,28 +669,49 @@ export function ReportView(props: {
                       Work on the project with co-workers and keep everything organized
                     </p>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const url = typeof window !== "undefined" ? window.location.href : "";
-                        navigator.clipboard.writeText(url);
-                        setShareCopied(true);
-                        setTimeout(() => setShareCopied(false), 2000);
-                      }}
-                      className="inline-flex items-center gap-1.5 rounded-[8px] border border-slate-300 bg-white hover:bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors shadow-2xs cursor-pointer outline-none focus:outline-none focus:ring-0"
-                    >
-                      {shareCopied ? (
-                        <>
-                          <Check className="h-3.5 w-3.5 text-emerald-600" />
-                          <span>Copied link!</span>
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="h-3.5 w-3.5 text-slate-600" />
-                          <span>Share</span>
-                        </>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setDrawerIssue(issue)}
+                        className="inline-flex items-center gap-1.5 rounded-[8px] bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 text-xs font-bold transition-colors shadow-2xs cursor-pointer"
+                      >
+                        <Code className="h-3.5 w-3.5" />
+                        <span>View Evidence &amp; Code Fix →</span>
+                      </button>
+
+                      {(issue.title.toLowerCase().includes("schema") || issue.title.toLowerCase().includes("structured data") || (issue.category && issue.category.toLowerCase().includes("schema"))) && (
+                        <Link
+                          href={`/dashboard/schema?url=${encodeURIComponent(issue.fixUrl || domain)}`}
+                          className="inline-flex items-center gap-1.5 rounded-[8px] bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 text-xs font-bold transition-colors shadow-2xs"
+                        >
+                          <FileCode className="h-3.5 w-3.5" />
+                          <span>Generate Schema Fix</span>
+                        </Link>
                       )}
-                    </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = typeof window !== "undefined" ? window.location.href : "";
+                          navigator.clipboard.writeText(url);
+                          setShareCopied(true);
+                          setTimeout(() => setShareCopied(false), 2000);
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-[8px] border border-slate-300 bg-white hover:bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors shadow-2xs cursor-pointer outline-none focus:outline-none focus:ring-0"
+                      >
+                        {shareCopied ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 text-emerald-600" />
+                            <span>Copied link!</span>
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="h-3.5 w-3.5 text-slate-600" />
+                            <span>Share</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1666,6 +1701,15 @@ export function ReportView(props: {
       )}
         </>
       )}
+
+      {/* ISSUE DIAGNOSTIC & CODE FIX DRAWER */}
+      <IssueDetailDrawer
+        isOpen={!!drawerIssue}
+        onClose={() => setDrawerIssue(null)}
+        issue={drawerIssue}
+        domain={domain}
+        onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
+      />
 
       {/* UPGRADE PLAN MODAL */}
       <UpgradePlanModal
