@@ -3,17 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
-  ExternalLink,
   X,
   RotateCw,
-  Bell,
   ArrowRight,
-  Layers,
 } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
 
 export type LiveAudit = {
   id: string;
@@ -42,7 +37,6 @@ export function RealtimeAuditNotifier({
 }: {
   onUnreadCountChange?: (count: number) => void;
 }) {
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [activeAudits, setActiveAudits] = useState<LiveAudit[]>([]);
   const [liveToast, setLiveToast] = useState<{
@@ -150,7 +144,7 @@ export function RealtimeAuditNotifier({
             const newest = data.notifications[0];
             if (newest && !newest.readAt && !seenNotifIdsRef.current.has(newest.id)) {
               seenNotifIdsRef.current.add(newest.id);
-              let destUrl = newest.linkUrl || "/dashboard";
+              const destUrl = newest.linkUrl || "/dashboard";
               setLiveToast({
                 id: newest.id,
                 title: newest.title,
@@ -166,7 +160,7 @@ export function RealtimeAuditNotifier({
         }
 
         prevActiveIdsRef.current = currentActiveIds;
-      } catch (e) {
+      } catch {
         // Silently handle transient poll network errors
       } finally {
         if (!isCancelled) {
