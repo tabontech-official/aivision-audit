@@ -107,7 +107,7 @@ export function AnalysisProgress({
           setProgress(100);
           setStageIndex(STAGES.length);
           setTimeout(() => {
-            if (!cancelled) router.push(`/dashboard?project=${encodeURIComponent(domain)}`);
+            if (!cancelled) router.push(`/dashboard/reports/${publicId}?tab=compare`);
           }, 900);
           return;
         }

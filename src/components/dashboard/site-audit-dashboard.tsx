@@ -1224,7 +1224,7 @@ export function SiteAuditDashboard({
           {/* Compare (What Changed) Button */}
           {reportPublicId && (
             <Link
-              href={`/dashboard/reports/${reportPublicId}/compare`}
+              href={`/dashboard/reports/${reportPublicId}?tab=compare`}
               className="inline-flex items-center gap-1.5 rounded-[8px] border border-indigo-200 bg-indigo-50/90 px-3.5 py-2 text-xs font-bold text-indigo-950 shadow-2xs hover:bg-indigo-100 hover:border-indigo-300 transition-colors cursor-pointer font-lazzer"
               title="View what changed since previous audit"
             >
@@ -1477,7 +1477,7 @@ export function SiteAuditDashboard({
                   </div>
                   {reportPublicId && (
                     <Link
-                      href={`/dashboard/reports/${reportPublicId}/compare`}
+                      href={`/dashboard/reports/${reportPublicId}?tab=compare`}
                       className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
                     >
                       What changed &rarr;

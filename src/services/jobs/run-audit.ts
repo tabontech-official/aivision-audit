@@ -747,7 +747,7 @@ export async function runAudit(reportId: string): Promise<void> {
           type: "REPORT_READY",
           title: `Audit Completed: ${targetHost}`,
           body: `Overall score: ${summary.overallScore}/100 (${summary.grade}). ${summary.passedCount} checks passed, ${summary.failedCount} issues detected.`,
-          linkUrl: `/dashboard?project=${encodeURIComponent(targetHost)}`,
+          linkUrl: `/dashboard/reports/${report.publicId}?tab=compare`,
         },
       }).catch(() => undefined);
     }

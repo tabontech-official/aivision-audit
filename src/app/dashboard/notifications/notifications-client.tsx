@@ -291,7 +291,13 @@ export function NotificationsClient({
                 <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                   {item.linkUrl && (
                     <Link
-                      href={item.linkUrl}
+                      href={
+                        item.linkUrl.startsWith("/dashboard/reports/") && !item.linkUrl.includes("tab=")
+                          ? item.linkUrl.includes("?")
+                            ? `${item.linkUrl}&tab=compare`
+                            : `${item.linkUrl}?tab=compare`
+                          : item.linkUrl
+                      }
                       onClick={() => {
                         if (isUnread) handleMarkRead(item.id);
                       }}

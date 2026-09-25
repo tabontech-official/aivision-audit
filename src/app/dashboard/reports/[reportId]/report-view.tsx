@@ -335,9 +335,10 @@ export function ReportView(props: {
       rows: Array<{ id: string; name: string; section: string; sectionSlug: string; severity: string; note?: string | null }>;
     }>;
   } | null;
+  initialTab?: "CURRENT" | "COMPARE";
 }) {
   const router = useRouter();
-  const [activeReportTab, setActiveReportTab] = useState<"CURRENT" | "COMPARE">("CURRENT");
+  const [activeReportTab, setActiveReportTab] = useState<"CURRENT" | "COMPARE">(props.initialTab || "CURRENT");
   const [isPending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -954,7 +955,14 @@ export function ReportView(props: {
         <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
           <button
             type="button"
-            onClick={() => setActiveReportTab("CURRENT")}
+            onClick={() => {
+              setActiveReportTab("CURRENT");
+              if (typeof window !== "undefined") {
+                const url = new URL(window.location.href);
+                url.searchParams.delete("tab");
+                window.history.replaceState(null, "", url.pathname + (url.search ? url.search : ""));
+              }
+            }}
             className={cn(
               "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer",
               activeReportTab === "CURRENT"
@@ -968,7 +976,14 @@ export function ReportView(props: {
 
           <button
             type="button"
-            onClick={() => setActiveReportTab("COMPARE")}
+            onClick={() => {
+              setActiveReportTab("COMPARE");
+              if (typeof window !== "undefined") {
+                const url = new URL(window.location.href);
+                url.searchParams.set("tab", "compare");
+                window.history.replaceState(null, "", url.pathname + "?" + url.searchParams.toString());
+              }
+            }}
             className={cn(
               "inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer",
               activeReportTab === "COMPARE"

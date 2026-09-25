@@ -16,12 +16,13 @@ export default async function ReportDetailPage({
   searchParams,
 }: {
   params: Promise<{ reportId: string }>;
-  searchParams?: Promise<{ section?: string }>;
+  searchParams?: Promise<{ section?: string; tab?: string }>;
 }) {
   const user = await requireUser();
   const { reportId: publicId } = await params;
   const resolvedSearchParams = (await searchParams) ?? {};
   const targetSection = resolvedSearchParams.section;
+  const initialTab = resolvedSearchParams.tab?.toLowerCase() === "compare" ? "COMPARE" : "CURRENT";
 
   if (!publicId || publicId.length > 40) notFound();
 
@@ -319,6 +320,7 @@ export default async function ReportDetailPage({
       coverageCompleted={report.coverageCompleted ?? undefined}
       currentPlanKey={report.currentPlanKey ?? undefined}
       comparisonData={comparisonPayload}
+      initialTab={initialTab}
     />
   );
 }
