@@ -38,6 +38,7 @@ import { recheckIssueAction } from "@/app/dashboard/websites/[id]/actions";
 import { StopAuditButton } from "@/components/dashboard/stop-audit-button";
 import { DashboardLiveAuditBanner } from "@/components/dashboard/dashboard-live-audit-banner";
 import { UpgradePlanModal } from "@/components/dashboard/upgrade-plan-modal";
+import { AuditUpgradeBanner } from "@/components/dashboard/audit-upgrade-banner";
 
 export interface IssueItem {
   id: string;
@@ -1223,70 +1224,23 @@ export function SiteAuditDashboard({
       )}
 
       {/* AUDIT SCOPE & COVERAGE BANNER (Shown when audit is completed and additional pages or plan limits exist) */}
-      {!isRunning && hasMoreAvailableUnderPlan ? (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-emerald-200/90 bg-[#f0fdf9] p-4 shadow-2xs animate-in fade-in-50 duration-200">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 mt-0.5">
-              <Layers className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-slate-900 text-sm sm:text-base">
-                  Total Crawled: {coverageUsed.toLocaleString()} · {coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used
-                </span>
-                <span className="rounded-full bg-emerald-100/80 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold">
-                  {planCreditsRemaining.toLocaleString()} plan credits remaining
-                </span>
-                <span className="rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 text-[11px] font-medium">
-                  {siteRemaining.toLocaleString()} uncrawled pages
-                </span>
-              </div>
-              <p className="mt-0.5 text-xs text-slate-600">
-                Initial crawl completed. Your plan has <strong>{planCreditsRemaining.toLocaleString()}</strong> remaining credits to crawl {additionalPossible.toLocaleString()} more unique pages on this website.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleContinueAudit}
-            disabled={isContinuing}
-            className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 disabled:opacity-60 outline-none focus:outline-none focus:ring-0"
-          >
-            <RotateCw className={cn("h-3.5 w-3.5", isContinuing && "animate-spin")} />
-            <span>{isContinuing ? "Crawling Pages..." : `Continue Crawl: Analyse ${additionalPossible.toLocaleString()} More Pages`}</span>
-          </button>
-        </div>
-      ) : !isRunning && planLimitReached ? (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-amber-200/90 bg-amber-50/70 p-4 shadow-2xs animate-in fade-in-50 duration-200">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 mt-0.5">
-              <AlertTriangle className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-slate-900 text-sm sm:text-base">
-                  Plan limit reached ({coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used)
-                </span>
-                <span className="rounded-full bg-amber-100 text-amber-900 border border-amber-200 px-2.5 py-0.5 text-[11px] font-bold">
-                  {siteRemaining.toLocaleString()} pages remaining
-                </span>
-              </div>
-              <p className="mt-0.5 text-xs text-slate-600">
-                You have reached your monthly crawl limit. Upgrade your plan to crawl more pages.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsUpgradeModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 outline-none focus:outline-none focus:ring-0"
-          >
-            <span>Upgrade Plan</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
+      {!isRunning && siteRemaining > 0 ? (
+        <AuditUpgradeBanner
+          domain={domain}
+          healthScore={overallScore}
+          criticalIssues={failedCount}
+          highIssues={warningCount}
+          totalIssues={topIssues.length > 0 ? topIssues.length : (failedCount + warningCount)}
+          pagesCrawled={pagesCrawled || coverageUsed || 1}
+          totalDetectedPages={totalDetected}
+          siteRemaining={siteRemaining}
+          planCreditsRemaining={planCreditsRemaining}
+          hasMoreAvailableUnderPlan={hasMoreAvailableUnderPlan}
+          planLimitReached={planLimitReached}
+          isContinuing={isContinuing}
+          onContinueAudit={handleContinueAudit}
+          onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
+        />
       ) : null}
 
       {/* 1. TOP HEADER & METADATA BAR (Semrush Style) */}
@@ -2800,6 +2754,16 @@ export function SiteAuditDashboard({
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
         reason={rerunNotice?.message}
+        auditSummary={{
+          domain,
+          healthScore: overallScore,
+          criticalIssues: failedCount,
+          highIssues: warningCount,
+          totalIssues: topIssues.length > 0 ? topIssues.length : (failedCount + warningCount),
+          pagesCrawled: pagesCrawled || coverageUsed || 1,
+          totalDetectedPages: totalDetected,
+          siteRemaining,
+        }}
       />
     </div>
   );
