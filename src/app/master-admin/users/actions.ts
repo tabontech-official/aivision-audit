@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { auth } from "@/lib/auth/auth";
 import { adminChangeUserPlan } from "@/services/billing/subscriptions";
 import { logAdminActivity } from "@/services/audit-log/log";
+import { hardDeleteUserAndAllData } from "@/services/users/delete";
 
 export type UserAdminResult = { ok: true; message?: string } | { ok: false; error: string };
 
@@ -94,9 +95,7 @@ export async function updateUserAction(input: unknown): Promise<UserAdminResult>
 const deleteSchema = z.object({ userId: z.string().uuid() });
 
 /**
- * Soft-deletes a user: stamps deletedAt (every query filters on it) and revokes
- * their sessions so access ends immediately rather than at token expiry.
- * The row is kept so reports, payments, and audit history stay attributable.
+ * Permanently deletes a user and all their associated data from the database.
  */
 export async function deleteUserAction(input: unknown): Promise<UserAdminResult> {
   const session = await auth();
@@ -113,7 +112,7 @@ export async function deleteUserAction(input: unknown): Promise<UserAdminResult>
   }
 
   const target = await db.user.findUnique({ where: { id: userId } });
-  if (!target || target.deletedAt) return { ok: false, error: "User not found." };
+  if (!target) return { ok: false, error: "User not found." };
 
   if (target.role === "MASTER_ADMIN") {
     const adminCount = await db.user.count({
@@ -124,20 +123,16 @@ export async function deleteUserAction(input: unknown): Promise<UserAdminResult>
     }
   }
 
-  const now = new Date();
-  await db.$transaction([
-    db.user.update({ where: { id: userId }, data: { deletedAt: now } }),
-    db.session.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: now } }),
-  ]);
+  await hardDeleteUserAndAllData(userId);
 
   await logAdminActivity({
     actorId: session.user.id,
     action: "user.delete",
     entityType: "user",
     entityId: userId,
-    before: { email: target.email, role: target.role, plan: target.plan, deletedAt: null },
-    after: { deletedAt: now.toISOString() },
+    before: { email: target.email, role: target.role, plan: target.plan },
+    after: { deleted: true },
   });
   revalidatePath("/master-admin/users");
-  return { ok: true, message: `${target.email} has been deleted.` };
+  return { ok: true, message: `${target.email} and all associated data have been permanently deleted.` };
 }

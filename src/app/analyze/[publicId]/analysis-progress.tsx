@@ -20,6 +20,7 @@ import {
   XCircle,
   Layers,
   ArrowRight,
+  ArrowLeft,
   LayoutDashboard,
   KeyRound,
 } from "lucide-react";
@@ -107,7 +108,7 @@ export function AnalysisProgress({
           setProgress(100);
           setStageIndex(STAGES.length);
           setTimeout(() => {
-            if (!cancelled) router.push(`/dashboard/reports/${publicId}?tab=compare`);
+            if (!cancelled) router.push(`/dashboard/reports/${publicId}`);
           }, 900);
           return;
         }
@@ -156,7 +157,27 @@ export function AnalysisProgress({
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-[#dff2ed] px-4 py-12 font-lazzer relative selection:bg-slate-200">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-[#dff2ed] px-4 pt-20 pb-12 font-lazzer relative selection:bg-slate-200">
+      {/* Top Navigation Header: Back to Dashboard + Background info */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-8 py-3.5 backdrop-blur-md bg-[#dff2ed]/85 border-b border-slate-200/50 font-lazzer">
+        <Link
+          href={`/dashboard?project=${encodeURIComponent(domain)}`}
+          className="inline-flex items-center gap-2 rounded-xl bg-white/90 hover:bg-white text-slate-800 hover:text-slate-950 px-3.5 py-2 text-xs font-bold border border-slate-200/80 shadow-2xs transition-all cursor-pointer"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to Dashboard</span>
+        </Link>
+
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white/90 border border-slate-200/80 px-3.5 py-1.5 rounded-xl shadow-2xs">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+          </span>
+          <span className="hidden sm:inline">Audit continues in background</span>
+          <span className="sm:hidden">Running in background</span>
+        </div>
+      </header>
+
       {/* Background ambient lighting */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/40 rounded-full blur-3xl pointer-events-none -z-0" />
 

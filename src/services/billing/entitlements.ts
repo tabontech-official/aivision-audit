@@ -222,6 +222,7 @@ export async function getUserPlanConfig(userId: string): Promise<PlanConfig> {
       periodEnd = new Date(activeSub.currentPeriodEnd);
     }
     const plan = activeSub.plan;
+    const isSubFree = (plan.key || "").toUpperCase() === "FREE";
     return {
       planId: plan.id,
       planKey: plan.key,
@@ -229,8 +230,8 @@ export async function getUserPlanConfig(userId: string): Promise<PlanConfig> {
       priceMonthlyCents: plan.priceMonthlyCents,
       priceYearlyCents: plan.priceYearlyCents,
       currency: plan.currency,
-      pageAuditLimit: plan.pageAuditLimit ?? 100,
-      initialSampleSize: plan.initialSampleSize ?? 30,
+      pageAuditLimit: isSubFree ? 10 : (plan.pageAuditLimit ?? 100),
+      initialSampleSize: isSubFree ? 10 : (plan.initialSampleSize ?? 30),
       websiteLimit: plan.websiteLimit ?? 1,
       schemaMonthlyLimit: plan.schemaMonthlyLimit ?? 25,
       schemaBuilderEnabled: plan.schemaBuilderEnabled ?? true,
@@ -262,6 +263,8 @@ export async function getUserPlanConfig(userId: string): Promise<PlanConfig> {
     plan = await db.plan.findUnique({ where: { key: "FREE" } });
   }
 
+  const isFree = planKey === "FREE" || (plan?.key || "").toUpperCase() === "FREE";
+
   return {
     planId: plan?.id || "default-free",
     planKey: plan?.key || "FREE",
@@ -269,17 +272,17 @@ export async function getUserPlanConfig(userId: string): Promise<PlanConfig> {
     priceMonthlyCents: plan?.priceMonthlyCents ?? 0,
     priceYearlyCents: plan?.priceYearlyCents ?? 0,
     currency: plan?.currency || "usd",
-    pageAuditLimit: plan?.pageAuditLimit ?? (planKey === "FREE" ? 10 : 1000),
-    initialSampleSize: plan?.initialSampleSize ?? (planKey === "FREE" ? 10 : 50),
-    websiteLimit: plan?.websiteLimit ?? (planKey === "FREE" ? 1 : 5),
-    schemaMonthlyLimit: plan?.schemaMonthlyLimit ?? (planKey === "FREE" ? 3 : 100),
+    pageAuditLimit: isFree ? 10 : (plan?.pageAuditLimit ?? 1000),
+    initialSampleSize: isFree ? 10 : (plan?.initialSampleSize ?? 50),
+    websiteLimit: plan?.websiteLimit ?? (isFree ? 1 : 5),
+    schemaMonthlyLimit: plan?.schemaMonthlyLimit ?? (isFree ? 3 : 100),
     schemaBuilderEnabled: plan?.schemaBuilderEnabled ?? true,
-    auditHistoryRetentionDays: plan?.auditHistoryRetentionDays ?? (planKey === "FREE" ? 7 : 90),
-    scheduledAuditsEnabled: plan?.scheduledAuditsEnabled ?? (planKey !== "FREE"),
-    scheduledAuditFrequency: plan?.scheduledAuditFrequency || (planKey === "FREE" ? "DISABLED" : "WEEKLY"),
+    auditHistoryRetentionDays: plan?.auditHistoryRetentionDays ?? (isFree ? 7 : 90),
+    scheduledAuditsEnabled: plan?.scheduledAuditsEnabled ?? !isFree,
+    scheduledAuditFrequency: plan?.scheduledAuditFrequency || (isFree ? "DISABLED" : "WEEKLY"),
     reAuditEnabled: plan?.reAuditEnabled ?? true,
-    auditComparisonEnabled: plan?.auditComparisonEnabled ?? (planKey !== "FREE"),
-    auditLimitPerMonth: plan?.auditLimitPerMonth ?? (planKey === "FREE" ? 3 : 50),
+    auditComparisonEnabled: plan?.auditComparisonEnabled ?? !isFree,
+    auditLimitPerMonth: plan?.auditLimitPerMonth ?? (isFree ? 3 : 50),
     auditLimitType: plan?.auditLimitType || "MONTHLY",
     auditResetPeriod: plan?.auditResetPeriod || "MONTHLY",
     periodStart,

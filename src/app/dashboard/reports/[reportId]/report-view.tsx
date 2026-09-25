@@ -353,9 +353,11 @@ export function ReportView(props: {
 
   const { projected, domain, publicId, allDomains = [] } = props;
 
-  const totalDetected = props.totalDetectedUrls ?? props.pagesCrawledCount ?? 1;
+  const isFreeViewer = props.viewerPlan === "FREE" || (props.currentPlanKey || "").toUpperCase() === "FREE" || (!props.currentPlanKey && (!props.coverageLimit || props.coverageLimit <= 10));
+  const totalDetected = props.totalDetectedUrls ?? props.pagesCrawledCount ?? (isFreeViewer ? 10 : 100);
   const coverageUsed = props.coverageUsed ?? props.pagesCrawledCount ?? 1;
-  const coverageLimit = props.coverageLimit ?? 100;
+  const rawCoverageLimit = props.coverageLimit ?? (isFreeViewer ? 10 : 100);
+  const coverageLimit = isFreeViewer ? 10 : rawCoverageLimit;
   const planCreditsRemaining = Math.max(0, coverageLimit - coverageUsed);
   const siteRemaining = Math.max(0, totalDetected - coverageUsed);
   const additionalPossible = Math.min(planCreditsRemaining, siteRemaining);
@@ -816,6 +818,72 @@ export function ReportView(props: {
 
   return (
     <div className="space-y-5 pb-12 font-lazzer text-slate-800">
+      {/* AUDIT SCOPE & COVERAGE BANNER */}
+      {hasMoreAvailableUnderPlan ? (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-emerald-200/90 bg-[#f0fdf9] p-4 shadow-2xs animate-in fade-in-50 duration-200">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 mt-0.5">
+              <Layers className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-slate-900 text-sm sm:text-base">
+                  Total Crawled: {coverageUsed.toLocaleString()} · {coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used
+                </span>
+                <span className="rounded-full bg-emerald-100/80 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold">
+                  {planCreditsRemaining.toLocaleString()} plan credits remaining
+                </span>
+                <span className="rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 text-[11px] font-medium">
+                  {siteRemaining.toLocaleString()} uncrawled pages
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-slate-600">
+                Initial crawl completed. Your plan has <strong>{planCreditsRemaining.toLocaleString()}</strong> remaining credits to crawl {additionalPossible.toLocaleString()} more unique pages on this website.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleContinueAudit}
+            disabled={isContinuing}
+            className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 disabled:opacity-60 outline-none focus:outline-none focus:ring-0"
+          >
+            <RotateCw className={cn("h-3.5 w-3.5", isContinuing && "animate-spin")} />
+            <span>{isContinuing ? "Crawling Pages..." : `Continue Crawl: Analyse ${additionalPossible.toLocaleString()} More Pages`}</span>
+          </button>
+        </div>
+      ) : planLimitReached ? (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-amber-200/90 bg-amber-50/70 p-4 shadow-2xs animate-in fade-in-50 duration-200">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 mt-0.5">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-slate-900 text-sm sm:text-base">
+                  Plan limit reached ({coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used)
+                </span>
+                <span className="rounded-full bg-amber-100 text-amber-900 border border-amber-200 px-2.5 py-0.5 text-[11px] font-bold">
+                  {siteRemaining.toLocaleString()} pages remaining
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-slate-600">
+                You have reached your monthly crawl limit. Upgrade your plan to crawl more pages.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/pricing"
+            className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 outline-none focus:outline-none focus:ring-0"
+          >
+            <span>Upgrade Plan</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      ) : null}
+
       {/* 1. TOP HEADER & METADATA BAR (Semrush Style) */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between border-b border-slate-200/70 pb-4">
         {/* Left Title & Meta Line */}
@@ -872,7 +940,7 @@ export function ReportView(props: {
           </div>
 
           {/* Meta Details Row */}
-          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 font-medium">
+          <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-2.5 text-xs text-slate-500 font-medium">
             <span className="font-semibold text-slate-700">{domain || "domain.com"}</span>
             <span>
               Updated:{" "}
@@ -887,19 +955,19 @@ export function ReportView(props: {
               <Laptop className="h-3.5 w-3.5 text-slate-400" />
               <span>Desktop</span>
             </span>
-            <span>
-              Pages crawled: <strong className="font-semibold text-slate-800">{coverageUsed.toLocaleString()} / {totalDetected.toLocaleString()}</strong>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100/90 text-slate-700 border border-slate-200/80 font-medium">
+              Pages crawled: <strong className="font-bold text-slate-900">{(props.pagesCrawledCount || 1).toLocaleString()} / {totalDetected.toLocaleString()}</strong>
             </span>
-            <span>
-              Usage: <strong className="font-semibold text-slate-800">{coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used</strong>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-50/80 text-indigo-900 border border-indigo-200/70 font-medium">
+              Usage: <strong className="font-bold text-indigo-950">{coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()}</strong> credits used
             </span>
             {planCreditsRemaining > 0 ? (
-              <span>
-                Remaining: <strong className="font-semibold text-slate-800">{planCreditsRemaining.toLocaleString()} credits</strong>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50/80 text-emerald-900 border border-emerald-200/70 font-medium">
+                Remaining: <strong className="font-bold text-emerald-700">{planCreditsRemaining.toLocaleString()} credits</strong>
               </span>
             ) : (
-              <span className="text-amber-600 font-semibold">
-                Remaining: 0 credits
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-50/80 text-amber-900 border border-amber-200/70 font-semibold">
+                Remaining: <strong className="font-bold text-amber-700">0 credits</strong>
               </span>
             )}
           </div>
@@ -1309,71 +1377,6 @@ export function ReportView(props: {
       ) : (
         /* TAB CONTENT: CURRENT REPORT VIEW */
         <>
-      {/* AUDIT SCOPE & COVERAGE BANNER */}
-      {hasMoreAvailableUnderPlan ? (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-emerald-200/90 bg-[#f0fdf9] p-4 shadow-2xs animate-in fade-in-50 duration-200">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 mt-0.5">
-              <Layers className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-slate-900 text-sm sm:text-base">
-                  Total Crawled: {coverageUsed.toLocaleString()} · {coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used
-                </span>
-                <span className="rounded-full bg-emerald-100/80 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold">
-                  {planCreditsRemaining.toLocaleString()} plan credits remaining
-                </span>
-                <span className="rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 text-[11px] font-medium">
-                  {siteRemaining.toLocaleString()} uncrawled pages
-                </span>
-              </div>
-              <p className="mt-0.5 text-xs text-slate-600">
-                Initial crawl completed. Your plan has <strong>{planCreditsRemaining.toLocaleString()}</strong> remaining credits to crawl {additionalPossible.toLocaleString()} more unique pages on this website.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleContinueAudit}
-            disabled={isContinuing}
-            className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 disabled:opacity-60 outline-none focus:outline-none focus:ring-0"
-          >
-            <RotateCw className={cn("h-3.5 w-3.5", isContinuing && "animate-spin")} />
-            <span>{isContinuing ? "Crawling Pages..." : `Continue Crawl: Analyse ${additionalPossible.toLocaleString()} More Pages`}</span>
-          </button>
-        </div>
-      ) : planLimitReached ? (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-amber-200/90 bg-amber-50/70 p-4 shadow-2xs animate-in fade-in-50 duration-200">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 mt-0.5">
-              <AlertTriangle className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-slate-900 text-sm sm:text-base">
-                  Plan limit reached ({coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used)
-                </span>
-                <span className="rounded-full bg-amber-100 text-amber-900 border border-amber-200 px-2.5 py-0.5 text-[11px] font-bold">
-                  {siteRemaining.toLocaleString()} pages remaining
-                </span>
-              </div>
-              <p className="mt-0.5 text-xs text-slate-600">
-                You have reached your monthly crawl limit. Upgrade your plan to crawl more pages.
-              </p>
-            </div>
-          </div>
-
-          <Link
-            href="/pricing"
-            className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 outline-none focus:outline-none focus:ring-0"
-          >
-            <span>Upgrade Plan</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-      ) : null}
 
       {rerunNotice && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900 animate-in fade-in-50 duration-200">

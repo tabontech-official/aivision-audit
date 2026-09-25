@@ -92,6 +92,12 @@ export function RealtimeAuditNotifier({
           }
         });
 
+        const recentReportsMap = new Map<string, string>();
+        (data as unknown as { recentReports?: Array<{ id: string; publicId: string; status: string }> }).recentReports?.forEach((r) => {
+          if (r.id) recentReportsMap.set(r.id, r.status);
+          if (r.publicId) recentReportsMap.set(r.publicId, r.status);
+        });
+
         const currentActiveIds = new Set(data.activeAudits.map((a) => a.id));
 
         // Check for audits that finished in this session
@@ -99,25 +105,25 @@ export function RealtimeAuditNotifier({
           for (const prevId of prevActiveIdsRef.current) {
             if (!currentActiveIds.has(prevId)) {
               const auditPublicId = idToPublicIdRef.current.get(prevId);
+              const finishedStatus = recentReportsMap.get(prevId) || (auditPublicId ? recentReportsMap.get(auditPublicId) : null);
+
+              // If the audit was cancelled, stopped, or failed, do NOT show "Site Audit Completed!"
+              if (finishedStatus === "FAILED") {
+                continue;
+              }
+
               // Audit has finished! Look for its notification
               const matchingNotif = data.notifications?.find(
-                (n) => n.linkUrl?.includes(prevId) || (auditPublicId && n.linkUrl?.includes(auditPublicId)) || n.type === "REPORT_READY",
+                (n) => (n.linkUrl?.includes(prevId) || (auditPublicId && n.linkUrl?.includes(auditPublicId))) && n.type === "REPORT_READY",
               );
 
+              // Navigate to Report tab
               let destinationUrl = auditPublicId
-                ? `/dashboard/reports/${auditPublicId}?tab=compare`
+                ? `/dashboard/reports/${auditPublicId}`
                 : "/dashboard";
 
               if (matchingNotif?.linkUrl) {
-                destinationUrl = matchingNotif.linkUrl.includes("/dashboard/reports/")
-                  ? matchingNotif.linkUrl.includes("tab=")
-                    ? matchingNotif.linkUrl
-                    : matchingNotif.linkUrl.includes("?")
-                    ? `${matchingNotif.linkUrl}&tab=compare`
-                    : `${matchingNotif.linkUrl}?tab=compare`
-                  : auditPublicId
-                  ? `/dashboard/reports/${auditPublicId}?tab=compare`
-                  : matchingNotif.linkUrl;
+                destinationUrl = matchingNotif.linkUrl;
               }
 
               if (matchingNotif && !seenNotifIdsRef.current.has(matchingNotif.id)) {
@@ -128,11 +134,11 @@ export function RealtimeAuditNotifier({
                   body: matchingNotif.body,
                   linkUrl: destinationUrl,
                 });
-              } else {
+              } else if (finishedStatus === "COMPLETED" || finishedStatus === "PARTIAL") {
                 setLiveToast({
                   id: `audit-${prevId}-${Date.now()}`,
                   title: "Site Audit Completed!",
-                  body: "Your website audit has finished processing. Check out what changed.",
+                  body: "Your website audit has finished processing. Check out your report.",
                   linkUrl: destinationUrl,
                 });
               }
@@ -145,9 +151,6 @@ export function RealtimeAuditNotifier({
             if (newest && !newest.readAt && !seenNotifIdsRef.current.has(newest.id)) {
               seenNotifIdsRef.current.add(newest.id);
               let destUrl = newest.linkUrl || "/dashboard";
-              if (destUrl.startsWith("/dashboard/reports/") && !destUrl.includes("tab=")) {
-                destUrl = destUrl.includes("?") ? `${destUrl}&tab=compare` : `${destUrl}?tab=compare`;
-              }
               setLiveToast({
                 id: newest.id,
                 title: newest.title,

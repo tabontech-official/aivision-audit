@@ -686,6 +686,22 @@ export async function runAudit(reportId: string): Promise<void> {
     const psiFailed = !psi.mobile && !psi.desktop;
     const totalDuration = Date.now() - startTime;
 
+    // Check if this is the user's first audit (100% free of charge with 0 credits deducted)
+    let isFirstAudit = false;
+    if (report.userId) {
+      const prevCompleted = await db.report.count({
+        where: {
+          userId: report.userId,
+          status: { in: ["COMPLETED", "PARTIAL"] },
+          id: { not: report.id },
+        },
+      });
+      isFirstAudit = prevCompleted === 0;
+    }
+
+    const recordedCoverageUsed = isFirstAudit ? 0 : finalInitialCoverage;
+    const recordedCoverageRemaining = isFirstAudit ? pageLimit : Math.max(0, Math.min(pageLimit - finalInitialCoverage, totalDetected - finalInitialCoverage));
+
     await db.report.update({
       where: { id: reportId },
       data: {
@@ -703,8 +719,8 @@ export async function runAudit(reportId: string): Promise<void> {
         criticalIssueCount: summary.criticalIssueCount,
         totalDetectedUrls: totalDetected,
         coverageLimit: pageLimit,
-        coverageUsed: finalInitialCoverage,
-        coverageRemaining: Math.max(0, Math.min(pageLimit - finalInitialCoverage, totalDetected - finalInitialCoverage)),
+        coverageUsed: recordedCoverageUsed,
+        coverageRemaining: recordedCoverageRemaining,
         initialSampleSize: initialSample,
         coverageCompleted: finalInitialCoverage >= pageLimit || finalInitialCoverage >= totalDetected,
         currentPlanKey: userPlanKey,
@@ -720,21 +736,21 @@ export async function runAudit(reportId: string): Promise<void> {
     await logExecution({
       level: "INFO",
       category: "AUDIT_PIPELINE",
-      message: `Audit pipeline COMPLETED successfully in ${totalDuration}ms (Overall score: ${summary.overallScore}/100, Grade: ${summary.grade})`,
+      message: `Audit pipeline COMPLETED successfully in ${totalDuration}ms (Overall score: ${summary.overallScore}/100, Grade: ${summary.grade}${isFirstAudit ? " - FREE FIRST AUDIT" : ""})`,
       reportId,
       websiteUrl: page.finalUrl,
       durationMs: totalDuration,
       meta: { overallScore: summary.overallScore, grade: summary.grade, status: psiFailed ? "PARTIAL" : "COMPLETED" },
     });
 
-    // Record audit page consumption in usage ledger
-    if (report.userId) {
+    // Record audit page consumption in usage ledger (First audit is 100% free: 0 credits deducted)
+    if (report.userId && !isFirstAudit) {
       await recordAuditPageUsage({
         userId: report.userId,
         websiteId: report.websiteId,
         reportId: report.id,
         pagesCount: finalInitialCoverage,
-        description: `Initial audit crawl of ${finalInitialCoverage} pages for ${page.finalUrl}`,
+        description: `Audit crawl of ${finalInitialCoverage} pages for ${page.finalUrl}`,
       }).catch((err) => console.error("Failed to record audit page usage ledger:", err));
     }
 
@@ -747,7 +763,7 @@ export async function runAudit(reportId: string): Promise<void> {
           type: "REPORT_READY",
           title: `Audit Completed: ${targetHost}`,
           body: `Overall score: ${summary.overallScore}/100 (${summary.grade}). ${summary.passedCount} checks passed, ${summary.failedCount} issues detected.`,
-          linkUrl: `/dashboard/reports/${report.publicId}?tab=compare`,
+          linkUrl: `/dashboard/reports/${report.publicId}`,
         },
       }).catch(() => undefined);
     }

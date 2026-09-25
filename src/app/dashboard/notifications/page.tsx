@@ -56,7 +56,7 @@ export default async function NotificationsPage() {
             type,
             title,
             body,
-            linkUrl: `/dashboard/reports/${r.publicId}?tab=compare`,
+            linkUrl: `/dashboard/reports/${r.publicId}`,
             createdAt: r.createdAt,
           },
         }).catch(() => null);

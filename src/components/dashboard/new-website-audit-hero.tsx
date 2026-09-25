@@ -13,7 +13,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
-import { rescanWebsiteAction } from "@/app/dashboard/reports/actions";
+import { claimWelcomeRewardAndRunAuditAction, rescanWebsiteAction } from "@/app/dashboard/reports/actions";
+import { Sparkles, Gift } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface NewWebsiteAuditHeroProps {
@@ -22,6 +23,7 @@ interface NewWebsiteAuditHeroProps {
   planKey: string;
   planName: string;
   pageCreditsLimit: number;
+  initialPendingUrl?: string;
 }
 
 export function NewWebsiteAuditHero({
@@ -30,9 +32,10 @@ export function NewWebsiteAuditHero({
   planKey,
   planName,
   pageCreditsLimit,
+  initialPendingUrl,
 }: NewWebsiteAuditHeroProps) {
   const router = useRouter();
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(initialPendingUrl || "");
   const [isFocused, setIsFocused] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -46,6 +49,8 @@ export function NewWebsiteAuditHero({
     return trimmed;
   };
 
+  const [congratulation, setCongratulation] = useState<string | null>(null);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanUrl = normalizeUrl(url);
@@ -57,13 +62,22 @@ export function NewWebsiteAuditHero({
     setError(null);
     startTransition(async () => {
       try {
-        const res = await rescanWebsiteAction(cleanUrl);
+        const res = await claimWelcomeRewardAndRunAuditAction(cleanUrl);
         if (res.ok) {
-          const domain = (cleanUrl.replace(/^https?:\/\//i, "").split("/")[0]) || "";
-          router.push(`/dashboard?project=${encodeURIComponent(domain)}`);
+          setCongratulation("🎉 Congratulations! You received 10 Free Bonus Credits and started your free first website audit (0 credits deducted)!");
+          const domain = res.domain || (cleanUrl.replace(/^https?:\/\//i, "").split("/")[0]) || "";
+          router.push(`/dashboard?project=${encodeURIComponent(domain)}&reward=claimed`);
           router.refresh();
         } else {
-          setError(res.error || "Failed to start audit. Please verify the URL and try again.");
+          // Fallback to rescanWebsiteAction if reward was already claimed
+          const fallbackRes = await rescanWebsiteAction(cleanUrl);
+          if (fallbackRes.ok) {
+            const domain = (cleanUrl.replace(/^https?:\/\//i, "").split("/")[0]) || "";
+            router.push(`/dashboard?project=${encodeURIComponent(domain)}`);
+            router.refresh();
+          } else {
+            setError(fallbackRes.error || res.error || "Failed to start audit. Please verify the URL and try again.");
+          }
         }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "An unexpected error occurred.");
@@ -84,31 +98,37 @@ export function NewWebsiteAuditHero({
 
         <div className="relative z-10 w-full flex flex-col items-start">
           
-          {/* Header Row: Brand Icon & Plan Badge */}
+          {/* Header Row: Welcome Gift & Plan Badge */}
           <div className="flex flex-wrap items-center gap-3 mb-5">
             <BrandIcon className="w-8 h-8" />
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-xs font-bold text-emerald-900 shadow-2xs">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-              </span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-xs font-bold text-emerald-950 shadow-2xs">
+              <Gift className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Welcome Gift: +10 Free Credits &amp; Free First Audit</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
               <span>{planName}</span>
-              <span className="text-emerald-300">·</span>
-              <span className="font-mono text-emerald-800 font-semibold">
-                {pageCreditsLimit} Page Crawl Credits Available
-              </span>
             </div>
           </div>
 
           {/* Headline */}
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight text-left">
-            Welcome, {displayName}! Run your first site audit.
+            Claim reward and run your free audit
           </h1>
 
           {/* Subtitle */}
           <p className="mt-2.5 text-sm sm:text-base text-slate-600 leading-relaxed text-left max-w-2xl font-normal">
-            Enter your website address below to start an in-depth technical SEO, Core Web Vitals, and structured data crawl.
+            Welcome, <strong className="text-slate-900 font-semibold">{displayName}</strong>! Claim 10 bonus credits immediately. Your first website audit is 100% free of cost with 0 credits deducted from your account.
           </p>
+
+          {/* Congratulation Success Alert */}
+          {congratulation && (
+            <div className="w-full mt-5 flex items-center gap-3 rounded-2xl border border-emerald-300 bg-emerald-50/95 p-4 text-emerald-950 shadow-xs animate-in fade-in-50 duration-200">
+              <Sparkles className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div className="text-xs sm:text-sm font-bold">
+                {congratulation}
+              </div>
+            </div>
+          )}
 
           {/* URL Input Form */}
           <form onSubmit={handleSubmit} className="mt-7 w-full space-y-3" noValidate>
@@ -143,11 +163,12 @@ export function NewWebsiteAuditHero({
                   {isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
-                      <span>Initiating Crawl...</span>
+                      <span>Claiming &amp; Crawling...</span>
                     </>
                   ) : (
                     <>
-                      <span>Run Website Audit</span>
+                      <Sparkles className="w-4 h-4 text-slate-950" />
+                      <span>Claim 10 Credits &amp; Run Free Audit</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

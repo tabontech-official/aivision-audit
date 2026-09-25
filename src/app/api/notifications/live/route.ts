@@ -53,9 +53,22 @@ export async function GET() {
 
     const unreadCount = notifications.filter((n) => !n.readAt).length;
 
+    // 3. Fetch recent reports to verify status of recently completed/stopped audits
+    const recentReports = await db.report.findMany({
+      where: { userId, deletedAt: null },
+      select: {
+        id: true,
+        publicId: true,
+        status: true,
+      },
+      orderBy: { updatedAt: "desc" },
+      take: 10,
+    });
+
     return NextResponse.json({
       ok: true,
       activeAudits,
+      recentReports,
       notifications: notifications.map((n) => ({
         id: n.id,
         type: n.type,

@@ -96,17 +96,17 @@ export function AuditUrlForm({
     });
   };
 
-  /** Signed in inside the modal — replay the audit they already asked for. */
+  /** Signed in inside the modal — navigate to dashboard with pending URL & reward claim */
   const onAuthenticated = () => {
     const target = gateUrl ? normalizeUrl(gateUrl) : "";
     setGateUrl(null);
-    if (!target) return;
+    if (!target) {
+      router.push("/dashboard");
+      return;
+    }
     setError(null);
-    startTransition(async () => {
-      if (await requestAudit(target)) {
-        setError("Your session didn't stick. Please try again.");
-      }
-    });
+    router.push(`/dashboard?pendingUrl=${encodeURIComponent(target)}&reward=claim`);
+    router.refresh();
   };
 
   const isLg = size === "lg";

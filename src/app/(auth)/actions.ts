@@ -12,6 +12,7 @@ import { claimAnonymousReports } from "@/lib/auth/claim";
 import { convertLeadsForUser, captureLeadsAtSignup } from "@/services/leads/capture";
 import { recordFunnelEvent } from "@/services/leads/funnel";
 import { seedFindingsForUser } from "@/services/findings/seed";
+import { hardDeleteUserAndAllData } from "@/services/users/delete";
 import {
   signupSchema,
   loginSchema,
@@ -47,11 +48,17 @@ export async function signupAction(input: unknown): Promise<ActionResult> {
 
   const { name, email, password, marketingConsent } = parsed.data;
 
-  const existing = await db.user.findUnique({ where: { email } });
+  const existing = await db.user.findFirst({ where: { email, deletedAt: null } });
   if (existing) {
     // Do not reveal account existence beyond what signup inherently requires;
     // generic message keeps enumeration cost high.
     return { ok: false, error: "An account with this email already exists. Try logging in." };
+  }
+
+  // If a legacy soft-deleted user exists with this email, purge it so creation succeeds cleanly
+  const softDeleted = await db.user.findFirst({ where: { email, deletedAt: { not: null } } });
+  if (softDeleted) {
+    await hardDeleteUserAndAllData(softDeleted.id);
   }
 
   const passwordHash = await hashPassword(password);
@@ -165,14 +172,11 @@ export async function checkEmailAction(input: unknown): Promise<EmailCheckResult
     return { ok: false, error: "Too many attempts. Please wait a few minutes and try again." };
   }
 
-  const user = await db.user.findUnique({
-    where: { email: parsed.data },
-    select: { deletedAt: true },
+  const user = await db.user.findFirst({
+    where: { email: parsed.data, deletedAt: null },
+    select: { id: true },
   });
 
-  // A soft-deleted account can neither be signed into nor re-created; send it
-  // down the sign-in branch so the message stays honest rather than promising
-  // an account we can't make.
   return { ok: true, exists: user !== null };
 }
 
@@ -222,17 +226,17 @@ export async function continueWithEmailAction(input: unknown): Promise<GateResul
     };
   }
 
-  const existing = await db.user.findUnique({ where: { email } });
-
-  // A soft-deleted account holds the email but cannot be signed into, and the
-  // unique constraint blocks re-creating it. Neither branch below can succeed.
-  if (existing?.deletedAt) {
-    return { ok: false, error: "We couldn't sign you in. Please contact support." };
-  }
+  const existing = await db.user.findFirst({ where: { email, deletedAt: null } });
 
   let created = false;
 
   if (!existing) {
+    // If a legacy soft-deleted user exists with this email, purge it so the unique constraint doesn't block fresh creation
+    const softDeleted = await db.user.findFirst({ where: { email, deletedAt: { not: null } } });
+    if (softDeleted) {
+      await hardDeleteUserAndAllData(softDeleted.id);
+    }
+
     // Create-account branch — strength rules apply here and only here.
     const strong = passwordSchema.safeParse(password);
     if (!strong.success) {

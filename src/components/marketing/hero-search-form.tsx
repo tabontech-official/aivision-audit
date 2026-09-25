@@ -66,13 +66,14 @@ export function HeroSearchForm() {
   const onAuthenticated = () => {
     const target = gateUrl ? normalizeUrl(gateUrl) : "";
     setGateUrl(null);
-    if (!target) return;
+    if (!target) {
+      router.push("/dashboard");
+      return;
+    }
     setError(null);
-    startTransition(async () => {
-      if (await requestAudit(target)) {
-        setError("Your session didn't stick. Please try again.");
-      }
-    });
+    // Navigate to dashboard where user can claim reward and run their free audit
+    router.push(`/dashboard?pendingUrl=${encodeURIComponent(target)}&reward=claim`);
+    router.refresh();
   };
 
   return (

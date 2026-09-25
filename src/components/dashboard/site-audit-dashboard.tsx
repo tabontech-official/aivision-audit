@@ -29,9 +29,11 @@ import {
   Copy,
   UserPlus,
   GitCompare,
+  Gift,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { rerunAuditAction, rescanWebsiteAction, continueAuditAction } from "@/app/dashboard/reports/actions";
+import { rerunAuditAction, rescanWebsiteAction, continueAuditAction, claimWelcomeRewardAndRunAuditAction } from "@/app/dashboard/reports/actions";
 import { recheckIssueAction } from "@/app/dashboard/websites/[id]/actions";
 import { StopAuditButton } from "@/components/dashboard/stop-audit-button";
 import { DashboardLiveAuditBanner } from "@/components/dashboard/dashboard-live-audit-banner";
@@ -162,6 +164,7 @@ export interface SiteAuditDashboardProps {
   coverageLimit?: number;
   coverageCompleted?: boolean;
   currentPlanKey?: string;
+  pendingRewardUrl?: string;
 }
 
 function SemiCircleGauge({
@@ -562,8 +565,31 @@ export function SiteAuditDashboard({
   coverageRemaining: coverageRemainingProp,
   coverageLimit: coverageLimitProp,
   coverageCompleted = false,
+  currentPlanKey,
+  pendingRewardUrl,
 }: SiteAuditDashboardProps) {
   const router = useRouter();
+  const [isClaimingReward, setIsClaimingReward] = useState(false);
+  const [rewardClaimed, setRewardClaimed] = useState(false);
+
+  const handleClaimPendingReward = async () => {
+    if (!pendingRewardUrl || isClaimingReward) return;
+    setIsClaimingReward(true);
+    try {
+      const res = await claimWelcomeRewardAndRunAuditAction(pendingRewardUrl);
+      if (res.ok) {
+        setRewardClaimed(true);
+        const dom = res.domain || pendingRewardUrl.replace(/^https?:\/\//i, "").split("/")[0] || "";
+        router.push(`/dashboard?project=${encodeURIComponent(dom)}`);
+        router.refresh();
+      }
+    } catch (e) {
+      console.error("Claim reward error:", e);
+    } finally {
+      setIsClaimingReward(false);
+    }
+  };
+
   const [activeTab, setActiveTab] = useState<string>(
     initialTab?.toLowerCase() === "issues"
       ? "Issues"
@@ -634,9 +660,11 @@ export function SiteAuditDashboard({
     }
   };
 
-  const totalDetected = totalDetectedUrls || maxPages || 200;
+  const isFreePlan = (currentPlanKey || "").toUpperCase() === "FREE" || (!currentPlanKey && (!coverageLimitProp || coverageLimitProp <= 10));
+  const totalDetected = totalDetectedUrls || maxPages || (isFreePlan ? 10 : 200);
   const coverageUsed = coverageUsedProp ?? pagesCrawled;
-  const coverageLimit = coverageLimitProp ?? maxPages;
+  const rawCoverageLimit = coverageLimitProp ?? (isFreePlan ? 10 : (maxPages || 100));
+  const coverageLimit = isFreePlan ? 10 : rawCoverageLimit;
   const planCreditsRemaining = Math.max(0, coverageLimit - coverageUsed);
   const siteRemaining = Math.max(0, totalDetected - coverageUsed);
   const additionalPossible = Math.min(planCreditsRemaining, siteRemaining);
@@ -1118,8 +1146,72 @@ export function SiteAuditDashboard({
     );
   };
 
+  const isFirstAuditCompleted = Boolean(reportStatus === "COMPLETED" || reportStatus === "PARTIAL");
+
   return (
     <div className="space-y-5 pb-12 font-lazzer text-slate-800">
+      {/* 0. WELCOME REWARD CLAIM BANNER */}
+      {pendingRewardUrl && !rewardClaimed && (
+        <div className="rounded-2xl border border-emerald-300/90 bg-gradient-to-r from-[#f0fdf9] via-white to-[#f0fdf9] p-4 sm:p-5 shadow-xs font-lazzer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in duration-300">
+          <div className="flex items-start gap-3.5">
+            <div className="p-2.5 rounded-2xl bg-emerald-100 text-emerald-800 border border-emerald-200/80 shrink-0 mt-0.5 shadow-2xs">
+              <Gift className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                  Claim reward and run your free audit
+                </h3>
+                <span className="rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 px-2.5 py-0.5 text-[11px] font-bold">
+                  +10 Free Credits
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-slate-600 max-w-xl leading-relaxed">
+                Claim 10 free bonus credits for <strong className="text-slate-900 font-semibold">{pendingRewardUrl}</strong>. Your first website audit is 100% free of charge with 0 credits deducted!
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleClaimPendingReward}
+            disabled={isClaimingReward}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#c084fc] hover:bg-[#b572fa] active:bg-[#a85cf7] text-slate-950 font-bold px-4 py-2.5 text-xs shadow-xs hover:shadow-md transition-all cursor-pointer shrink-0 disabled:opacity-50"
+          >
+            {isClaimingReward ? (
+              <>
+                <RotateCw className="w-3.5 h-3.5 animate-spin text-slate-950" />
+                <span>Claiming &amp; Starting...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                <span>Claim 10 Credits &amp; Run Free Audit</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* CONGRATULATION REWARD CLAIMED BANNER */}
+      {(rewardClaimed || (typeof window !== "undefined" && window.location.search.includes("reward=claimed"))) && (
+        <div className="rounded-2xl border border-emerald-300 bg-emerald-50/95 p-4 shadow-xs font-lazzer flex items-center justify-between gap-3 animate-in fade-in-50 duration-200">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-sm font-extrabold text-emerald-950">
+                🎉 Congratulations! 10 Free Bonus Credits Added
+              </div>
+              <p className="text-xs text-emerald-800">
+                Your first website audit is running 100% free of charge — 0 credits are deducted from your 10 remaining credits!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 0. LIVE BACKGROUND AUDIT PROGRESS BANNER (When audit is actively running) */}
       {(isRunning || reportStatus === "PROCESSING" || reportStatus === "QUEUED" || reportStatus === "PENDING") && reportPublicId && (
         <DashboardLiveAuditBanner
@@ -1129,6 +1221,73 @@ export function SiteAuditDashboard({
           initialProgress={progressPercent}
         />
       )}
+
+      {/* AUDIT SCOPE & COVERAGE BANNER (Shown when audit is completed and additional pages or plan limits exist) */}
+      {!isRunning && hasMoreAvailableUnderPlan ? (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-emerald-200/90 bg-[#f0fdf9] p-4 shadow-2xs animate-in fade-in-50 duration-200">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 mt-0.5">
+              <Layers className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-slate-900 text-sm sm:text-base">
+                  Total Crawled: {coverageUsed.toLocaleString()} · {coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used
+                </span>
+                <span className="rounded-full bg-emerald-100/80 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold">
+                  {planCreditsRemaining.toLocaleString()} plan credits remaining
+                </span>
+                <span className="rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 text-[11px] font-medium">
+                  {siteRemaining.toLocaleString()} uncrawled pages
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-slate-600">
+                Initial crawl completed. Your plan has <strong>{planCreditsRemaining.toLocaleString()}</strong> remaining credits to crawl {additionalPossible.toLocaleString()} more unique pages on this website.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleContinueAudit}
+            disabled={isContinuing}
+            className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 disabled:opacity-60 outline-none focus:outline-none focus:ring-0"
+          >
+            <RotateCw className={cn("h-3.5 w-3.5", isContinuing && "animate-spin")} />
+            <span>{isContinuing ? "Crawling Pages..." : `Continue Crawl: Analyse ${additionalPossible.toLocaleString()} More Pages`}</span>
+          </button>
+        </div>
+      ) : !isRunning && planLimitReached ? (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-amber-200/90 bg-amber-50/70 p-4 shadow-2xs animate-in fade-in-50 duration-200">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 mt-0.5">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-slate-900 text-sm sm:text-base">
+                  Plan limit reached ({coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used)
+                </span>
+                <span className="rounded-full bg-amber-100 text-amber-900 border border-amber-200 px-2.5 py-0.5 text-[11px] font-bold">
+                  {siteRemaining.toLocaleString()} pages remaining
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-slate-600">
+                You have reached your monthly crawl limit. Upgrade your plan to crawl more pages.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsUpgradeModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 outline-none focus:outline-none focus:ring-0"
+          >
+            <span>Upgrade Plan</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ) : null}
 
       {/* 1. TOP HEADER & METADATA BAR (Semrush Style) */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between border-b border-slate-200/70 pb-4">
@@ -1174,7 +1333,7 @@ export function SiteAuditDashboard({
           </div>
 
           {/* Meta Details Row */}
-          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 font-medium">
+          <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-2.5 text-xs text-slate-500 font-medium">
             <span className="font-semibold text-slate-700">{domain || "domain.com"}</span>
             <span>Updated: {lastUpdated}</span>
             <span className="inline-flex items-center gap-1">
@@ -1190,19 +1349,19 @@ export function SiteAuditDashboard({
                 </>
               )}
             </span>
-            <span>
-              Pages crawled: <strong className="font-semibold text-slate-800">{coverageUsed.toLocaleString()} / {totalDetected.toLocaleString()}</strong>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100/90 text-slate-700 border border-slate-200/80 font-medium">
+              Pages crawled: <strong className="font-bold text-slate-900">{(pagesCrawled || 1).toLocaleString()} / {totalDetected.toLocaleString()}</strong>
             </span>
-            <span>
-              Usage: <strong className="font-semibold text-slate-800">{coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used</strong>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-50/80 text-indigo-900 border border-indigo-200/70 font-medium">
+              Usage: <strong className="font-bold text-indigo-950">{coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()}</strong> credits used
             </span>
             {planCreditsRemaining > 0 ? (
-              <span>
-                Remaining: <strong className="font-semibold text-slate-800">{planCreditsRemaining.toLocaleString()} credits</strong>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50/80 text-emerald-900 border border-emerald-200/70 font-medium">
+                Remaining: <strong className="font-bold text-emerald-700">{planCreditsRemaining.toLocaleString()} credits</strong>
               </span>
             ) : (
-              <span className="text-amber-600 font-semibold">
-                Remaining: 0 credits
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-50/80 text-amber-900 border border-amber-200/70 font-semibold">
+                Remaining: <strong className="font-bold text-amber-700">0 credits</strong>
               </span>
             )}
           </div>
@@ -1210,16 +1369,18 @@ export function SiteAuditDashboard({
 
         {/* Right Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {/* Rerun Campaign (Black Button) */}
-          <button
-            type="button"
-            onClick={handleRerun}
-            disabled={isPending || isRunning}
-            className="inline-flex items-center gap-2 rounded-[8px] bg-[#181818] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-black disabled:opacity-60 transition-colors cursor-pointer font-lazzer"
-          >
-            <RotateCw className={cn("h-3.5 w-3.5", (isPending || isRunning) && "animate-spin")} />
-            <span>{isPending || isRunning ? "Running Audit..." : "Rerun campaign"}</span>
-          </button>
+          {/* Rerun Campaign (Black Button) — only show when first audit is completed */}
+          {isFirstAuditCompleted && (
+            <button
+              type="button"
+              onClick={handleRerun}
+              disabled={isPending || isRunning}
+              className="inline-flex items-center gap-2 rounded-[8px] bg-[#181818] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-black disabled:opacity-60 transition-colors cursor-pointer font-lazzer"
+            >
+              <RotateCw className={cn("h-3.5 w-3.5", (isPending || isRunning) && "animate-spin")} />
+              <span>{isPending || isRunning ? "Running Audit..." : "Rerun campaign"}</span>
+            </button>
+          )}
 
           {/* Compare (What Changed) Button */}
           {reportPublicId && (
@@ -1297,73 +1458,6 @@ export function SiteAuditDashboard({
         </div>
       </div>
 
-      {/* AUDIT SCOPE & COVERAGE BANNER */}
-      {hasMoreAvailableUnderPlan ? (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-emerald-200/90 bg-[#f0fdf9] p-4 shadow-2xs animate-in fade-in-50 duration-200">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 mt-0.5">
-              <Layers className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-slate-900 text-sm sm:text-base">
-                  Total Crawled: {coverageUsed.toLocaleString()} · {coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used
-                </span>
-                <span className="rounded-full bg-emerald-100/80 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold">
-                  {planCreditsRemaining.toLocaleString()} plan credits remaining
-                </span>
-                <span className="rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 text-[11px] font-medium">
-                  {siteRemaining.toLocaleString()} uncrawled pages
-                </span>
-              </div>
-              <p className="mt-0.5 text-xs text-slate-600">
-                Initial crawl completed. Your plan has <strong>{planCreditsRemaining.toLocaleString()}</strong> remaining credits to crawl {additionalPossible.toLocaleString()} more unique pages on this website.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleContinueAudit}
-            disabled={isContinuing}
-            className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 disabled:opacity-60 outline-none focus:outline-none focus:ring-0"
-          >
-            <RotateCw className={cn("h-3.5 w-3.5", isContinuing && "animate-spin")} />
-            <span>{isContinuing ? "Crawling Pages..." : `Continue Crawl: Analyse ${additionalPossible.toLocaleString()} More Pages`}</span>
-          </button>
-        </div>
-      ) : planLimitReached ? (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-amber-200/90 bg-amber-50/70 p-4 shadow-2xs animate-in fade-in-50 duration-200">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 mt-0.5">
-              <AlertTriangle className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-slate-900 text-sm sm:text-base">
-                  Plan limit reached ({coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()} credits used)
-                </span>
-                <span className="rounded-full bg-amber-100 text-amber-900 border border-amber-200 px-2.5 py-0.5 text-[11px] font-bold">
-                  {siteRemaining.toLocaleString()} pages remaining
-                </span>
-              </div>
-              <p className="mt-0.5 text-xs text-slate-600">
-                You have reached your monthly crawl limit. Upgrade your plan to crawl more pages.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsUpgradeModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#181818] hover:bg-black text-white px-4 py-2 text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0 outline-none focus:outline-none focus:ring-0"
-          >
-            <span>Upgrade Plan</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      ) : null}
-
       {rerunNotice && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900 animate-in fade-in-50 duration-200">
           <div className="flex items-start gap-2.5">
@@ -1438,25 +1532,6 @@ export function SiteAuditDashboard({
         })}
       </div>
 
-      {/* In-Progress Notification Banner */}
-      {isRunning && (
-        <div className="flex items-center justify-between rounded-xl border border-indigo-200 bg-indigo-50/70 p-4 shadow-2xs">
-          <div className="flex items-center gap-3">
-            <RotateCw className="h-5 w-5 animate-spin text-indigo-600" />
-            <div>
-              <div className="text-sm font-bold text-indigo-950">
-                Audit scan in progress for {domain}
-              </div>
-              <div className="text-xs text-indigo-700">
-                Running 70+ crawl factor inspections ({progressPercent}% complete)...
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {reportPublicId && <StopAuditButton identifier={reportPublicId} />}
-          </div>
-        </div>
-      )}
 
       {/* ========================================================================= */}
       {/* 3A. OVERVIEW TAB VIEW */}

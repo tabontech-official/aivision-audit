@@ -17,10 +17,11 @@ export const revalidate = 0;
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ project?: string; tab?: string }>;
+  searchParams?: Promise<{ project?: string; tab?: string; pendingUrl?: string; reward?: string }>;
 }) {
   const resolvedParams = (await searchParams) ?? {};
   const requestedProject = resolvedParams.project;
+  const pendingUrl = resolvedParams.pendingUrl;
 
   const user = await requireUser();
 
@@ -140,6 +141,7 @@ export default async function DashboardPage({
         planKey={usageSummary.plan.planKey}
         planName={usageSummary.plan.planName}
         pageCreditsLimit={usageSummary.pages.limit}
+        initialPendingUrl={pendingUrl}
       />
     );
   }
@@ -694,12 +696,13 @@ export default async function DashboardPage({
       }}
       crawledPagesList={crawledPagesList}
       statistics={statistics}
-      totalDetectedUrls={activeReport?.totalDetectedUrls ?? (totalPages > 0 ? totalPages : usageSummary.pages.limit)}
+      totalDetectedUrls={activeReport?.totalDetectedUrls ?? (totalPages > 0 ? totalPages : (usageSummary.plan.planKey === "FREE" ? 10 : usageSummary.pages.limit))}
       coverageUsed={activeReport?.coverageUsed ?? usageSummary.pages.used}
-      coverageRemaining={activeReport?.coverageRemaining ?? usageSummary.pages.remaining}
-      coverageLimit={activeReport?.coverageLimit ?? usageSummary.pages.limit}
+      coverageRemaining={activeReport?.coverageRemaining ?? (usageSummary.plan.planKey === "FREE" ? Math.max(0, 10 - (activeReport?.coverageUsed ?? usageSummary.pages.used)) : usageSummary.pages.remaining)}
+      coverageLimit={usageSummary.plan.planKey === "FREE" ? 10 : (activeReport?.coverageLimit ?? usageSummary.pages.limit)}
       coverageCompleted={activeReport?.coverageCompleted ?? undefined}
       currentPlanKey={activeReport?.currentPlanKey ?? usageSummary.plan.planKey}
+      pendingRewardUrl={pendingUrl}
     />
   );
 }

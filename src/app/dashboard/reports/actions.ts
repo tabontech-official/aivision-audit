@@ -177,3 +177,72 @@ export async function continueAuditAction(reportPublicId: string): Promise<{
     return { ok: false, error: err instanceof Error ? err.message : "Failed to continue audit." };
   }
 }
+
+/**
+ * Claim 10 free bonus credits and run the first website audit (100% free of cost, 0 credits deducted).
+ */
+export async function claimWelcomeRewardAndRunAuditAction(
+  targetUrl: string
+): Promise<{ ok: true; domain: string; reportPublicId: string } | { ok: false; error: string }> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { ok: false, error: "Please sign in to claim your reward." };
+    }
+
+    const userId = session.user.id;
+
+    // 1. Grant 10 bonus credits if user hasn't received them yet
+    const existingWelcomeBonus = await db.bonusCredit.findFirst({
+      where: {
+        userId,
+        reason: "WELCOME_REWARD_10",
+      },
+    });
+
+    if (!existingWelcomeBonus) {
+      await db.bonusCredit.create({
+        data: {
+          userId,
+          units: 10,
+          remainingUnits: 10,
+          reason: "WELCOME_REWARD_10",
+          expiresAt: null,
+        },
+      });
+    }
+
+    // 2. Validate & normalize URL
+    let cleanUrl = targetUrl.trim();
+    if (!cleanUrl) {
+      return { ok: false, error: "Please enter a valid website URL." };
+    }
+    if (!/^https?:\/\//i.test(cleanUrl)) {
+      cleanUrl = `https://${cleanUrl}`;
+    }
+
+    // 3. Initiate the audit
+    const result = await createAudit(cleanUrl, {
+      kind: "user",
+      userId,
+      plan: (session.user.plan as UserPlan) || "FREE",
+    });
+
+    if (!result.ok) {
+      return { ok: false, error: result.error };
+    }
+
+    const domain = cleanUrl.replace(/^https?:\/\//i, "").split("/")[0] || "";
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/reports");
+    return { ok: true, domain, reportPublicId: result.reportPublicId };
+  } catch (err: unknown) {
+    console.error("claimWelcomeRewardAndRunAuditAction error:", err);
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to claim reward and start audit.",
+    };
+  }
+}
+
