@@ -15,15 +15,14 @@ import {
   ArrowRight,
   Check,
   X,
-  CreditCard,
-  RefreshCw,
-  Award,
+  RotateCw,
+  Activity,
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Pricing & Plans · AI Vision Audit",
   description:
-    "Transparent, flexible pricing for AI website audits, Core Web Vitals, JSON-LD schema generation, and agency white-label reports.",
+    "Audits show you what’s broken. Monitoring helps you keep it fixed. Choose how much of your website you want to monitor and how often you want it checked.",
 };
 
 export const dynamic = "force-dynamic";
@@ -32,101 +31,218 @@ export default async function PricingPage() {
   const session = await auth();
   const dbPlans = await getPublicPlans();
 
-  // Dynamic Plans from Master Admin DB
-  let formattedPlans: PublicPricingPlan[] = dbPlans.map((p) => ({
-    id: p.id,
-    key: p.key,
-    name: p.name,
-    description: p.description,
-    priceMonthly: p.priceMonthlyCents / 100,
-    priceYearly: p.priceYearlyCents / 100,
-    currency: p.currency,
-    trialDays: p.trialDays,
-    isPopular: p.isPopular,
-    badgeText: p.badgeText,
-    customCtaText: p.customCtaText,
-    customCtaUrl: p.customCtaUrl,
-    auditLimitPerMonth: p.auditLimitPerMonth,
-    auditLimitType: p.auditLimitType,
-    features: p.publicFeatures.map((pf) => ({
-      label: pf.label,
-      isIncluded: pf.isIncluded,
-    })),
-  }));
+  // Dynamic Plans from Master Admin DB with recurring positioning
+  let formattedPlans: PublicPricingPlan[] = dbPlans.map((p) => {
+    const keyUpper = p.key.toUpperCase();
+    let positioning = "Find what’s broken";
+    if (keyUpper.includes("FREE")) positioning = "Find what’s broken";
+    else if (keyUpper.includes("STARTER")) positioning = "Keep one site healthy";
+    else if (keyUpper.includes("PRO") || keyUpper.includes("PREMIUM")) positioning = "Protect a growing website";
+    else if (keyUpper.includes("AGENCY") || keyUpper.includes("SCALE")) positioning = "Monitor multiple client websites";
+
+    const monitoredCapacity =
+      p.pageAuditLimit >= 3000
+        ? "Up to 3,000 monitored pages"
+        : p.pageAuditLimit >= 1000
+        ? "Up to 1,000 monitored pages"
+        : p.pageAuditLimit >= 100
+        ? "Up to 100 monitored pages"
+        : "Up to 10 monitored pages";
+
+    const featuresList: Array<{ label: string; isIncluded: boolean }> = [];
+
+    // 1. Number of monitored websites
+    featuresList.push({
+      label:
+        p.websiteLimit === -1
+          ? "Unlimited monitored websites"
+          : `${p.websiteLimit} monitored ${p.websiteLimit === 1 ? "website" : "websites"}`,
+      isIncluded: true,
+    });
+
+    // 2. Monitored page capacity
+    featuresList.push({
+      label: monitoredCapacity,
+      isIncluded: true,
+    });
+
+    // 3. Check frequency
+    featuresList.push({
+      label: keyUpper.includes("AGENCY")
+        ? "Daily & weekly automated checks"
+        : keyUpper.includes("PRO") || keyUpper.includes("PREMIUM")
+        ? "Weekly automated health monitoring"
+        : keyUpper.includes("STARTER")
+        ? "Monthly scheduled health check"
+        : "On-demand free audit",
+      isIncluded: true,
+    });
+
+    // 4. Fix verification
+    featuresList.push({
+      label: keyUpper.includes("FREE") ? "1 fix verification included" : "Instant live fix verification",
+      isIncluded: true,
+    });
+
+    // 5. Audit history & comparison
+    featuresList.push({
+      label: "Audit history & before/after compare diffs",
+      isIncluded: !keyUpper.includes("FREE"),
+    });
+
+    // 6. Schema builder allowance
+    featuresList.push({
+      label:
+        p.schemaMonthlyLimit === -1
+          ? "Unlimited schema builder generations"
+          : `${p.schemaMonthlyLimit || 3} schema generations / mo`,
+      isIncluded: true,
+    });
+
+    // 7. Scheduled audits & alerts
+    featuresList.push({
+      label: "Automated recurring monitoring & issue alerts",
+      isIncluded: !keyUpper.includes("FREE"),
+    });
+
+    return {
+      id: p.id,
+      key: p.key,
+      name: p.name,
+      description: p.description,
+      positioning,
+      monitoredCapacity,
+      websiteLimit: p.websiteLimit,
+      pageAuditLimit: p.pageAuditLimit,
+      priceMonthly: p.priceMonthlyCents / 100,
+      priceYearly: p.priceYearlyCents / 100,
+      currency: p.currency,
+      trialDays: p.trialDays,
+      isPopular: p.isPopular,
+      badgeText: p.badgeText,
+      customCtaText: p.customCtaText || (keyUpper.includes("FREE") ? "Audit My Site Free" : `Choose ${p.name}`),
+      customCtaUrl: p.customCtaUrl,
+      auditLimitPerMonth: p.auditLimitPerMonth,
+      auditLimitType: p.auditLimitType,
+      features: featuresList,
+    };
+  });
 
   // Fallback defaults if master admin has not populated plans in DB yet
   if (formattedPlans.length === 0) {
     formattedPlans = [
       {
-        id: "starter",
-        key: "starter",
-        name: "Starter Free",
-        description: "Perfect for testing individual websites, single landing pages, and quick schema checks.",
+        id: "free",
+        key: "free",
+        name: "Free",
+        description: "Find what’s broken on your website with an instant technical inspection.",
+        positioning: "Find what’s broken",
+        monitoredCapacity: "Up to 10 monitored pages",
+        websiteLimit: 1,
+        pageAuditLimit: 10,
         priceMonthly: 0,
         priceYearly: 0,
         currency: "usd",
         trialDays: 0,
         isPopular: false,
         badgeText: null,
-        customCtaText: "Start Free",
+        customCtaText: "Audit My Site Free",
         customCtaUrl: null,
-        auditLimitPerMonth: 5,
+        auditLimitPerMonth: 10,
         auditLimitType: "MONTHLY",
         features: [
-          { label: "5 Technical Audits / Month", isIncluded: true },
-          { label: "Basic SEO & Meta Tag Inspector", isIncluded: true },
-          { label: "Core Web Vitals & Speed Score", isIncluded: true },
-          { label: "Standard JSON-LD Schema Generator", isIncluded: true },
-          { label: "AI Citation Tracker", isIncluded: false },
-          { label: "White-Label PDF Reports", isIncluded: false },
+          { label: "1 monitored website", isIncluded: true },
+          { label: "Up to 10 monitored pages", isIncluded: true },
+          { label: "On-demand free audit", isIncluded: true },
+          { label: "1 fix verification included", isIncluded: true },
+          { label: "3 schema generations / mo", isIncluded: true },
+          { label: "Audit history & comparisons", isIncluded: false },
         ],
       },
       {
-        id: "growth-pro",
-        key: "growth-pro",
-        name: "Growth Pro",
-        description: "For scaling brands, e-commerce stores, and high-growth SaaS teams.",
-        priceMonthly: 29,
-        priceYearly: 24,
+        id: "starter",
+        key: "starter",
+        name: "Starter",
+        description: "Keep one site healthy and verify technical fixes over time.",
+        positioning: "Keep one site healthy",
+        monitoredCapacity: "Up to 100 monitored pages",
+        websiteLimit: 1,
+        pageAuditLimit: 100,
+        priceMonthly: 19,
+        priceYearly: 15,
         currency: "usd",
-        trialDays: 7,
-        isPopular: true,
-        badgeText: "Most Popular",
-        customCtaText: "Start 7-Day Free Trial",
+        trialDays: 0,
+        isPopular: false,
+        badgeText: null,
+        customCtaText: "Choose Starter",
         customCtaUrl: null,
         auditLimitPerMonth: 100,
         auditLimitType: "MONTHLY",
         features: [
-          { label: "100 Deep Audits / Month", isIncluded: true },
-          { label: "Full Technical Crawler & Canonical Mesh", isIncluded: true },
-          { label: "Perplexity & ChatGPT Citation Tracking", isIncluded: true },
-          { label: "Advanced Product & Article Schema", isIncluded: true },
-          { label: "Automated Fix Code Generator", isIncluded: true },
-          { label: "Standard PDF Export Reports", isIncluded: true },
+          { label: "1 monitored website", isIncluded: true },
+          { label: "Up to 100 monitored pages", isIncluded: true },
+          { label: "Monthly scheduled health check", isIncluded: true },
+          { label: "Instant live fix verification", isIncluded: true },
+          { label: "Full audit history & change diffs", isIncluded: true },
+          { label: "25 schema generations / mo", isIncluded: true },
         ],
       },
       {
-        id: "agency-scale",
-        key: "agency-scale",
-        name: "Agency & Scale",
-        description: "For agencies and enterprises managing multi-client domains and high-volume crawls.",
-        priceMonthly: 89,
-        priceYearly: 72,
+        id: "pro",
+        key: "pro",
+        name: "Pro",
+        description: "Protect a growing website with weekly automated checks and deep crawl depth.",
+        positioning: "Protect a growing website",
+        monitoredCapacity: "Up to 1,000 monitored pages",
+        websiteLimit: 5,
+        pageAuditLimit: 1000,
+        priceMonthly: 49,
+        priceYearly: 39,
+        currency: "usd",
+        trialDays: 7,
+        isPopular: true,
+        badgeText: "Most Popular",
+        customCtaText: "Choose Pro",
+        customCtaUrl: null,
+        auditLimitPerMonth: 1000,
+        auditLimitType: "MONTHLY",
+        features: [
+          { label: "5 monitored websites", isIncluded: true },
+          { label: "Up to 1,000 monitored pages", isIncluded: true },
+          { label: "Weekly automated health monitoring", isIncluded: true },
+          { label: "Instant live fix verification", isIncluded: true },
+          { label: "Historical compare diff engine", isIncluded: true },
+          { label: "100 schema generations / mo", isIncluded: true },
+          { label: "Automated recurring re-audit alerts", isIncluded: true },
+        ],
+      },
+      {
+        id: "agency",
+        key: "agency",
+        name: "Agency",
+        description: "Monitor multiple client websites with high-capacity crawls and white-label reporting.",
+        positioning: "Monitor multiple client websites",
+        monitoredCapacity: "Up to 3,000 monitored pages",
+        websiteLimit: 20,
+        pageAuditLimit: 3000,
+        priceMonthly: 129,
+        priceYearly: 99,
         currency: "usd",
         trialDays: 14,
         isPopular: false,
         badgeText: "Agency Choice",
-        customCtaText: "Get Agency Scale",
+        customCtaText: "Choose Agency",
         customCtaUrl: null,
-        auditLimitPerMonth: 500,
+        auditLimitPerMonth: 3000,
         auditLimitType: "MONTHLY",
         features: [
-          { label: "500 Audits / Month (or Unlimited option)", isIncluded: true },
-          { label: "Full White-Label Branded PDF Reports", isIncluded: true },
-          { label: "Multi-Client Portfolio Command Center", isIncluded: true },
-          { label: "Automated Weekly Re-Crawl Alerts", isIncluded: true },
-          { label: "Historical Compare Diff Engine", isIncluded: true },
-          { label: "Priority Concurrency & VIP Support", isIncluded: true },
+          { label: "20 monitored websites", isIncluded: true },
+          { label: "Up to 3,000 monitored pages", isIncluded: true },
+          { label: "Daily & weekly automated checks", isIncluded: true },
+          { label: "Instant live fix verification", isIncluded: true },
+          { label: "Multi-client portfolio workspace", isIncluded: true },
+          { label: "Unlimited schema builder generations", isIncluded: true },
+          { label: "Full white-label PDF audit reports", isIncluded: true },
         ],
       },
     ];
@@ -135,95 +251,100 @@ export default async function PricingPage() {
   // Dynamic Comparison Table based on active master-admin plans
   const comparisonCategories = [
     {
-      category: "Audit Limits & Performance",
+      category: "Site Coverage & Monitoring",
       features: [
         {
-          name: "Monthly Audit Allowance",
+          name: "Monitored Page Capacity",
           getValue: (p: PublicPricingPlan) =>
-            p.auditLimitType === "UNLIMITED" ? "Unlimited" : `${p.auditLimitPerMonth} Audits/mo`,
+            p.monitoredCapacity ||
+            ((p.pageAuditLimit ?? 0) >= 3000
+              ? "Up to 3,000 pages"
+              : (p.pageAuditLimit ?? 0) >= 1000
+              ? "Up to 1,000 pages"
+              : (p.pageAuditLimit ?? 0) >= 100
+              ? "Up to 100 pages"
+              : "Up to 10 pages"),
         },
         {
-          name: "Headless Browser JavaScript Rendering",
-          getValue: (_p: PublicPricingPlan) => true,
+          name: "Monitored Websites",
+          getValue: (p: PublicPricingPlan) =>
+            p.websiteLimit === -1 ? "Unlimited" : `${p.websiteLimit ?? 1} Sites`,
         },
         {
-          name: "Core Web Vitals & Speed Scoring",
-          getValue: (_p: PublicPricingPlan) => true,
+          name: "Automated Check Frequency",
+          getValue: (p: PublicPricingPlan) => {
+            const k = (p.key || "").toUpperCase();
+            if (k.includes("AGENCY")) return "Daily & Weekly";
+            if (k.includes("PRO") || k.includes("PREMIUM")) return "Weekly";
+            if (k.includes("STARTER")) return "Monthly";
+            return "On-demand";
+          },
         },
         {
-          name: "Sitemap & RSS Feed Auto-Sync",
-          getValue: (p: PublicPricingPlan) => p.priceMonthly > 0 || p.auditLimitPerMonth >= 50,
+          name: "Fix Verification Engine",
+          getValue: (p: PublicPricingPlan) =>
+            (p.key || "").toUpperCase().includes("FREE") ? "1 Verification" : "Unlimited",
         },
       ],
     },
     {
-      category: "Structured Data & AI Search",
+      category: "Audit Intelligence & History",
       features: [
         {
-          name: "JSON-LD Schema Generation & Validation",
+          name: "70+ Factor Technical SEO Diagnostics",
           getValue: (_p: PublicPricingPlan) => true,
         },
         {
-          name: "Google Rich Results SERP Preview",
+          name: "Core Web Vitals & Real Speed Scoring",
           getValue: (_p: PublicPricingPlan) => true,
         },
         {
-          name: "AI Answer Engine Citation Tracking",
-          getValue: (p: PublicPricingPlan) =>
-            p.features.some(
-              (f) =>
-                f.isIncluded &&
-                (f.label.toLowerCase().includes("ai") ||
-                  f.label.toLowerCase().includes("citation") ||
-                  f.label.toLowerCase().includes("search"))
-            ) || p.priceMonthly > 0,
+          name: "Audit History & Before/After Change Tracking",
+          getValue: (p: PublicPricingPlan) => !(p.key || "").toUpperCase().includes("FREE"),
         },
         {
           name: "Automated Code Remediation Snippets",
-          getValue: (p: PublicPricingPlan) =>
-            p.features.some(
-              (f) =>
-                f.isIncluded &&
-                (f.label.toLowerCase().includes("code") ||
-                  f.label.toLowerCase().includes("fix") ||
-                  f.label.toLowerCase().includes("inspection"))
-            ) || p.priceMonthly > 0,
+          getValue: (_p: PublicPricingPlan) => true,
         },
       ],
     },
     {
-      category: "Agency & Collaboration",
+      category: "Schema Builder & Structured Data",
       features: [
         {
-          name: "Exportable PDF Audit Deliverables",
-          getValue: (p: PublicPricingPlan) =>
-            p.features.some(
-              (f) =>
-                f.isIncluded &&
-                (f.label.toLowerCase().includes("pdf") ||
-                  f.label.toLowerCase().includes("report"))
-            ) || p.priceMonthly >= 15,
+          name: "JSON-LD Schema Builder Allowance",
+          getValue: (p: PublicPricingPlan) => {
+            const k = (p.key || "").toUpperCase();
+            if (k.includes("AGENCY")) return "Unlimited";
+            if (k.includes("PRO") || k.includes("PREMIUM")) return "100 / mo";
+            if (k.includes("STARTER")) return "25 / mo";
+            return "3 / mo";
+          },
+        },
+        {
+          name: "Google Rich Results SERP Previewer",
+          getValue: (_p: PublicPricingPlan) => true,
+        },
+        {
+          name: "Real-Time Syntax & Error Validator",
+          getValue: (_p: PublicPricingPlan) => true,
+        },
+      ],
+    },
+    {
+      category: "Reporting & Collaboration",
+      features: [
+        {
+          name: "Exportable Client-Ready PDF Deliverables",
+          getValue: (p: PublicPricingPlan) => p.priceMonthly >= 15,
         },
         {
           name: "Custom White-Label Branding",
-          getValue: (p: PublicPricingPlan) =>
-            p.features.some(
-              (f) =>
-                f.isIncluded &&
-                (f.label.toLowerCase().includes("white-label") ||
-                  f.label.toLowerCase().includes("brand"))
-            ) || p.priceMonthly >= 50,
+          getValue: (p: PublicPricingPlan) => p.priceMonthly >= 50,
         },
         {
           name: "Multi-Client Portfolio Workspace",
-          getValue: (p: PublicPricingPlan) =>
-            p.features.some(
-              (f) =>
-                f.isIncluded &&
-                (f.label.toLowerCase().includes("client") ||
-                  f.label.toLowerCase().includes("portfolio") ||
-                  f.label.toLowerCase().includes("workspace"))
-            ) || p.priceMonthly >= 50,
+          getValue: (p: PublicPricingPlan) => p.priceMonthly >= 50,
         },
         {
           name: "Priority Concurrency & Support",
@@ -235,24 +356,28 @@ export default async function PricingPage() {
 
   const faqs = [
     {
-      q: "How does billing and plan upgrading work?",
-      a: "You can upgrade, downgrade, or cancel your plan at any time directly in your dashboard billing settings. When upgrading, proration is calculated automatically so you only pay the delta.",
+      q: "How does ongoing website health monitoring work?",
+      a: "Once you set up a website, AI Vision Audit routinely crawls your pages according to your plan frequency (weekly or daily) to catch broken links, slow pages, missing schema, and SEO regressions as your site changes.",
     },
     {
-      q: "What happens if I hit my monthly audit limit?",
-      a: "If you need additional audits before your cycle resets, you can easily top up credits or upgrade to a higher tier. Failed audits due to server timeouts never consume your quota.",
+      q: "What is Fix Verification?",
+      a: "After you deploy a code or template fix on your website, Fix Verification immediately rechecks the affected live URLs in real-time to confirm whether the issue is resolved.",
+    },
+    {
+      q: "How does billing and plan upgrading work?",
+      a: "You can upgrade, downgrade, or cancel your plan at any time directly in your dashboard billing settings. When upgrading, proration is calculated automatically so you only pay the difference.",
+    },
+    {
+      q: "What happens if my site has more pages than my plan capacity?",
+      a: "You can easily upgrade to a higher tier anytime to expand your monitored page capacity from 100 to 1,000 or 3,000 pages.",
     },
     {
       q: "Can I customize the white-label PDF reports with my agency logo?",
       a: "Yes! On Agency plans, you can upload your agency logo, primary color scheme, and executive sign-off notes so the PDF deliverables appear 100% bespoke to your clients.",
     },
     {
-      q: "What payment methods do you accept?",
-      a: "We accept all major credit and debit cards (Visa, Mastercard, American Express) processed securely via Stripe. Invoicing is also available for annual enterprise contracts.",
-    },
-    {
       q: "Is there a free trial?",
-      a: "Yes! Plans with free trials allow you to test all features with zero risk. You won’t be charged until the trial period ends, and you can cancel anytime.",
+      a: "Yes! Plans with free trials allow you to test all features with zero risk. You won’t be charged until the trial period ends, and you can cancel anytime with one click.",
     },
   ];
 
@@ -266,15 +391,17 @@ export default async function PricingPage() {
             <div className="mx-auto max-w-3xl text-center flex flex-col items-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-800">
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>DYNAMIC, TRANSPARENT PLANS</span>
+                <span>CONTINUOUS WEBSITE HEALTH PLANS</span>
               </div>
 
-              <h1 className="mt-6 font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.12]">
-                Simple Pricing for Powerful Audits
+              <h1 className="mt-6 font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-950 leading-[1.12]">
+                Audits show you what’s broken.
+                <br />
+                Monitoring helps you keep it fixed.
               </h1>
 
               <p className="mt-5 text-base sm:text-lg text-slate-700 leading-relaxed max-w-2xl font-normal">
-                Choose the plan that fits your growth. Managed dynamically to ensure you always get the latest features, highest crawl speeds, and best value.
+                Choose how much of your website you want to monitor and how often you want it checked.
               </p>
             </div>
           </div>
@@ -293,13 +420,13 @@ export default async function PricingPage() {
             <div className="max-w-3xl mx-auto text-center mb-16">
               <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
-                <span>FEATURE BREAKDOWN</span>
+                <span>CAPABILITY BREAKDOWN</span>
               </div>
               <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
-                Compare All Plan Capabilities
+                Compare Plan Capabilities &amp; Monitoring
               </h2>
               <p className="mt-3 text-slate-600 text-base">
-                Everything you need to know about our audit limits, AI intelligence, and white-label tiers.
+                Everything you need to know about site coverage, verification limits, and scheduled monitoring.
               </p>
             </div>
 
@@ -374,10 +501,10 @@ export default async function PricingPage() {
               <div className="space-y-3 max-w-xl">
                 <div className="inline-flex items-center gap-2 rounded-full bg-slate-800 px-3 py-1 text-xs font-semibold text-emerald-400 border border-slate-700">
                   <Building2 className="h-3.5 w-3.5" />
-                  <span>HIGH-VOLUME &amp; ENTERPRISE</span>
+                  <span>HIGH-CAPACITY &amp; ENTERPRISE</span>
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                  Need Custom Audits or API Integrations?
+                  Need Custom Monitoring or High-Volume Crawls?
                 </h3>
                 <p className="text-sm text-slate-300 leading-relaxed">
                   We offer custom volume pricing, dedicated crawler concurrency, webhook streaming, custom SSO, and SLA guarantees for enterprise platforms.
@@ -404,7 +531,7 @@ export default async function PricingPage() {
                 Frequently Asked Questions
               </h2>
               <p className="mt-3 text-slate-600 text-base">
-                Everything you need to know about billing, audits, and plans.
+                Everything you need to know about website health monitoring, verification, and plans.
               </p>
             </div>
 
@@ -444,7 +571,7 @@ export default async function PricingPage() {
                 targetUrl="/dashboard"
                 className="rounded-full bg-[#181818] px-8 py-3.5 text-sm font-bold text-white shadow-md hover:bg-black transition"
               >
-                Get Started Now
+                Audit My Site Free
               </AuthActionButton>
             </div>
           </div>

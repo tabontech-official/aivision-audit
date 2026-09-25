@@ -47,14 +47,16 @@ export function Hero() {
       <div className="relative mx-auto max-w-5xl px-4 sm:px-8 lg:px-12 xl:px-16 text-center">
         {/* Main Headline */}
         <h1 className="font-display font-semibold text-5xl sm:text-6xl md:text-7xl lg:text-[76px] xl:text-[80px] tracking-[-0.035em] text-[#111827] leading-[1.06] max-w-4xl mx-auto font-lazzer">
-          AI Website Audit
+          Find what’s broken.
           <br />
-          &amp; Schema Suite
+          Fix it.
+          <br />
+          Keep it fixed.
         </h1>
 
         {/* Subtitle */}
         <p className="mt-4 sm:mt-5 text-base sm:text-lg md:text-[19px] text-[#374151] max-w-2xl mx-auto font-normal leading-relaxed font-lazzer">
-          Instantly diagnose 70+ technical SEO factors, Google Core Web Vitals, and structured JSON-LD schema markup to dominate Google and emerging AI answer engines.
+          Audit your website, verify fixes, track changes, and keep your site healthy over time.
         </p>
 
         {/* Search Bar Pill Container */}
@@ -769,19 +771,28 @@ export function AiShiftSection() {
 
 const STEPS = [
   {
-    icon: FileSearch,
-    title: "Enter any website URL",
-    body: "Type or paste any domain address. We crawl and analyze the live site just like search engine bots do.",
+    icon: Search,
+    step: "1",
+    title: "Audit",
+    body: "Find SEO, performance, accessibility, technical, and website health issues.",
   },
   {
     icon: ListChecks,
-    title: "70+ automated audit checks",
-    body: "Technical SEO, Core Web Vitals, JSON-LD schema, mobile UX, and security headers are tested in real time.",
+    step: "2",
+    title: "Fix",
+    body: "See clear recommendations for what needs attention.",
   },
   {
-    icon: Rocket,
-    title: "Get your action roadmap",
-    body: "Receive an overall health score with prioritized, step-by-step code solutions and rich schema outputs.",
+    icon: CheckCircle2,
+    step: "3",
+    title: "Verify",
+    body: "Recheck fixes and confirm whether the issue is actually resolved.",
+  },
+  {
+    icon: ShieldCheck,
+    step: "4",
+    title: "Monitor",
+    body: "Keep checking the website over time and catch new problems when they appear.",
   },
 ];
 
@@ -792,95 +803,57 @@ export function HowItWorks() {
       className="bg-[#dff2ed] py-14 sm:py-20 font-lazzer"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 xl:px-16">
-        <div className="grid items-center gap-14 md:grid-cols-2">
-          {/* Left */}
-          <div>
-            <div className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer inline-flex items-center gap-2">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
-              <span>HOW IT WORKS</span>
-            </div>
-
-            <h2 className="max-w-xl text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-950 font-lazzer">
-              From Website URL to High-Impact Growth Insights
-            </h2>
-
-            <p className="mt-4 max-w-lg text-base sm:text-lg leading-relaxed text-slate-600 font-normal">
-              Run an in-depth audit in under a minute — no tracking code, plugins, or developer setup required.
-            </p>
-
-            <div className="mt-8 space-y-5">
-              {STEPS.map((s, i) => (
-                <div
-                  key={s.title}
-                  className="flex items-start gap-4"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-[#181818] text-white">
-                    <s.icon className="h-5 w-5" aria-hidden />
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wide text-emerald-700">
-                        Step {i + 1}
-                      </span>
-
-                      <h3 className="font-bold text-slate-900 font-lazzer text-base">
-                        {s.title}
-                      </h3>
-                    </div>
-
-                    <p className="mt-1 text-sm leading-relaxed text-slate-600 font-normal">
-                      {s.body}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <div className="mx-auto max-w-3xl text-center mb-12 sm:mb-16">
+          <div className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 font-lazzer inline-flex items-center gap-2">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
+            <span>HOW IT WORKS</span>
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
           </div>
 
-          {/* Right Demo Card */}
-          <div className="rounded-sm border border-slate-200 bg-white p-6 shadow-xs">
-            <div className="rounded-xs bg-slate-100 px-5 py-3.5 text-sm text-slate-600 font-medium">
-              https://yourwebsite.com
-            </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-950 font-lazzer">
+            Find what’s broken. Fix it. Verify it. Keep it that way.
+          </h2>
 
-            <div className="mt-5 rounded-xs bg-[#dff2ed]/60 p-5 border border-emerald-200/50">
-              <div className="text-xs font-bold uppercase tracking-wider text-emerald-800">
-                AI VISION AUDIT REPORT
-              </div>
+          <p className="mt-4 text-base sm:text-lg leading-relaxed text-slate-600 font-normal">
+            A continuous loop of discovery, actionable resolution, instant live verification, and automated recurring monitoring.
+          </p>
+        </div>
 
-              <div className="mt-2 text-xl font-bold text-slate-900 font-lazzer">
-                Health Score: 94/100
-              </div>
-
-              <div className="mt-4 space-y-2.5 text-sm font-medium">
-                <div className="flex justify-between border-b border-slate-200/50 pb-1.5">
-                  <span className="text-slate-600">Technical SEO</span>
-                  <strong className="text-emerald-700">98% Passed</strong>
+        {/* 4 Cards Horizontal Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+          {STEPS.map((s) => {
+            const Icon = s.icon;
+            return (
+              <div
+                key={s.step}
+                className="flex flex-col justify-between rounded-xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-xs hover:shadow-md transition-all relative overflow-hidden group"
+              >
+                {/* Step badge top right */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white shadow-2xs group-hover:bg-[#143a31] transition-colors">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <span className="rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-2.5 py-0.5 text-xs font-black">
+                    Step {s.step}
+                  </span>
                 </div>
 
-                <div className="flex justify-between border-b border-slate-200/50 pb-1.5">
-                  <span className="text-slate-600">Core Web Vitals</span>
-                  <strong className="text-emerald-700">Good (1.2s)</strong>
+                <div className="space-y-2">
+                  <h3 className="font-display font-bold text-slate-950 text-xl tracking-tight">
+                    {s.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm leading-relaxed text-slate-600 font-normal">
+                    {s.body}
+                  </p>
                 </div>
 
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Schema Markup</span>
-                  <strong className="text-emerald-700">Validated JSON-LD</strong>
+                <div className="mt-6 pt-3 border-t border-slate-100 flex items-center text-xs font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                  <span>Explore {s.title}</span>
+                  <ChevronRight className="h-3.5 w-3.5 ml-1 group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
-            </div>
-
-            <div className="mt-5 rounded-xs border border-dashed border-slate-300 p-4 bg-slate-50">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                ACTIONABLE AUDIT INSIGHT
-              </div>
-
-              <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-600">
-                Your technical SEO foundations are strong. Implementing JSON-LD FAQ schema and compressing hero assets will secure top search positions.
-              </p>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -1383,28 +1356,28 @@ export function FinalCta() {
             <div className="lg:col-span-7 flex flex-col items-start text-left z-10">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-slate-200">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                <span>NEXT-GENERATION AUDIT PLATFORM</span>
+                <span>CONTINUOUS WEBSITE HEALTH</span>
               </div>
 
               <h2 className="mt-5 font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight font-lazzer">
-                Accelerate Your SEO &amp; AI Search Visibility Today
+                Find what’s broken. Fix it. Keep it fixed.
               </h2>
 
               <p className="mt-4 text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl">
-                Run an instant 70+ factor technical audit, generate Google-compliant JSON-LD schema markup, and monitor site speed with AI Vision Audit.
+                Audit your website, verify fixes, track changes, and keep your site healthy over time with AI Vision Audit.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3.5">
                 <AuthActionButton
                   className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3 text-sm font-bold text-slate-950 shadow-xs transition-colors hover:bg-slate-100 font-lazzer cursor-pointer"
                 >
-                  Run Free Audit Now
+                  Audit My Site Free
                 </AuthActionButton>
                 <Link
-                  href="/dashboard/schema"
+                  href="/pricing"
                   className="inline-flex items-center justify-center rounded-full border border-white/30 bg-transparent px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 font-lazzer cursor-pointer"
                 >
-                  Explore Schema Suite
+                  View Plans
                 </Link>
               </div>
             </div>

@@ -31,6 +31,7 @@ import {
   GitCompare,
   Gift,
   Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { rerunAuditAction, rescanWebsiteAction, continueAuditAction, claimWelcomeRewardAndRunAuditAction } from "@/app/dashboard/reports/actions";
@@ -1083,6 +1084,16 @@ export function SiteAuditDashboard({
                     </p>
 
                     <div className="flex items-center gap-2 flex-wrap">
+                      {(issue.title.toLowerCase().includes("schema") || issue.title.toLowerCase().includes("structured data") || (issue.category && issue.category.toLowerCase().includes("schema"))) && (
+                        <Link
+                          href={`/dashboard/schema?url=${encodeURIComponent(issue.fixUrl || domain)}`}
+                          className="inline-flex items-center gap-1.5 rounded-[8px] bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 text-xs font-bold transition-colors shadow-2xs"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                          <span>Generate Schema Fix</span>
+                        </Link>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => {
@@ -1113,23 +1124,41 @@ export function SiteAuditDashboard({
                         className="inline-flex items-center gap-1.5 rounded-[8px] bg-slate-900 hover:bg-black text-white px-3 py-1.5 text-xs font-bold transition-colors shadow-2xs cursor-pointer disabled:opacity-50 outline-none focus:outline-none focus:ring-0"
                       >
                         <RotateCw className={cn("h-3.5 w-3.5", recheckingId === issue.id && "animate-spin")} />
-                        <span>{recheckingId === issue.id ? "Verifying..." : "Recheck Issue"}</span>
+                        <span>{recheckingId === issue.id ? "Verifying..." : "Verify Fix"}</span>
                       </button>
                     </div>
 
                     {(() => {
                       const result = recheckResults[issue.id];
                       if (!result) return null;
+                      if (result.ok && result.status === "Fixed") {
+                        return (
+                          <div className="mt-3 rounded-xl border border-emerald-300 bg-[#f0fdf9] p-3 text-xs text-slate-800 space-y-1.5 animate-in fade-in-50">
+                            <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+                              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                              <span>✓ Fix Verified</span>
+                            </div>
+                            <p className="text-slate-700 leading-relaxed">
+                              Your change worked on the pages we checked. More pages on your website may use the same template or structure and still need verification.
+                            </p>
+                            <div className="pt-1">
+                              <button
+                                type="button"
+                                onClick={() => setIsUpgradeModalOpen(true)}
+                                className="inline-flex items-center gap-1 font-bold text-emerald-900 hover:text-black underline cursor-pointer"
+                              >
+                                <span>Verify More Pages</span>
+                                <ArrowRight className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
                       return (
                         <div className="mt-2 text-xs font-semibold">
                           {result.ok ? (
-                            <span className={cn(
-                              "inline-flex items-center gap-1 px-2 py-0.5 rounded-md",
-                              result.status === "Fixed"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : "bg-amber-100 text-amber-900"
-                            )}>
-                              {result.status === "Fixed" ? "✓ Issue Verified Fixed!" : "⚠ Issue Still Present"}
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-900">
+                              ⚠ Issue Still Present
                             </span>
                           ) : (
                             <span className="text-rose-600">{result.message}</span>
@@ -1323,7 +1352,7 @@ export function SiteAuditDashboard({
 
         {/* Right Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {/* Rerun Campaign (Black Button) — only show when first audit is completed */}
+          {/* Recheck Website (Black Button) — only show when first audit is completed */}
           {isFirstAuditCompleted && (
             <button
               type="button"
@@ -1332,7 +1361,7 @@ export function SiteAuditDashboard({
               className="inline-flex items-center gap-2 rounded-[8px] bg-[#181818] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-black disabled:opacity-60 transition-colors cursor-pointer font-lazzer"
             >
               <RotateCw className={cn("h-3.5 w-3.5", (isPending || isRunning) && "animate-spin")} />
-              <span>{isPending || isRunning ? "Running Audit..." : "Rerun campaign"}</span>
+              <span>{isPending || isRunning ? "Checking Website..." : "Recheck Website"}</span>
             </button>
           )}
 
@@ -1341,10 +1370,10 @@ export function SiteAuditDashboard({
             <Link
               href={`/dashboard/reports/${reportPublicId}?tab=compare`}
               className="inline-flex items-center gap-1.5 rounded-[8px] border border-indigo-200 bg-indigo-50/90 px-3.5 py-2 text-xs font-bold text-indigo-950 shadow-2xs hover:bg-indigo-100 hover:border-indigo-300 transition-colors cursor-pointer font-lazzer"
-              title="View what changed since previous audit"
+              title="Compare with last audit"
             >
               <GitCompare className="h-3.5 w-3.5 text-indigo-700 shrink-0" />
-              <span>What changed</span>
+              <span>Compare With Last Audit</span>
               {scoreDelta !== null && scoreDelta !== undefined && scoreDelta !== 0 && (
                 <span
                   className={cn(
@@ -1762,6 +1791,16 @@ export function SiteAuditDashboard({
                                 </div>
                                 <div className="mt-3 space-y-2">
                                   <div className="flex items-center gap-2 flex-wrap">
+                                    {(issue.title.toLowerCase().includes("schema") || issue.title.toLowerCase().includes("structured data") || (issue.category && issue.category.toLowerCase().includes("schema"))) && (
+                                      <Link
+                                        href={`/dashboard/schema?url=${encodeURIComponent(issue.fixUrl || domain)}`}
+                                        className="inline-flex items-center gap-1.5 rounded-[8px] bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1 text-xs font-bold transition-colors shadow-2xs"
+                                      >
+                                        <Sparkles className="h-3.5 w-3.5" />
+                                        <span>Generate Schema Fix</span>
+                                      </Link>
+                                    )}
+
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -1783,23 +1822,41 @@ export function SiteAuditDashboard({
                                       className="inline-flex items-center gap-1.5 rounded-[8px] bg-slate-900 hover:bg-black text-white px-2.5 py-1 text-xs font-bold transition-colors shadow-2xs cursor-pointer disabled:opacity-50 outline-none focus:outline-none focus:ring-0"
                                     >
                                       <RotateCw className={cn("h-3.5 w-3.5", recheckingId === issue.id && "animate-spin")} />
-                                      <span>{recheckingId === issue.id ? "Verifying..." : "Recheck"}</span>
+                                      <span>{recheckingId === issue.id ? "Verifying..." : "Verify Fix"}</span>
                                     </button>
                                   </div>
 
                                   {(() => {
                                     const result = recheckResults[issue.id];
                                     if (!result) return null;
+                                    if (result.ok && result.status === "Fixed") {
+                                      return (
+                                        <div className="mt-2.5 rounded-xl border border-emerald-300 bg-[#f0fdf9] p-3 text-xs text-slate-800 space-y-1.5 animate-in fade-in-50">
+                                          <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+                                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                                            <span>✓ Fix Verified</span>
+                                          </div>
+                                          <p className="text-slate-700 leading-relaxed">
+                                            Your change worked on the pages we checked. More pages on your website may use the same template or structure and still need verification.
+                                          </p>
+                                          <div className="pt-1">
+                                            <button
+                                              type="button"
+                                              onClick={() => setIsUpgradeModalOpen(true)}
+                                              className="inline-flex items-center gap-1 font-bold text-emerald-900 hover:text-black underline cursor-pointer"
+                                            >
+                                              <span>Verify More Pages</span>
+                                              <ArrowRight className="h-3 w-3" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      );
+                                    }
                                     return (
                                       <div className="text-xs font-semibold">
                                         {result.ok ? (
-                                          <span className={cn(
-                                            "inline-flex items-center gap-1 px-2 py-0.5 rounded-md",
-                                            result.status === "Fixed"
-                                              ? "bg-emerald-100 text-emerald-800"
-                                              : "bg-amber-100 text-amber-900"
-                                          )}>
-                                            {result.status === "Fixed" ? "✓ Verified Fixed!" : "⚠ Still Present"}
+                                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-900">
+                                            ⚠ Still Present
                                           </span>
                                         ) : (
                                           <span className="text-rose-600">{result.message}</span>

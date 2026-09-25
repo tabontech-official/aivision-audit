@@ -113,11 +113,15 @@ export function HeroSearchForm() {
               disabled={pending}
               className="bg-[#c084fc] hover:bg-[#b572fa] active:bg-[#a85cf7] text-slate-950 font-bold px-6 sm:px-7 py-3 sm:py-3.5 rounded-full text-xs sm:text-sm transition-all shadow-xs shrink-0 cursor-pointer disabled:opacity-60 font-lazzer"
             >
-              {pending ? "Analyzing..." : "Get insights"}
+              {pending ? "Analyzing..." : "Audit My Site Free"}
             </button>
           </div>
         </div>
       </form>
+
+      <p className="mt-2.5 text-xs text-slate-600 font-medium text-center">
+        No card required.
+      </p>
 
       {error && (
         <p role="alert" className="mt-2 text-xs font-semibold text-red-600">

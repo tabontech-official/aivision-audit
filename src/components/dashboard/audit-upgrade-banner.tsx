@@ -96,8 +96,8 @@ export function AuditUpgradeBanner({
               {issuesFoundText}
             </h3>
             <p className="mt-1 text-sm font-semibold text-slate-700">
-              Your website has <span className="text-slate-950 font-bold">{totalDetectedPages.toLocaleString()} pages</span>.{" "}
-              <span className="text-amber-700 font-bold">{siteRemaining.toLocaleString()} are still unchecked</span>.
+              We found <span className="text-slate-950 font-bold">{totalDetectedPages.toLocaleString()} URLs</span> on your website. You’ve audited <span className="text-slate-950 font-bold">{pagesCrawled.toLocaleString()} {pagesCrawled === 1 ? "page" : "pages"}</span> so far.{" "}
+              <span className="text-amber-700 font-bold">{siteRemaining.toLocaleString()} pages are still outside your current audit coverage</span>.
             </p>
           </div>
 
@@ -156,31 +156,36 @@ export function AuditUpgradeBanner({
           </div>
 
           {/* Why That Matters */}
-          <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed bg-amber-50/70 border border-amber-200/60 rounded-xl p-3">
-            <strong className="text-amber-950 font-bold">Why this matters:</strong> The pages we haven’t analysed may still contain issues affecting search visibility, speed, accessibility, technical SEO, and overall site health.
-          </p>
+          <div className="bg-amber-50/80 border border-amber-200/70 rounded-xl p-3.5 space-y-1 text-xs sm:text-[13px] text-slate-700 leading-relaxed">
+            <p>
+              <strong className="text-amber-950 font-bold">Why this matters:</strong> The pages we haven’t analysed may still contain issues affecting search visibility, speed, accessibility, technical SEO, and overall site health.
+            </p>
+            <p className="text-amber-900 font-medium">
+              Keep your full site checked and monitor future changes automatically.
+            </p>
+          </div>
 
           {/* What Paid Unlocks */}
           <div className="pt-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-2">
-              What full audit access unlocks:
+              What ongoing monitoring unlocks:
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                <span>Continue deeper audit across all <strong>{siteRemaining.toLocaleString()}</strong> unchecked pages</span>
+                <span>Audit all <strong>{siteRemaining.toLocaleString()}</strong> remaining pages</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                <span>Recheck fixes &amp; live verification in real-time</span>
+                <span>Recheck fixes &amp; confirm resolution live</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                <span>Compare crawl changes &amp; track issue fixes</span>
+                <span>Track health score &amp; compare changes over time</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                <span>24/7 automated monitoring &amp; health alerts</span>
+                <span>Continuous recurring scheduled site monitoring</span>
               </div>
             </div>
           </div>
@@ -193,14 +198,14 @@ export function AuditUpgradeBanner({
             <div className="flex items-center gap-2 text-slate-900">
               <Zap className="h-4 w-4 text-emerald-600" />
               <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                Unlock Complete Site Audit
+                Continuous Site Health
               </span>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
               {hasMoreAvailableUnderPlan
-                ? `You have ${planCreditsRemaining.toLocaleString()} remaining plan credits available to crawl more pages.`
-                : `Upgrade your plan to analyze all ${siteRemaining.toLocaleString()} unchecked pages and automate continuous monitoring.`}
+                ? `You have ${planCreditsRemaining.toLocaleString()} remaining plan credits to check more pages.`
+                : `Keep your full site checked and monitor future changes automatically.`}
             </p>
           </div>
 
@@ -213,7 +218,7 @@ export function AuditUpgradeBanner({
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 hover:bg-black text-white px-4 py-3 text-xs sm:text-sm font-bold shadow-md transition-all cursor-pointer disabled:opacity-60"
               >
                 <RotateCw className={cn("h-4 w-4", isContinuing && "animate-spin")} />
-                <span>{isContinuing ? "Crawling Pages..." : "Continue Full Website Audit"}</span>
+                <span>{isContinuing ? "Crawling Pages..." : "Check More Pages"}</span>
               </button>
             ) : (
               <button
@@ -221,7 +226,7 @@ export function AuditUpgradeBanner({
                 onClick={onOpenUpgradeModal}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 hover:bg-black text-white px-4 py-3 text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer group"
               >
-                <span>Continue Full Website Audit</span>
+                <span>Start Monitoring My Site</span>
                 <ArrowRight className="h-4 w-4 text-white group-hover:translate-x-0.5 transition-transform" />
               </button>
             )}

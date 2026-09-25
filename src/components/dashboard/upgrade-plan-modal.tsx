@@ -195,13 +195,16 @@ export function UpgradePlanModal({ isOpen, onClose, reason, auditSummary }: Upgr
 
               {/* Unchecked Pages Explanatory Callout */}
               {(auditSummary.siteRemaining ?? 0) > 0 && (
-                <div className="rounded-xl bg-amber-50/80 border border-amber-200/70 p-3.5 text-xs text-slate-700 leading-relaxed space-y-1">
+                <div className="rounded-xl bg-amber-50/80 border border-amber-200/70 p-3.5 text-xs text-slate-700 leading-relaxed space-y-1.5">
                   <p className="font-bold text-amber-950 text-[13px]">
-                    Your website has {(auditSummary.totalDetectedPages ?? (auditSummary.pagesCrawled! + auditSummary.siteRemaining!)).toLocaleString()} pages.{" "}
-                    <span className="text-amber-700">{(auditSummary.siteRemaining ?? 0).toLocaleString()} are still unchecked.</span>
+                    We found {(auditSummary.totalDetectedPages ?? (auditSummary.pagesCrawled! + auditSummary.siteRemaining!)).toLocaleString()} URLs on your website. You’ve audited {auditSummary.pagesCrawled?.toLocaleString()} {auditSummary.pagesCrawled === 1 ? "page" : "pages"} so far.{" "}
+                    <span className="text-amber-700">{(auditSummary.siteRemaining ?? 0).toLocaleString()} pages are still outside your current audit coverage.</span>
                   </p>
                   <p className="text-slate-600">
                     The pages we haven’t analysed may still contain issues affecting search visibility, speed, accessibility, technical SEO, and overall site health.
+                  </p>
+                  <p className="text-amber-900 font-semibold">
+                    Keep your full site checked and monitor future changes automatically.
                   </p>
                 </div>
               )}
@@ -209,7 +212,7 @@ export function UpgradePlanModal({ isOpen, onClose, reason, auditSummary }: Upgr
               {/* What Paid Unlocks Feature Checklist */}
               <div className="py-1">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
-                  What paid plan unlocks:
+                  What ongoing health monitoring unlocks:
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
                   <div className="flex items-center gap-2">
@@ -218,7 +221,7 @@ export function UpgradePlanModal({ isOpen, onClose, reason, auditSummary }: Upgr
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span>Recheck fixes &amp; instant live verification</span>
+                    <span>Recheck fixes &amp; confirm live resolution</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
@@ -226,14 +229,14 @@ export function UpgradePlanModal({ isOpen, onClose, reason, auditSummary }: Upgr
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span>Scheduled continuous site monitoring</span>
+                    <span>Continuous automated site monitoring</span>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
             <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
-              {reason || `You have reached your limit of ${currentQuota.toLocaleString()} pages on the ${currentPlanName}. Upgrade to continue crawling pages, run scheduled re-audits, and unlock all features.`}
+              {reason || `You have reached your limit of ${currentQuota.toLocaleString()} pages on the ${currentPlanName}. Upgrade to continue monitoring pages, run scheduled re-audits, and unlock all features.`}
             </p>
           )}
 
@@ -312,12 +315,18 @@ export function UpgradePlanModal({ isOpen, onClose, reason, auditSummary }: Upgr
                   <div className="space-y-2 text-xs text-slate-700 py-3 border-y border-emerald-100/80">
                     <div className="flex items-center gap-2 font-bold text-emerald-950">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span>{activeTargetPlan.pageAuditLimit.toLocaleString()} Monthly Crawl Credits</span>
+                      <span>
+                        {activeTargetPlan.pageAuditLimit >= 3000
+                          ? "Up to 3,000 Monitored Pages"
+                          : activeTargetPlan.pageAuditLimit >= 1000
+                          ? "Up to 1,000 Monitored Pages"
+                          : `Up to ${activeTargetPlan.pageAuditLimit.toLocaleString()} Monitored Pages`}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span>{activeTargetPlan.websiteLimit === -1 ? "Unlimited" : activeTargetPlan.websiteLimit} Monitored Projects</span>
+                      <span>{activeTargetPlan.websiteLimit === -1 ? "Unlimited" : activeTargetPlan.websiteLimit} Monitored {activeTargetPlan.websiteLimit === 1 ? "Website" : "Websites"}</span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -327,7 +336,7 @@ export function UpgradePlanModal({ isOpen, onClose, reason, auditSummary }: Upgr
 
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span>Scheduled Audits &amp; Historical Issue Comparison</span>
+                      <span>Scheduled Audits &amp; Before/After Compare Diffs</span>
                     </div>
                   </div>
 
@@ -346,7 +355,7 @@ export function UpgradePlanModal({ isOpen, onClose, reason, auditSummary }: Upgr
                         </>
                       ) : (
                         <>
-                          <span>Continue Full Website Audit</span>
+                          <span>Start Monitoring My Site</span>
                           <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                         </>
                       )}

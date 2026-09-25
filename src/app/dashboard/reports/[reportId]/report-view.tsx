@@ -932,7 +932,7 @@ export function ReportView(props: {
 
         {/* Right Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {/* Rerun Campaign (Black Button) */}
+          {/* Recheck Website (Black Button) */}
           <button
             type="button"
             onClick={handleRerun}
@@ -940,7 +940,7 @@ export function ReportView(props: {
             className="inline-flex items-center gap-2 rounded-[8px] bg-[#181818] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-black disabled:opacity-60 transition-colors cursor-pointer font-lazzer outline-none focus:outline-none focus:ring-0"
           >
             <RotateCw className={cn("h-3.5 w-3.5", isPending && "animate-spin")} />
-            <span>{isPending ? "Running Audit..." : "Rerun campaign"}</span>
+            <span>{isPending ? "Checking Website..." : "Recheck Website"}</span>
           </button>
 
           {/* PDF Report Link */}
@@ -1017,7 +1017,7 @@ export function ReportView(props: {
             )}
           >
             <GitCompare className="w-3.5 h-3.5" />
-            <span>Compare Report</span>
+            <span>Compare With Last Audit</span>
             {props.comparisonData?.scoreDelta !== null && props.comparisonData?.scoreDelta !== undefined && props.comparisonData?.scoreDelta !== 0 && (
               <span
                 className={cn(
