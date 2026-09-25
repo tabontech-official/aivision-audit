@@ -662,15 +662,16 @@ export function SiteAuditDashboard({
   };
 
   const isFreePlan = (currentPlanKey || "").toUpperCase() === "FREE" || (!currentPlanKey && (!coverageLimitProp || coverageLimitProp <= 10));
-  const totalDetected = totalDetectedUrls || maxPages || (isFreePlan ? 10 : 200);
-  const coverageUsed = coverageUsedProp ?? pagesCrawled;
+  const effectiveCrawledCount = Math.max(pagesCrawled || 0, (crawledPagesList || []).length, 1);
+  const coverageUsed = Math.max(effectiveCrawledCount, coverageUsedProp ?? 0);
+  const totalDetected = Math.max(effectiveCrawledCount, totalDetectedUrls || maxPages || (isFreePlan ? 10 : 200));
   const rawCoverageLimit = coverageLimitProp ?? (isFreePlan ? 10 : (maxPages || 100));
   const coverageLimit = isFreePlan ? 10 : rawCoverageLimit;
   const planCreditsRemaining = Math.max(0, coverageLimit - coverageUsed);
-  const siteRemaining = Math.max(0, totalDetected - coverageUsed);
+  const siteRemaining = Math.max(0, totalDetected - effectiveCrawledCount);
   const additionalPossible = Math.min(planCreditsRemaining, siteRemaining);
   const hasMoreAvailableUnderPlan = !coverageCompleted && planCreditsRemaining > 0 && siteRemaining > 0;
-  const planLimitReached = !hasMoreAvailableUnderPlan && siteRemaining > 0 && planCreditsRemaining <= 0;
+  const planLimitReached = (planCreditsRemaining === 0 || coverageUsed >= coverageLimit) && siteRemaining > 0;
 
   const handleContinueAudit = async () => {
     if (!reportPublicId || isContinuing) return;
@@ -1259,7 +1260,7 @@ export function SiteAuditDashboard({
           criticalIssues={failedCount}
           highIssues={warningCount}
           totalIssues={topIssues.length > 0 ? topIssues.length : (failedCount + warningCount)}
-          pagesCrawled={pagesCrawled || coverageUsed || 1}
+          pagesCrawled={effectiveCrawledCount}
           totalDetectedPages={totalDetected}
           siteRemaining={siteRemaining}
           planCreditsRemaining={planCreditsRemaining}
@@ -1332,7 +1333,7 @@ export function SiteAuditDashboard({
               )}
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100/90 text-slate-700 border border-slate-200/80 font-medium">
-              Pages crawled: <strong className="font-bold text-slate-900">{(pagesCrawled || 1).toLocaleString()} / {totalDetected.toLocaleString()}</strong>
+              Pages crawled: <strong className="font-bold text-slate-900">{effectiveCrawledCount.toLocaleString()} / {totalDetected.toLocaleString()}</strong>
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-50/80 text-indigo-900 border border-indigo-200/70 font-medium">
               Usage: <strong className="font-bold text-indigo-950">{coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()}</strong> credits used
@@ -2816,7 +2817,7 @@ export function SiteAuditDashboard({
           criticalIssues: failedCount,
           highIssues: warningCount,
           totalIssues: topIssues.length > 0 ? topIssues.length : (failedCount + warningCount),
-          pagesCrawled: pagesCrawled || coverageUsed || 1,
+          pagesCrawled: effectiveCrawledCount,
           totalDetectedPages: totalDetected,
           siteRemaining,
         }}

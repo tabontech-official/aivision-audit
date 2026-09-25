@@ -108,7 +108,7 @@ export default async function ReportDetailPage({
     : 92;
   const rawExtracted = (report.rawData?.extracted as Record<string, unknown>) || {};
   const crawledPages = Array.isArray(rawExtracted.crawledPages) ? rawExtracted.crawledPages : [];
-  const pagesCrawledCount = crawledPages.length > 0 ? crawledPages.length : Math.max(1, report.passedCount + report.failedCount + report.warningCount || 1);
+  const pagesCrawledCount = crawledPages.length > 0 ? crawledPages.length : (report.coverageUsed && report.coverageUsed > 0 ? report.coverageUsed : 1);
 
   // Fetch comparison data if previous report exists
   let comparisonPayload: {

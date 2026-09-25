@@ -656,8 +656,13 @@ export default async function DashboardPage({
   };
 
   const initialTab = resolvedParams.tab || "overview";
+  const isFree = usageSummary.plan.planKey === "FREE";
   const actualCrawledPagesCount = Math.max(1, crawledPagesList.length);
-  const effectiveMaxPages = Math.max(actualCrawledPagesCount, totalPages);
+  const effectiveCoverageUsed = Math.max(actualCrawledPagesCount, usageSummary.pages.used, activeReport?.coverageUsed ?? 0);
+  const effectiveCoverageLimit = isFree ? 10 : (activeReport?.coverageLimit ?? usageSummary.pages.limit);
+  const effectiveCoverageRemaining = Math.max(0, effectiveCoverageLimit - effectiveCoverageUsed);
+  const effectiveTotalDetected = activeReport?.totalDetectedUrls ?? (totalPages > 0 ? totalPages : (isFree ? 10 : usageSummary.pages.limit));
+  const effectiveMaxPages = Math.max(actualCrawledPagesCount, effectiveTotalDetected);
 
   return (
     <SiteAuditDashboard
@@ -696,11 +701,11 @@ export default async function DashboardPage({
       }}
       crawledPagesList={crawledPagesList}
       statistics={statistics}
-      totalDetectedUrls={activeReport?.totalDetectedUrls ?? (totalPages > 0 ? totalPages : (usageSummary.plan.planKey === "FREE" ? 10 : usageSummary.pages.limit))}
-      coverageUsed={activeReport?.coverageUsed ?? usageSummary.pages.used}
-      coverageRemaining={activeReport?.coverageRemaining ?? (usageSummary.plan.planKey === "FREE" ? Math.max(0, 10 - (activeReport?.coverageUsed ?? usageSummary.pages.used)) : usageSummary.pages.remaining)}
-      coverageLimit={usageSummary.plan.planKey === "FREE" ? 10 : (activeReport?.coverageLimit ?? usageSummary.pages.limit)}
-      coverageCompleted={activeReport?.coverageCompleted ?? undefined}
+      totalDetectedUrls={effectiveTotalDetected}
+      coverageUsed={effectiveCoverageUsed}
+      coverageRemaining={effectiveCoverageRemaining}
+      coverageLimit={effectiveCoverageLimit}
+      coverageCompleted={activeReport?.coverageCompleted ?? (effectiveCoverageRemaining <= 0)}
       currentPlanKey={activeReport?.currentPlanKey ?? usageSummary.plan.planKey}
       pendingRewardUrl={pendingUrl}
     />

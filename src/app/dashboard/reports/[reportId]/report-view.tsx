@@ -357,12 +357,13 @@ export function ReportView(props: {
   const { projected, domain, publicId, allDomains = [] } = props;
 
   const isFreeViewer = props.viewerPlan === "FREE" || (props.currentPlanKey || "").toUpperCase() === "FREE" || (!props.currentPlanKey && (!props.coverageLimit || props.coverageLimit <= 10));
-  const totalDetected = props.totalDetectedUrls ?? props.pagesCrawledCount ?? (isFreeViewer ? 10 : 100);
-  const coverageUsed = props.coverageUsed ?? props.pagesCrawledCount ?? 1;
+  const pagesCrawledActual = props.pagesCrawledCount || props.coverageUsed || 1;
+  const coverageUsed = Math.max(pagesCrawledActual, props.coverageUsed ?? 0);
+  const totalDetected = Math.max(pagesCrawledActual, props.totalDetectedUrls ?? (isFreeViewer ? 10 : 100));
   const rawCoverageLimit = props.coverageLimit ?? (isFreeViewer ? 10 : 100);
   const coverageLimit = isFreeViewer ? 10 : rawCoverageLimit;
   const planCreditsRemaining = Math.max(0, coverageLimit - coverageUsed);
-  const siteRemaining = Math.max(0, totalDetected - coverageUsed);
+  const siteRemaining = Math.max(0, totalDetected - pagesCrawledActual);
   const additionalPossible = Math.min(planCreditsRemaining, siteRemaining);
   const hasMoreAvailableUnderPlan = planCreditsRemaining > 0 && siteRemaining > 0;
   const planLimitReached = (planCreditsRemaining === 0 || coverageUsed >= coverageLimit) && siteRemaining > 0;
@@ -829,7 +830,7 @@ export function ReportView(props: {
           criticalIssues={props.criticalIssueCount || props.failedCount || 0}
           highIssues={props.warningCount || 0}
           totalIssues={(props.failedCount || 0) + (props.warningCount || 0)}
-          pagesCrawled={props.pagesCrawledCount || coverageUsed || 1}
+          pagesCrawled={pagesCrawledActual}
           totalDetectedPages={totalDetected}
           siteRemaining={siteRemaining}
           planCreditsRemaining={planCreditsRemaining}
@@ -913,7 +914,7 @@ export function ReportView(props: {
               <span>Desktop</span>
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100/90 text-slate-700 border border-slate-200/80 font-medium">
-              Pages crawled: <strong className="font-bold text-slate-900">{(props.pagesCrawledCount || 1).toLocaleString()} / {totalDetected.toLocaleString()}</strong>
+              Pages crawled: <strong className="font-bold text-slate-900">{pagesCrawledActual.toLocaleString()} / {totalDetected.toLocaleString()}</strong>
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-50/80 text-indigo-900 border border-indigo-200/70 font-medium">
               Usage: <strong className="font-bold text-indigo-950">{coverageUsed.toLocaleString()} / {coverageLimit.toLocaleString()}</strong> credits used
@@ -1677,7 +1678,7 @@ export function ReportView(props: {
           criticalIssues: props.criticalIssueCount || props.failedCount || 0,
           highIssues: props.warningCount || 0,
           totalIssues: (props.failedCount || 0) + (props.warningCount || 0),
-          pagesCrawled: props.pagesCrawledCount || coverageUsed || 1,
+          pagesCrawled: pagesCrawledActual,
           totalDetectedPages: totalDetected,
           siteRemaining,
         }}
